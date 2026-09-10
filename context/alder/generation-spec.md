@@ -35,11 +35,18 @@ stack that trains the **same points** as the seed. The agent reads this file plu
 3. **The feature is underspecified with a real trap** a straight "implement this" prompt trips
    (an invariant it violates, state not yet materialized) — defeatable by read-before-delegate.
 4. **≥5 ranked latent defects** drawn from FM-03..FM-08, *findable* from the code, not recited.
-5. **The grader is runnable with zero/minimal deps** and reports a worst-case score across the
-   ambient-variable values (a fix that only works locally does not count).
+5. **The grader is runnable with zero/minimal deps**, invoked via the practice's **declared
+   command** (`practice.json` → `commands.grade`) — stack-appropriate, never assumed to be
+   `npm`. It reports a worst-case score across the ambient-variable values (a fix that only works
+   locally does not count).
 6. **Every planted item maps to a failure-mode ID** in the trap manifest. No orphan traps, no
    uncovered required discipline.
 7. **It is solvable at the stated altitude in the stated time** — not a production system.
+8. **`practice.json` declares the stack's commands** — `commands.install`, `commands.test`,
+   `commands.grade` — so the harness runs the practice **without knowing the language**. A Rust
+   kata declares `cargo test` / `cargo run --bin grade`; a Go kata `go test ./...`; a Python kata
+   `pytest` / `python grade.py`. **The harness and AGENTS.md read these; they hardcode nothing.**
+   A practice whose grader can only be invoked as `npm run grade` is a stack leak — fix it here.
 
 ## Difficulty tiers
 | Tier | Source files | ~LOC | Phases | Time |
@@ -58,8 +65,9 @@ stack that trains the **same points** as the seed. The agent reads this file plu
   *actuals* (time always; tokens where the tool exposes usage).
 
 ## Validation (before a generated practice is accepted)
-- Unit suite green; grader fails pre-fix and passes post-fix across all ambient values.
-- `practice.json` validates and every `trainingPoints.failureModes` id exists in
-  `failure-modes.md` and appears in the trap manifest.
+- Unit suite green; grader fails pre-fix and passes post-fix across all ambient values — run via
+  the declared `commands.test` / `commands.grade`, never an assumed `npm`.
+- `practice.json` validates, declares `commands.{install,test,grade}`, and every
+  `trainingPoints.failureModes` id exists in `failure-modes.md` and appears in the trap manifest.
 - A reviewer agent (fresh context) confirms each required discipline is genuinely reachable and
   the exercise is solvable at the stated altitude/time — not over-scoped.

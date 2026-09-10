@@ -39,9 +39,13 @@ These come from [`harness/DESIGN.md`](harness/DESIGN.md §0–§2). Follow them 
 4. **Separate executor from examiner.** The agent that runs the learner's prompts must not be the
    one that grades them; grade in a fresh context (a sub-agent or a separate pass).
 5. **The examiner grades from three inputs, never one:** its golden context (Context +
-   `_solutions/`), the learner's prompt transcript, and the result in the cloned folder (diff +
-   `npm run grade` + unit suite, which *you* run, not the learner).
-6. **In `assess`, no feedback until the end.** In `train`, coach as you go.
+   `_solutions/`), the learner's prompt transcript, and the result in the cloned folder (the diff
+   plus the practice's declared **grade** and **test** commands, which *you* run, not the learner).
+6. **Read commands from `practice.json`, never hardcode a toolchain.** Each practice declares
+   `commands.install` / `commands.test` / `commands.grade` for its own stack — `cargo test`,
+   `go test ./...`, `pytest`, `npm run grade`, etc. The harness runs those. Assuming `npm` breaks
+   every non-Node practice.
+7. **In `assess`, no feedback until the end.** In `train`, coach as you go.
 
 ## Running a mode today (before the built runner exists)
 ```
@@ -49,10 +53,10 @@ These come from [`harness/DESIGN.md`](harness/DESIGN.md §0–§2). Follow them 
 cp -R practices/<id> .sessions/<stamp>/work && rm -rf .sessions/<stamp>/work/_solutions
 cp -R practices/<id>/_solutions .sessions/<stamp>/golden          # examiner only
 ```
-Then: execute the learner's prompts inside `work/`; keep an ordered transcript; run
-`npm run grade` (pointing at a copy that still has `_solutions/`, or the `golden/` grader) to
-score; and in `assess`, write `.sessions/<stamp>/feedback.md` at the end per the rubric shape in
-`harness/DESIGN.md §2`.
+Then: execute the learner's prompts inside `work/`; keep an ordered transcript; run the
+practice's declared grade command (`practice.json` → `commands.grade`, against a copy that still
+has `_solutions/` or the `golden/` grader) to score; and in `assess`, write
+`.sessions/<stamp>/feedback.md` at the end per the rubric shape in `harness/DESIGN.md §2`.
 
 ## Map
 - `context/<tree>/` — the Context (start with `context/alder/`).

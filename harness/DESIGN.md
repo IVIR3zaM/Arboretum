@@ -29,8 +29,10 @@ Two consequences that matter:
 - The clone the assistant sees has **`_solutions/` stripped** — the learner cannot reach the
   answer key, the hidden tests, or the rubric by inspecting their workdir.
 - The examiner reads `_solutions/` and the Context from `golden/`, which the assistant/learner
-  **cannot** see. The grader (`npm run grade`) is run by the harness against the clone, not by
-  the learner.
+  **cannot** see. The grader — the practice's **declared** command (`practice.json` →
+  `commands.grade`; `npm run grade` for the seed, `cargo run --bin grade` for a Rust kata, …) —
+  is run by the harness against the clone, not by the learner. The harness reads the command from
+  `practice.json`; it assumes no particular toolchain.
 
 ---
 
@@ -48,8 +50,8 @@ best practice). Roles:
   jailed to `work/` and is given the learner's prompts verbatim. It does **not** grade.
 - **Examiner / Evaluator.** Judges the run from **three inputs** (see §2). Runs in a fresh
   context. May itself be **multiple sub-agents**:
-  - an **outcome checker** — runs `npm run grade` and the unit suite on the clone, reads the
-    diff, records objective results;
+  - an **outcome checker** — runs the practice's declared grade and test commands on the clone,
+    reads the diff, records objective results;
   - a **transcript judge** — reads the learner's prompts against the golden context and the
     rubric, scoring each prompting round on the driving axis;
   - an **aggregator** — reconciles the two and writes `feedback.md`.
@@ -129,7 +131,8 @@ ones they now avoid without prompting.
 
 - **Today:** an agent can *be* the harness by following this document and [`../AGENTS.md`](../AGENTS.md)
   — clone the practice manually, jail itself to the clone, keep the transcript, and run the
-  examiner as a fresh-context pass. The objective gate (`npm run grade`) already works.
+  examiner as a fresh-context pass. The objective gate — the practice's declared `commands.grade`
+(`npm run grade` for the seed) — already works.
 - **Phase 2 (build):** the `arbor` runner CLI automates the clone/jail, the transcript capture,
   the multi-agent examiner, time/token actuals, and the `feedback.md` format. See
   [`../docs/DISTRIBUTION.md`](../docs/DISTRIBUTION.md).

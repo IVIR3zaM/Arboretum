@@ -3,6 +3,26 @@
 > A **flight simulator for AI-assisted development** — deliberate practice on seeded codebases
 > where naive prompting provably can't reach the goal.
 
+## Where to start
+
+- **Just want to see it work?** Run the seed kata:
+  ```bash
+  cd practices/deliveries && node --test test/*.test.ts && npm run grade
+  ```
+  15 unit tests pass — but the grader reports **0/7**. There's a real bug the tests can't see.
+  Fixing it (for every timezone, not just yours) is the exercise.
+- **Want to actually train, not just look?** Pick a Context and follow the path
+  **read → assess → train** (the [three modes](#how-you-use-it--the-harness-and-its-three-modes)).
+  Begin by reading the Context you'll learn: [`context/alder/`](context/alder/).
+- **You're an AI agent, or driving one?** Read [`AGENTS.md`](AGENTS.md) — how to run the harness,
+  and the rules that matter (clone the practice, jail the assistant to it, never touch the original).
+- **Want the reasoning first?** Read [`docs/CONCEPT.md`](docs/CONCEPT.md), or open the visual
+  one-pager linked at the bottom.
+
+Everything below explains how it fits together.
+
+---
+
 An arboretum is a living collection of many tree species, grown for study. This one grows
 **Contexts** — versioned, tree-named bodies of knowledge about how to use AI coding assistants
 well — and turns each into hands-on practice.
@@ -67,3 +87,8 @@ Research + architecture phase. **In:** Context v1, the seed kata, the generator 
 harness design, the docs, a one-pager. **Out (next):** generating more katas, a built harness
 runner for the three modes with time/token actuals, the multi-agent examiner, a hosted
 playground.
+
+## License
+[Apache-2.0](LICENSE) © 2026 Reza Maghoul (see [`NOTICE`](NOTICE)). Permissive with a patent
+grant — see [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md) on keeping a future commercial surface
+separate.

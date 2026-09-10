@@ -6,8 +6,9 @@ principle throughout: **tool-agnostic core, optional Claude-first depth.**
 ## Today — self-serve, any assistant
 1. Clone the repo, open a practice (`practices/deliveries/`), read `README.md`.
 2. Work the five phases with **any** AI assistant — Claude Code, Cursor, Copilot, a web chat.
-3. `npm run grade` is the portable self-grader (the hidden acceptance oracle). It needs no
-   service and no account; it runs locally and scores worst-case across the ambient values.
+3. The practice's declared grade command (`practice.json` → `commands.grade`; `npm run grade`
+   for the seed) is the portable self-grader — the hidden acceptance oracle. It needs no service
+   and no account; it runs locally and scores worst-case across the ambient values.
 4. Read `_solutions/rubric.md` only after finishing, to self-assess how you drove.
 
 This already works. The only dependency is a recent Node for the seed kata; other stacks ship
@@ -41,10 +42,14 @@ and [`../AGENTS.md`](../AGENTS.md); Phase 2 turns that into a tool.
 - The **generator** (`generator/CONTRACT.md`) feeds the catalog: new practices are generated
   from a Context version into the domains/stacks a team actually uses.
 
-## Licensing / openness (decision deferred)
-The Context and the generator contract could be open (they're reference knowledge); the
-practice catalog and hosted grader are the natural commercial surface. No decision needed for
-the research phase — flagged here so it isn't forgotten.
+## Licensing / openness
+The repo ships under **Apache-2.0** (see `LICENSE` / `NOTICE`) — permissive, with an explicit
+patent grant and attribution terms, a sensible default for shareable reference knowledge (the
+Context and the generator contract) and a developer tool. It does **not** foreclose a commercial
+product: the hosted catalog and grader remain yours to build as a separate, closed surface
+(open-core). If you later want to stop a competitor from *hosting Arboretum itself*, that
+protection belongs on the commercial code via a source-available license (e.g. PolyForm
+Noncommercial or BSL) — a different decision from this reference repo's license.
 
 ## Audience
 Individual engineers leveling up their AI-driving reflexes; teams onboarding to AI-assisted

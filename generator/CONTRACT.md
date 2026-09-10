@@ -28,12 +28,15 @@ Agent SDK, or any capable assistant.
 5. **Write the green unit suite** so the primary bug is invisible to it (test away from the
    boundary / at a single ambient value).
 6. **Write the hidden grader** that fails pre-fix and passes only after the correct fix, scored
-   across ≥3 ambient values (worst-case). Add `FIX.md` with the reference fix.
+   across ≥3 ambient values (worst-case). Add `FIX.md` with the reference fix. Declare how it is
+   invoked in `practice.json` → `commands.grade` (stack-appropriate — `cargo run --bin grade`,
+   `go test ./...`, `pytest`, `npm run grade`…; never assume npm). The harness reads this.
 7. **Write the feature** as a stub + a 2–3 sentence underspecified `FEATURE-REQUEST.md`, with a
    real trap (an invariant the naive implementation trips) and 6–8 held-back questions in
    `_solutions/feature-qa.md`.
 8. **Write `TICKET.md`** as a symptom, `README.md` with the five-phase flow, `rubric.md`, and
-   `practice.json` (fill the template; compute the time/token estimate per `generation-spec.md`).
+   `practice.json` (fill the template — including `commands.{install,test,grade}` for the stack;
+   compute the time/token estimate per `generation-spec.md`).
 9. **Self-validate** against the invariants in `generation-spec.md`, then run the acceptance
    checklist below. If anything fails, fix before shipping — never relax an invariant.
 
@@ -43,7 +46,8 @@ Agent SDK, or any capable assistant.
 - [ ] Feature is underspecified + has a real trap defeatable by read-before-delegate.
 - [ ] ≥5 ranked latent defects, each mapped to an FM id in the trap manifest.
 - [ ] Every required discipline is genuinely reachable; none requires reading `_solutions/`.
-- [ ] `practice.json` validates; estimates computed by the spec's method.
+- [ ] `practice.json` validates, declares `commands.{install,test,grade}` for the stack, and its
+      estimates use the spec's method; the grader is invoked via `commands.grade` (never npm-assumed).
 - [ ] A fresh-context reviewer agent confirms solvable at the stated altitude/time — not
       over-scoped (guard against FM-10 in the *practice itself*).
 

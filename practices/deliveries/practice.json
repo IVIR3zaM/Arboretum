@@ -7,7 +7,8 @@
   "difficulty": "M",
   "estimate": { "minutes": 60, "tokens": 25000 },
   "phases": ["understand", "fix", "feature", "improve", "review"],
-  "grader": { "command": "npm run grade", "kind": "hidden-acceptance", "max": 7 },
+  "commands": { "install": "", "test": "node --test test/*.test.ts", "grade": "npm run grade" },
+  "grader": { "kind": "hidden-acceptance", "max": 7 },
   "trainingPoints": {
     "disciplines": [
       "reproduce-before-fix",

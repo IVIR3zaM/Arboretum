@@ -11,7 +11,8 @@ structure and register, changing only domain and stack.
 > <the customer symptom, in plain language. what they saw, when, that it's
 >  only *some* users/inputs/environments, and that the suite is green.>
 **What we know:** <the intended rule, stated plainly — no file, no line>
-**Your job:** reproduce first (a failing test), then fix for EVERY case. `npm run grade` checks it.
+**Your job:** reproduce first (a failing test), then fix for EVERY case. The grade command
+(declared in `practice.json` → `commands.grade`) checks it.
 ```
 
 ## `FEATURE-REQUEST.md` (phase 3) — 2–3 sentences, underspecified

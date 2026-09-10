@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "license": "Apache-2.0",
   "description": "A subscription-box delivery-scheduling service — training kata for AI-assisted development.",
   "engines": {
     "node": ">=22.18"

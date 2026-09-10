@@ -7,7 +7,12 @@
   "difficulty": "S | M | L",
   "estimate": { "minutes": 0, "tokens": 0 },
   "phases": ["understand", "fix", "feature", "improve", "review"],
-  "grader": { "command": "npm run grade", "kind": "hidden-acceptance", "max": 0 },
+  "commands": {
+    "install": "<install deps, or \"\" if none — e.g. \"\", \"cargo fetch\", \"go mod download\">",
+    "test": "<run the unit suite — e.g. \"node --test test/*.test.ts\", \"cargo test\", \"go test ./...\">",
+    "grade": "<run the hidden acceptance grader — e.g. \"npm run grade\", \"cargo run --bin grade\", \"./grade.sh\">"
+  },
+  "grader": { "kind": "hidden-acceptance", "max": 0 },
   "trainingPoints": {
     "disciplines": ["reproduce-before-fix", "requirements-elicitation", "read-before-delegate", "verify-output", "restraint-altitude-match", "reject-on-camera"],
     "failureModes": ["FM-01", "FM-02", "FM-03", "FM-04", "FM-05", "FM-06", "FM-07", "FM-08"]
