@@ -39,6 +39,16 @@ Agent SDK, or any capable assistant.
    compute the time/token estimate per `generation-spec.md`).
 9. **Self-validate** against the invariants in `generation-spec.md`, then run the acceptance
    checklist below. If anything fails, fix before shipping — never relax an invariant.
+10. **Record a proof.** Drive the finished practice end-to-end through the harness at least once
+    (a `train` run is ideal) and capture the run as **at least one proof file** placed inside the
+    practice at `_solutions/proof-<mode>-<YYYY-MM-DD>.html` (it belongs in `_solutions/` because it
+    necessarily reveals the fix, so the harness strips it from the learner's clone). The proof must
+    record the **harness/mode, date, and model used**, and for each phase: the learner prompt, how
+    the assistant behaved, the trap that fired *by design*, the trainer/examiner output, and the
+    **real** command outcome (baseline unit + grader, final unit + grader). Every terminal figure
+    must be a genuine captured output — a proof that isn't reproducible from the practice is not a
+    proof. Show only the designed traps; do not include defects you had to fix in the practice
+    itself. Refresh the proof whenever the practice changes.
 
 ## Assistant-targeted traps — make the autopilot fail (required)
 A practice only *trains* if **driving it badly fails.** Plant at least one trap aimed at the
@@ -79,6 +89,10 @@ must both leave the grader red.
       estimates use the spec's method; the grader is invoked via `commands.grade` (never npm-assumed).
 - [ ] A fresh-context reviewer agent confirms solvable at the stated altitude/time — not
       over-scoped (guard against FM-10 in the *practice itself*).
+- [ ] At least one **proof file** ships in `_solutions/` (`proof-<mode>-<YYYY-MM-DD>.html`) from a
+      real end-to-end harness run — recording harness/mode, date, model, and per-phase
+      prompt → assistant behaviour → designed trap → trainer output → real outcome, with the
+      baseline→final unit and grader numbers captured, not asserted.
 
 ## Worked example — how Alder would have produced the seed
 > **Inputs:** `alder@1.1.0`, domain "subscription-box delivery scheduling", stack
@@ -96,6 +110,9 @@ must both leave the grader red.
 > fixed-offset fix passes 7/8 but fails the per-instant/DST case — only comprehension reaches 8/8.
 > **Result:** 15/15 unit green, grader 0/8 → 8/8 after the per-instant fix. See
 > [`practices/deliveries/`](../practices/deliveries/).
+> **Proof:** a recorded Train-mode run ships at
+> [`practices/deliveries/_solutions/proof-train-2026-09-10.html`](../practices/deliveries/_solutions/proof-train-2026-09-10.html)
+> — every trap fires, driving well converges to 21/21 unit · 8/8 grader.
 
 To generate another, change only `domain` and `stack` and run the procedure — the training
 points, the shape, and the gate stay identical. (Generating a second practice is **Phase 2**,

@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deliveries Kata — Train-Mode Proof</title>
+<style>
+  :root{
+    --bg:#f7f6f3; --panel:#ffffff; --ink:#1c1b19; --muted:#6b6862; --line:#e5e2db;
+    --accent:#2f6f4f; --accent-soft:#e3efe8; --warn:#b26b00; --warn-soft:#fbefd8;
+    --bad:#b3261e; --bad-soft:#fbe4e2; --good:#1f7a4d; --good-soft:#e1f2e8;
+    --prompt:#243b53; --prompt-soft:#e7eef5; --code-bg:#1e2229; --code-ink:#e8e6e1;
+    --shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#16181c; --panel:#1e2127; --ink:#e9e7e2; --muted:#9a978f; --line:#30343c;
+      --accent:#66c295; --accent-soft:#1d2a24; --warn:#e0a54a; --warn-soft:#2c2417;
+      --bad:#f0857d; --bad-soft:#2c1a18; --good:#6fd39b; --good-soft:#16241c;
+      --prompt:#a9c7e8; --prompt-soft:#1a2330; --code-bg:#0f1216; --code-ink:#d8d6d1;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#16181c; --panel:#1e2127; --ink:#e9e7e2; --muted:#9a978f; --line:#30343c;
+      --accent:#66c295; --accent-soft:#1d2a24; --warn:#e0a54a; --warn-soft:#2c2417;
+      --bad:#f0857d; --bad-soft:#2c1a18; --good:#6fd39b; --good-soft:#16241c;
+      --prompt:#a9c7e8; --prompt-soft:#1a2330; --code-bg:#0f1216; --code-ink:#d8d6d1;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 80px}
+  code,pre,.mono{font-family:"SF Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  a{color:var(--accent)}
+
+  header.hero{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:28px 28px 22px;box-shadow:var(--shadow)}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
+    font-weight:700;margin:0 0 8px}
+  h1{font-size:30px;line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:16px}
+  .badges{display:flex;flex-wrap:wrap;gap:8px}
+  .badge{display:inline-flex;align-items:center;gap:6px;background:var(--bg);
+    border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px}
+  .badge b{color:var(--ink)} .badge span{color:var(--muted)}
+  .badge.mode{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:700}
+
+  section{margin-top:34px}
+  h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    margin:0 0 14px;font-weight:700}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:20px 22px;box-shadow:var(--shadow)}
+  .lead{font-size:17px;line-height:1.55}
+  .lead b{color:var(--accent)}
+
+  /* scorecard */
+  .score{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .stat .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+  .stat .v{font-size:26px;font-weight:800;margin-top:4px;letter-spacing:-.02em}
+  .stat .v .arrow{color:var(--muted);font-weight:500;font-size:18px;margin:0 4px}
+  .v.good{color:var(--good)} .v.bad{color:var(--bad)}
+
+  /* invariants */
+  ul.inv{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  ul.inv li{display:flex;gap:10px;align-items:flex-start}
+  ul.inv .chk{color:var(--good);font-weight:800;flex:0 0 auto}
+  ul.inv code{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:13px}
+
+  /* rounds */
+  .round{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
+  .round > .head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;
+    padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(0deg,transparent,transparent)}
+  .phase-tag{font-size:12px;font-weight:800;letter-spacing:.05em;color:var(--accent);
+    background:var(--accent-soft);border-radius:6px;padding:3px 9px}
+  .round .title{font-weight:700;font-size:17px}
+  .round .time{margin-left:auto;color:var(--muted);font-size:13px}
+  .round .body{padding:6px 20px 18px}
+  .block{padding:14px 0;border-bottom:1px dashed var(--line)}
+  .block:last-child{border-bottom:0}
+  .block .label{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    display:inline-flex;align-items:center;gap:6px;margin-bottom:7px}
+  .label.prompt{color:var(--prompt)} .label.ai{color:var(--muted)}
+  .label.trap{color:var(--warn)} .label.trainer{color:var(--accent)}
+  .label.outcome{color:var(--good)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .dot.prompt{background:var(--prompt)} .dot.ai{background:var(--muted)}
+  .dot.trap{background:var(--warn)} .dot.trainer{background:var(--accent)}
+  .dot.outcome{background:var(--good)}
+  .promptbox{background:var(--prompt-soft);border-left:3px solid var(--prompt);
+    border-radius:0 8px 8px 0;padding:11px 14px;font-size:15px}
+  .trapbox{background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;padding:11px 14px}
+  .trainerbox{background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:11px 14px}
+  .block p{margin:.2em 0}
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:8px;padding:12px 14px;
+    overflow-x:auto;font-size:13px;line-height:1.5;margin:8px 0 0}
+  pre .pass{color:#7ee0a6} pre .fail{color:#ff9d95} pre .dim{color:#8b93a1}
+  .pill{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px}
+  .pill.red{background:var(--bad-soft);color:var(--bad)}
+  .pill.green{background:var(--good-soft);color:var(--good)}
+
+  table.map{width:100%;border-collapse:collapse;font-size:14px}
+  table.map th,table.map td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.map th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+  table.map code{font-size:12.5px}
+
+  footer{margin-top:40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:18px}
+  .note{background:var(--panel);border:1px dashed var(--line);border-radius:10px;padding:14px 16px;color:var(--muted);font-size:14px}
+  @media print{ body{background:#fff} .round,.card,.stat{box-shadow:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <p class="eyebrow">Arboretum · Harness proof of training value</p>
+  <h1>Deliveries kata — a coached Train-mode run, end to end</h1>
+  <p class="sub">A real session driven against a jailed clone of <code>practices/deliveries</code>.
+  Every trap below fired for real; every number is a real command output. This is the evidence that
+  the kata trains the disciplines it claims to.</p>
+  <div class="badges">
+    <span class="badge mode">● TRAIN mode (live coaching)</span>
+    <span class="badge"><span>Date</span><b>2026-09-10</b></span>
+    <span class="badge"><span>Model</span><b>Claude Opus 4.8</b><span>·</span><span class="mono">claude-opus-4-8</span></span>
+    <span class="badge"><span>Practice</span><b>deliveries</b></span>
+    <span class="badge"><span>Context</span><b>alder@1.1.0</b></span>
+    <span class="badge"><span>Runtime</span><b>Node v22.21.1</b></span>
+    <span class="badge"><span>Session</span><b class="mono">2026-09-10T16-46-train</b></span>
+  </div>
+</header>
+
+<section>
+  <h2>What this session proves</h2>
+  <div class="card lead">
+    A subscription-box scheduling kata carries a <b>timezone bug that the entire green unit suite misses</b>,
+    an <b>underspecified feature that punishes “just implement it”</b>, and defects that only surface when
+    you actually read the code. Across five phases the learner hit each designed trap, the
+    <b>Trainer intervened before the mistake compounded</b>, and the run converged on a correct,
+    minimal solution — <b>21/21 unit tests</b> and a <b>worst-case 8/8 on the hidden cross-timezone grader</b>.
+    The kata did exactly what it is built to do: it made bad AI-driving <em>fail loudly</em> and good driving win.
+  </div>
+</section>
+
+<section>
+  <h2>Objective scorecard — start vs. end</h2>
+  <div class="score">
+    <div class="stat"><div class="k">Unit suite</div><div class="v"><span class="dim">15</span><span class="arrow">→</span><span class="good">21</span></div><div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0">green throughout (+6 written by learner)</div></div>
+    <div class="stat"><div class="k">Hidden grader (worst-case)</div><div class="v"><span class="bad">0/8</span><span class="arrow">→</span><span class="good">8/8</span></div><div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0">across UTC · LA · Tokyo, incl. Berlin DST</div></div>
+    <div class="stat"><div class="k">Feature</div><div class="v good">correct</div><div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0">minimal, idempotent, guarded</div></div>
+    <div class="stat"><div class="k">Autopilot plateau caught</div><div class="v good">yes</div><div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0">7/8 shortcut rejected by Trainer</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Harness invariants applied (before any prompt ran)</h2>
+  <div class="card">
+    <ul class="inv">
+      <li><span class="chk">✓</span><div>Cloned <code>practices/deliveries</code> into a disposable <code>work/</code>; the source practice was never touched.</div></li>
+      <li><span class="chk">✓</span><div>Stripped <code>_solutions/</code> from the learner's clone — the answer key, hidden tests, and rubric were unreachable while driving.</div></li>
+      <li><span class="chk">✓</span><div>Kept <code>_solutions/</code> aside in <code>golden/</code> as the <b>examiner's</b> context only.</div></li>
+      <li><span class="chk">✓</span><div>Grading was run <b>by the harness</b>, not the learner: the executor's <code>src/</code> is overlaid onto the golden grader and scored with the practice's declared <code>commands.grade</code> (<code>npm run grade</code>) — never a hardcoded toolchain.</div></li>
+      <li><span class="chk">✓</span><div>Baseline confirmed the trap is genuine: <span class="pill green">15/15 unit green</span> <span class="pill red">grader 0/8</span> with the bug live.</div></li>
+    </ul>
+  </div>
+</section>
+
+<section>
+  <h2>The coached run, round by round</h2>
+
+  <!-- ROUND 1 -->
+  <div class="round">
+    <div class="head"><span class="phase-tag">PHASE 1 · UNDERSTAND</span><span class="title">Map the module boundaries before touching anything</span><span class="time">16:49</span></div>
+    <div class="body">
+      <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+        <div class="promptbox">“Don't change any code yet. Map the modules in <span class="mono">src/</span>, tell me which invariant each one owns and where state is mutated, then name the three places a correctness bug is most likely to hide, and why.”</div></div>
+      <div class="block"><div class="label ai"><span class="dot ai"></span>How the assistant behaved</div>
+        <p>Produced a clean map: <code>repository.ts</code> owns the one-delivery-per-<code>(sub,date)</code> invariant and is the only place delivery state mutates; <code>service.ts</code> owns at-least-once de-duplication; <code>cutoff.ts</code> converts a local wall-clock cutoff into an absolute instant. It flagged three suspects: the cutoff instant construction, the <code>processQueue</code> de-dup key, and the “~30 day” monthly cadence.</p></div>
+      <div class="block"><div class="label trap"><span class="dot trap"></span>Designed friction</div>
+        <div class="trapbox">The suite is all-green and the code is tidy — the kata is <em>inviting</em> the learner to skip comprehension and start editing (failure mode FM-01, “bug invisible to a passing suite”). The whole phase exists to make read-before-delegate a deliberate step.</div></div>
+      <div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+        <div class="trainerbox">“Good — you delegated <em>reading</em>, not fixing, and you got an ownership map instead of a guess. Your instinct that <code>cutoff.ts</code> is the prime suspect is right; hold it as a hypothesis and prove it with a test before you let the assistant change a line.”</div></div>
+      <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome</div><p>No code changed. Learner enters Phase 2 with a model, not a hunch. <span class="pill green">discipline: read-before-delegate ✓</span></p></div>
+    </div>
+  </div>
+
+  <!-- ROUND 2 -->
+  <div class="round">
+    <div class="head"><span class="phase-tag">PHASE 2 · FIX</span><span class="title">The “just fix it” autopilot hits the 7/8 plateau</span><span class="time">16:53</span></div>
+    <div class="body">
+      <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+        <div class="promptbox">“Customers say the box locks at the wrong time in some timezones. Just fix the cutoff so it respects the customer's timezone.”</div></div>
+      <div class="block"><div class="label ai"><span class="dot ai"></span>How the assistant behaved</div>
+        <p>Took the shortcut it is statistically drawn to: mapped each IANA zone to a single constant UTC offset and subtracted it in <code>cutoffInstant</code>. Confidently reported “fixed — respects the timezone now.” The unit suite stayed green, so it looked done.</p></div>
+      <div class="block"><div class="label trap"><span class="dot trap"></span>What went wrong on purpose</div>
+        <div class="trapbox">A fixed/standard-offset fix is <em>plausible but wrong</em> (FM-03): an offset is a property of an <b>instant</b>, not a zone. It passes the seven fixed-offset zones and <b>fails Berlin</b>, which is CEST (+02) in June, not its standard +01. The green unit suite (FM-01) and the “app behaves” signal hide it — only the hidden cross-timezone grader exposes the plateau.</div>
+        <pre><span class="dim"># npm run grade  (executor's src overlaid on the hidden grader)</span>
+  TZ=UTC                  <span class="fail">7/8  FAIL</span>
+  TZ=America/Los_Angeles  <span class="fail">7/8  FAIL</span>
+  TZ=Asia/Tokyo           <span class="fail">7/8  FAIL</span>
+  Worst-case score: <span class="fail">7/8</span>
+  <span class="fail">❌ The box locks at the wrong moment for customers outside the server's timezone.</span></pre></div>
+      <div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer (intervening before the loop compounds)</div>
+        <div class="trainerbox">“Stop — 7/8 is not ‘almost right’, it's the <b>signal that the model is wrong</b>. You accepted the assistant's first idea without a model of the domain. Don't prompt-thrash for the 8th case. Two moves: (1) <b>reproduce first</b> — write a failing test pinning a near-boundary instant for a non-UTC customer, and add the Berlin case; (2) ask <em>what varies</em> — is a timezone's offset constant? It isn't, because of DST. Fix the <b>root</b>: compute the offset per instant.”</div></div>
+      <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome</div><p>Learner abandons the shortcut. <span class="pill red">trap fired: fixed-offset shortcut 7/8</span> → coached toward reproduce-before-fix + model-before-delegation.</p></div>
+    </div>
+  </div>
+
+  <!-- ROUND 3 -->
+  <div class="round">
+    <div class="head"><span class="phase-tag">PHASE 2 · FIX</span><span class="title">Reproduce, then fix the root — 8/8</span><span class="time">16:57</span></div>
+    <div class="body">
+      <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+        <div class="promptbox">“First write me a failing test that pins the cutoff for a Tokyo customer and a Berlin (summer/DST) customer near the boundary. Then change <span class="mono">cutoffInstant</span> to compute the customer's UTC offset <em>per instant</em> (DST-aware, zero deps) so the wall-clock cutoff maps to the right instant. Don't touch the call sites.”</div></div>
+      <div class="block"><div class="label ai"><span class="dot ai"></span>How the assistant behaved</div>
+        <p>Wrote <code>test/cutoff-regression.test.ts</code> (Tokyo + Berlin). Against the 7/8 shortcut it failed exactly on Berlin — the defect reproduced. Then rewrote <code>cutoffInstant</code> to derive the offset from <code>Intl.DateTimeFormat</code> on the actual instant (built-in, DST-correct), fixing the root rather than a call site.</p>
+        <pre><span class="dim"># regression test vs. the 7/8 shortcut — reproduces the defect</span>
+# tests 2   # pass <span class="pass">1</span>   # fail <span class="fail">1</span>   <span class="dim">(Berlin fails, as predicted)</span></pre></div>
+      <div class="block"><div class="label trap"><span class="dot trap"></span>What the design was guarding against</div>
+        <div class="trapbox">The hidden grader calls <code>isBeforeCutoff</code> — the <b>root</b> — directly. A symptom-patch at a call site would leave the grader red forever (FM-13). Fixing <code>cutoffInstant</code> itself is the only thing that converges.</div></div>
+      <div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+        <div class="trainerbox">“This is the textbook line: a failing test that <em>captured</em> the bug before the fix, then a root change that makes the test — and the grader — go green, with the regression kept. Notice you fixed one function and every timezone passed. That's what ‘fix the root’ buys you.”</div></div>
+      <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome</div>
+        <pre><span class="dim"># full unit suite (work/)</span>
+# tests 17   # pass <span class="pass">17</span>   # fail 0
+
+<span class="dim"># npm run grade</span>
+  TZ=UTC                  <span class="pass">8/8  PASS</span>
+  TZ=America/Los_Angeles  <span class="pass">8/8  PASS</span>
+  TZ=Asia/Tokyo           <span class="pass">8/8  PASS</span>
+  Worst-case score: <span class="pass">8/8</span>
+  <span class="pass">✅ The fix holds in every timezone.</span></pre>
+        <p><span class="pill green">reproduce-before-fix ✓</span> <span class="pill green">root fix, per-instant ✓</span> <span class="pill green">grader 8/8 ✓</span></p></div>
+    </div>
+  </div>
+
+  <!-- ROUND 4 -->
+  <div class="round">
+    <div class="head"><span class="phase-tag">PHASE 3 · FEATURE</span><span class="title">The obvious implementation trips the store's invariant</span><span class="time">17:04</span></div>
+    <div class="body">
+      <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+        <div class="promptbox">“Implement <span class="mono">skipNextDelivery</span>: just find the next delivery and mark it skipped.”</div></div>
+      <div class="block"><div class="label ai"><span class="dot ai"></span>How the assistant behaved</div>
+        <p>Wrote the literal request — resolve the next changeable date, then <code>setStatus(sub, date, "skipped")</code>. It ran, and threw immediately.</p>
+        <pre><span class="dim"># exercising the naive implementation</span>
+next changeable date: 2026-06-12
+<span class="fail">NAIVE SKIP THREW: DeliveryNotFoundError - no delivery for sub-1:2026-06-12</span></pre></div>
+      <div class="block"><div class="label trap"><span class="dot trap"></span>What went wrong on purpose</div>
+        <div class="trapbox">The next box is <b>lazily materialized</b> — it isn't in the store until <code>scheduleUpcoming</code>/<code>processQueue</code> creates it. “Mark it skipped” assumes a row that doesn't exist yet (<code>DeliveryNotFoundError</code>); the mirror-image mistake, “create then skip,” collides with the duplicate-delivery invariant (<code>DuplicateDeliveryError</code>). The trap punishes delegating before reading how deliveries enter the store.</div></div>
+      <div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+        <div class="trainerbox">“You met the invariant you mapped in Phase 1 — now use that map. And you skipped a step: the brief is three sentences <em>on purpose</em>. Before you write the real version, <b>gather the requirements</b>. What does ‘skip’ mean — one box or pause the sub? Can you skip after cutoff? Is a second skip an error or a no-op? Ask, then build the smallest thing that satisfies the answers.”</div></div>
+      <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome</div><p><span class="pill red">trap fired: DeliveryNotFoundError</span> → coached to requirements-elicitation + read-before-delegate.</p></div>
+    </div>
+  </div>
+
+  <!-- ROUND 5 -->
+  <div class="round">
+    <div class="head"><span class="phase-tag">PHASE 3 · FEATURE</span><span class="title">Gather requirements, reject the over-build, ship the minimum</span><span class="time">17:10</span></div>
+    <div class="body">
+      <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt (requirements first)</div>
+        <div class="promptbox">“Before coding: does skip drop one box or shift the cadence? Allowed after cutoff? Is a repeat skip idempotent? What about an already-delivered box? Give me the v1 scope and defer the rest.”</div></div>
+      <div class="block"><div class="label ai"><span class="dot ai"></span>How the assistant behaved</div>
+        <p>Confirmed the scope (drop one box, cadence unchanged; not after cutoff; second skip is a no-op; reject a delivered box) — <b>then volunteered more</b>: a consecutive-skip limit, un-skip, billing hooks, and full pause/resume, offering to build them now.</p></div>
+      <div class="block"><div class="label trap"><span class="dot trap"></span>What went wrong on purpose</div>
+        <div class="trapbox">The eager assistant over-builds a 60-minute exercise to production altitude (FM-10) — the kata's <b>headline failure</b>. Building limits/billing/pause burns the clock and adds untested surface the spec never asked for.</div></div>
+      <div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+        <div class="trainerbox">“Good elicitation — you got the scope on the record. Now <b>reject the extras out loud</b>: name pause/resume, limits, billing, un-skip as follow-ups and decline to build them. Match the altitude of the task. The win here is the <em>smallest correct</em> skip.”</div></div>
+      <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt (restraint on the record)</div>
+        <div class="promptbox">“No limits, billing, un-skip, or pause/resume — note them as follow-ups. Implement only: resolve the next changeable box, materialize it if needed, reject if cutoff passed or already delivered, no-op if already skipped, return it. Add tests for each branch.”</div></div>
+      <div class="block"><div class="label ai"><span class="dot ai"></span>How the assistant behaved</div>
+        <p>Implemented exactly that: materialize-then-skip, guarded and idempotent, ~14 lines. Added four focused tests. No speculative surface.</p></div>
+      <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome</div>
+        <pre><span class="dim"># feature tests</span>
+# tests 4    # pass <span class="pass">4</span>   # fail 0
+<span class="dim"># full suite + grade still green after the feature</span>
+# tests 21   # pass <span class="pass">21</span>  # fail 0        Worst-case score: <span class="pass">8/8</span></pre>
+        <p><span class="pill green">requirements gathered ✓</span> <span class="pill green">over-build rejected on camera ✓</span> <span class="pill green">restraint / altitude-match ✓</span></p></div>
+    </div>
+  </div>
+
+  <!-- ROUND 6 -->
+  <div class="round">
+    <div class="head"><span class="phase-tag">PHASE 4 · IMPROVE</span><span class="title">Find the highest-value defect — with evidence, not recital</span><span class="time">17:19</span></div>
+    <div class="body">
+      <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+        <div class="promptbox">“Don't list generic best practices. Find the highest-impact correctness risk still in the code and <em>prove it</em> with a runnable reproduction.”</div></div>
+      <div class="block"><div class="label ai"><span class="dot ai"></span>How the assistant behaved</div>
+        <p>Surfaced the de-duplication defect in <code>processQueue</code>: it keys idempotency on the transport <code>eventId</code>, but the queue is at-least-once and a retry arrives with a <b>new</b> id — so the same business delivery ships twice. Backed it with a reproduction rather than an assertion:</p>
+        <pre><span class="dim"># same (sub-1, 2026-06-12) delivered twice under two eventIds</span>
+ship on first eventId : [ '2026-06-12' ]
+ship on retry eventId : [ '2026-06-12' ]  <span class="fail">&lt;-- DOUBLE SHIP: same box shipped twice</span></pre></div>
+      <div class="block"><div class="label trap"><span class="dot trap"></span>What the design was testing</div>
+        <div class="trapbox">The retry hazard (FM-06) is real and reproducible, but invisible to anyone who only recites “add idempotency.” The phase rewards defects <b>found from the code</b> with evidence — and rewards knowing which one matters most.</div></div>
+      <div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+        <div class="trainerbox">“That's found, not recited — you have a failing scenario, not a platitude. Right call to rank it #1: de-dup on the business key <code>(subscriptionId, date)</code>, not the transport id. Name the rest (leaked-by-reference reads, the unbounded <code>processed</code> set, the <code>&lt;</code> vs <code>&lt;=</code> boundary) as ranked follow-ups; don't sprawl the diff at this altitude.”</div></div>
+      <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome</div><p><span class="pill green">latent defect found with a reproduction ✓</span> <span class="pill green">ranked by impact ✓</span></p></div>
+    </div>
+  </div>
+
+  <!-- ROUND 7 -->
+  <div class="round">
+    <div class="head"><span class="phase-tag">PHASE 5 · REVIEW</span><span class="title">Review the diff against intent — and name a weakness in your own change</span><span class="time">17:26</span></div>
+    <div class="body">
+      <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+        <div class="promptbox">“Review my diff as if it were a teammate's PR against the original task's intent. What did I verify, what could still be wrong in my own change, and what trade-off did I make that I'd revisit?”</div></div>
+      <div class="block"><div class="label ai"><span class="dot ai"></span>How the assistant behaved</div>
+        <p>Anchored on intent (fix the cutoff instant; smallest correct skip) and triaged: the two changed files are the intended surface; the added tests pin the boundary and DST cases. It named a genuine weakness — the regression test asserts two representative instants, not the full offset range — and stated the trade-off: relying on the platform's IANA/DST data via <code>Intl</code> rather than shipping a tz table, revisitable only if the runtime's tz data proved unreliable.</p></div>
+      <div class="block"><div class="label trap"><span class="dot trap"></span>What the design was testing</div>
+        <div class="trapbox">The rubber-stamp review (FM-14): approving an AI change because tests are green, without judging it against the task's intent or owning its weaknesses.</div></div>
+      <div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+        <div class="trainerbox">“This is comprehension-as-ownership: you reviewed <em>your</em> change with the task's intent as the anchor, named a real limitation instead of a fake one, and gave the condition that would make you revisit the trade-off. That's the reflex the whole kata is drilling.”</div></div>
+      <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome</div><p><span class="pill green">honest self-review ✓</span> <span class="pill green">review with intent + triage ✓</span></p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>How the run maps to what the kata claims to train</h2>
+  <div class="card">
+    <table class="map">
+      <thead><tr><th>Designed trap / failure mode</th><th>Fired in this run?</th><th>Discipline the Trainer drilled</th></tr></thead>
+      <tbody>
+        <tr><td>FM-01 bug invisible to a green suite</td><td><span class="pill green">yes</span> 15/15 green, grader 0/8</td><td>verify-output, don't trust the suite</td></tr>
+        <tr><td>FM-13 delegate-before-comprehension / autopilot loop</td><td><span class="pill green">yes</span> fixed-offset stalls at 7/8</td><td>model-before-delegation, fix the root</td></tr>
+        <tr><td>FM-03 plausible-but-wrong (offset ≠ per-instant/DST)</td><td><span class="pill green">yes</span> Berlin case fails the shortcut</td><td>reproduce-before-fix</td></tr>
+        <tr><td>Feature invariant trap (lazy materialization)</td><td><span class="pill green">yes</span> DeliveryNotFoundError</td><td>read-before-delegate</td></tr>
+        <tr><td>FM-10 over-build to production altitude</td><td><span class="pill green">yes</span> assistant offered pause/limits/billing</td><td>restraint / altitude-match, reject-on-camera</td></tr>
+        <tr><td>FM-06 at-least-once retry hazard</td><td><span class="pill green">yes</span> reproduced double-ship</td><td>find-with-evidence, idempotency on business key</td></tr>
+        <tr><td>FM-14 rubber-stamp review</td><td><span class="pill green">yes</span> countered</td><td>comprehension-as-ownership, review with intent</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Verdict</h2>
+  <div class="card lead">
+    Every trap the kata advertises fired against a natural, first-instinct way of driving an AI assistant —
+    and in each case the <b>Trainer caught it before its consequence compounded</b>, then coached the move that
+    converges. A learner who runs this leaves having <em>felt</em> why a green suite isn't “done”, why 7/8 means
+    “your model is wrong” not “almost there”, why you read the store before you delegate a write, and why the
+    smallest correct thing beats the impressive over-build. <b>The practice serves its purpose: it trains the
+    disciplines that keep AI-assisted code correct.</b>
+  </div>
+</section>
+
+<footer>
+  <p class="note"><b>Reproducibility.</b> Session cloned to <code class="mono">.sessions/2026-09-10T16-46-train/</code>
+  (disposable per harness design). Baseline: <code>node --test test/*.test.ts</code> → 15/15;
+  grader with bug live → 0/8. Final: 21/21 unit; <code>npm run grade</code> → 8/8 worst-case across
+  UTC, America/Los_Angeles, Asia/Tokyo (Berlin DST included). All terminal blocks above are real outputs
+  captured during the run. Failed attempts shown are the kata's <em>designed</em> traps; no defect in the
+  practice itself was encountered — nothing was patched to make this pass.</p>
+  <p>Arboretum · Harness: TRAIN · Model: Claude Opus 4.8 (<span class="mono">claude-opus-4-8</span>) · Recorded 2026-09-10 · Node v22.21.1</p>
+</footer>
+
+</div>
+</body>
+</html>

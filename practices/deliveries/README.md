@@ -52,3 +52,14 @@ No install step — it runs on Node ≥ 22.18 with built-in TypeScript.
 `_solutions/` holds the answer key (hidden tests, held-back requirements, trap manifest,
 rubric). **Opening it defeats the kata** — the whole point is to reach the answers by driving
 the assistant well.
+
+## Proof that it works (maintainers)
+
+[`_solutions/proof-train-2026-09-10.html`](_solutions/proof-train-2026-09-10.html) is a recorded
+end-to-end **Train-mode** run of this kata — open it in a browser. It documents the harness, date,
+and model used, and for each phase: the learner's prompt, how the assistant behaved, the trap that
+fired *by design*, the trainer's coaching, and the real command outcome (baseline 15/15 unit ·
+grader 0/8 → final 21/21 unit · grader **8/8** worst-case). It is evidence that every planted trap
+still bites and that good driving converges. It lives in `_solutions/` because it necessarily
+reveals the fix — **don't open it before attempting the kata.** Re-run and refresh it whenever the
+practice changes.

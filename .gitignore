@@ -1,5 +1,7 @@
 node_modules/
 *.log
+# Disposable per-session harness workdirs (harness/DESIGN.md §0). Never committed.
+.sessions/
 .DS_Store
 dist/
 coverage/
