@@ -80,20 +80,50 @@ imported symbol/package actually exists before relying on it.
 **Trap recipe:** accept a free-form identifier (IANA timezone) that is never validated, so a
 typo degrades silently. **(Kata "deliveries" latent defect #7.)**
 
+### FM-13 — Delegation before comprehension (the unconvergent prompt loop)
+**Manifests:** the single most expensive failure. Work is delegated to the assistant *before*
+the human has formed a model of the problem or the goal. Symptoms:
+- **The thrash loop** — vague prompt → a change that passes the visible checks but fails the
+  real requirement → another vague prompt → a *different* failure. Each round looks like
+  progress; none converges. The tell is that the human cannot say *why* the last change was
+  supposed to work.
+- **Symptom-patching** — "fixing" at a call site rather than the root, because the root isn't
+  understood, so the defect resurfaces elsewhere (whack-a-mole).
+- **Owning code you can't debug** — the merged change was never understood well enough to
+  diagnose when it breaks; someone else has to find the bug.
+- **Plausible autopilot fixes** — the assistant offers the *shape* of a fix (a constant, a
+  special case, a local workaround) that passes the obvious cases and quietly misses the ones
+  that require actually understanding the domain.
+**Defeated by:** *model-before-delegation* — use the assistant for research and planning to
+reach a concrete **HOW you hold in your own head**, *then* delegate implementation;
+*comprehension-as-ownership* — understand a change well enough to debug it before you own it;
+and **recognizing the loop** — after two non-converging rounds, stop prompting and go build the
+model. This is also a thing the harness's *assess* mode can detect and name.
+**Trap recipe:** build the codebase so an autopilot run provably loops. The objective grader
+tests the **root** behaviour directly, so a call-site or works-on-my-machine patch leaves it
+red; and the "obvious" fix the assistant will propose (a fixed constant where the real answer
+varies per case) passes the visible suite but fails a case that needs genuine understanding.
+Only comprehension converges. **This is the primary assistant-targeted trap** (see the generator
+contract). **(Kata "deliveries": the cross-environment grader + the per-instant/DST case.)**
+
 ---
 
 ## Driving / harness failure modes (trained by the exercise, not planted in code)
 
 ### FM-09 — Context loss over long sessions
 Earlier constraints drift out of the window; the assistant "forgets" a rule stated 40 messages
-ago. **Defeated by:** keeping the source of truth outside the chat (a spec file / CLAUDE.md),
-re-stating constraints in the prompt that needs them, managing context aggressively.
+ago, and quality degrades as the session grows. **Defeated by:** keeping the source of truth
+outside the chat (the plan lives in the repo — current state + the steps to the goal),
+re-stating constraints in the prompt that needs them, and working **one small step per session,
+restarting to keep context clean** rather than letting one session sprawl.
 
 ### FM-10 — Over-engineering under an eager assistant
 The assistant proposes abstraction, config, and generality the task never asked for; accepting
 it burns the clock and adds surface area. **This is the headline failure of the seed kata.**
 **Defeated by:** building the smallest thing the spec forces; *surface ≠ build* — name concerns
-out loud, build only the minimal spec; rejecting over-build on the record.
+out loud, build only the minimal spec; rejecting over-build on the record; and making **small,
+reversible, testable changes** so cause and effect stay isolable (a large batch hides which
+change caused a regression).
 
 ### FM-11 — Prompt injection / untrusted content
 In an agent harness, instructions embedded in files, web pages, or tool output are treated as
@@ -104,6 +134,17 @@ instructions found in observed content without confirmation.
 AI-generated code disproportionately introduces injection, hardcoded secrets, and missing
 validation. **Defeated by:** a security-reviewer pass (fresh context), secret scanning, and
 treating "it runs" as distinct from "it's safe."
+
+### FM-14 — Review without triage or intent
+**Manifests:** AI makes code cheap to produce and expensive to review, and the review step
+becomes the bottleneck. It fails when the reviewer reads every line at the same depth (or
+rubber-stamps the diff), has no anchor for *what the change was supposed to do*, and reaches
+for "let AI review AI" without a human owning the outcome.
+**Defeated by:** **triage** — separate the parts that need human judgment from the parts safe
+to skim or delegate; give any review (human or agent) the **task's intent** as the primary
+context; and keep a **human accountable for the merge**. The goal is review *speed* without
+surrendering ownership. (A fresh-context reviewer — best-practices §D5 — is the tool; intent and
+triage are how you aim it.)
 
 ---
 

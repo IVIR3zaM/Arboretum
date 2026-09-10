@@ -18,7 +18,7 @@ semver *within* a tree (`alder@1.0.0` → `alder@1.1.0`).
 ## Assigned
 | Version | Tree | Why this tree |
 |---|---|---|
-| v1 | **Alder** | Nitrogen-fixing pioneer — the first tree on bare ground, enriching the soil for everything after. The foundational Context: core disciplines, FM-01..FM-12, the generation spec, one calibrated kata. |
+| v1 | **Alder** | Nitrogen-fixing pioneer — the first tree on bare ground, enriching the soil for everything after. The foundational Context: core disciplines, FM-01..FM-14, the generation spec, one calibrated kata. |
 
 ## Candidates for later versions (not yet assigned)
 - **Rowan / Birch** — a second pioneer pass: more plantable failure modes, more stacks, the
@@ -29,4 +29,4 @@ semver *within* a tree (`alder@1.0.0` → `alder@1.1.0`).
   tiers, and an agent-harness track.
 
 The seed kata pins the exact version it was built for (`practice.json` → `contextVersion:
-alder@1.0.0`), so a practice always declares which Context it trains to.
+alder@1.1.0`), so a practice always declares which Context it trains to.

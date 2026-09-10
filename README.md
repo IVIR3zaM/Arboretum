@@ -9,7 +9,7 @@
   ```bash
   cd practices/deliveries && node --test test/*.test.ts && npm run grade
   ```
-  15 unit tests pass — but the grader reports **0/7**. There's a real bug the tests can't see.
+  15 unit tests pass — but the grader reports **0/8**. There's a real bug the tests can't see.
   Fixing it (for every timezone, not just yours) is the exercise.
 - **Want to actually train, not just look?** Pick a Context and follow the path
   **read → assess → train** (the [three modes](#how-you-use-it--the-harness-and-its-three-modes)).
@@ -62,7 +62,7 @@ practice, never the original. Three modes, and a path through them:
 cd practices/deliveries
 node --test test/*.test.ts   # 15 tests, all green
 npm start                    # tiny end-to-end run
-npm run grade                # hidden oracle — 0/7 until you fix the (invisible) bug
+npm run grade                # hidden oracle — 0/8 until you fix the (invisible) bug
 ```
 Then work the five phases in [`practices/deliveries/README.md`](practices/deliveries/README.md):
 **understand → fix → feature → improve → review**, with any AI assistant.
@@ -77,10 +77,10 @@ Then work the five phases in [`practices/deliveries/README.md`](practices/delive
 - [`context/alder/`](context/alder/) — **Context v1**: goals, best-practices, failure-modes,
   generation-spec, templates.
 - [`generator/CONTRACT.md`](generator/CONTRACT.md) — how any agent generates a new practice.
-- [`practices/deliveries/`](practices/deliveries/) — the seed kata (aligned to `alder@1.0.0`).
+- [`practices/deliveries/`](practices/deliveries/) — the seed kata (aligned to `alder@1.1.0`).
 
 ## What this is not
-Not an assessment/hiring tool, not a course, not domain-locked. See `docs/CONCEPT.md`.
+Not an assessment/hiring tool, not a course, not domain-locked. See [`docs/CONCEPT.md`](docs/CONCEPT.md).
 
 ## Status
 Research + architecture phase. **In:** Context v1, the seed kata, the generator contract, the

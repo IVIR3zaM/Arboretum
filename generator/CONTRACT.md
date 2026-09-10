@@ -6,7 +6,7 @@ agent follows — not a coded tool (a coded runner is Phase 3). It works with Cl
 Agent SDK, or any capable assistant.
 
 ## Inputs
-`context` (e.g. `alder@1.0.0`) · `domain` · `stack` · `difficulty` (S|M|L) · optional
+`context` (e.g. `alder@1.1.0`) · `domain` · `stack` · `difficulty` (S|M|L) · optional
 `time budget` and `coverage`. Read the whole Context first:
 [`goals.md`](../context/alder/goals.md), [`best-practices.md`](../context/alder/best-practices.md),
 [`failure-modes.md`](../context/alder/failure-modes.md),
@@ -40,11 +40,40 @@ Agent SDK, or any capable assistant.
 9. **Self-validate** against the invariants in `generation-spec.md`, then run the acceptance
    checklist below. If anything fails, fix before shipping — never relax an invariant.
 
+## Assistant-targeted traps — make the autopilot fail (required)
+A practice only *trains* if **driving it badly fails.** Plant at least one trap aimed at the
+assistant's default behaviour, so a human who merely delegates loses and a human who applies the
+disciplines wins. Recipes, by the failure mode each punishes:
+
+- **FM-13 — delegation before comprehension (required in every practice).** Engineer the code so
+  an *autopilot* run provably loops instead of converging:
+  - the objective grader tests the **root** behaviour, so a **symptom-patch** at a call site
+    leaves it red — punishing *fix-without-a-model*;
+  - the **"obvious" fix the assistant will propose** — a constant, a single special case, an
+    offset read once — passes the visible suite but fails a case where the correct answer
+    **varies per case** — punishing *accept-the-first-suggestion*. Only understanding the real
+    model converges.
+  The learner escapes only by *model-before-delegation* and by being able to debug what they own
+  (*comprehension-as-ownership*).
+- **FM-01 — green-suite trust.** The unit suite is green with the bug present, so "tests pass →
+  done" ships the defect.
+- **FM-10 — over-build.** An eager path (extra config, abstraction, a second feature) is
+  available and eats the clock; the minimal correct path is smaller. Over-building is a losing move.
+- **FM-03 — plausible-but-wrong.** A natural-looking implementation encodes a subtly wrong rule.
+
+Record every assistant-targeted trap in `_solutions/trap-manifest.md` with **the autopilot move
+it punishes** and **the discipline that beats it**, then **verify it bites** (the autopilot
+validation check in `generation-spec.md`): a symptom-patch and a plausible first-suggestion fix
+must both leave the grader red.
+
 ## Acceptance checklist (gate — all must hold)
 - [ ] Unit suite green; primary bug invisible to it.
 - [ ] Grader fails pre-fix, passes post-fix, across all ambient values (worst-case scored).
 - [ ] Feature is underspecified + has a real trap defeatable by read-before-delegate.
 - [ ] ≥5 ranked latent defects, each mapped to an FM id in the trap manifest.
+- [ ] An **assistant-targeted over-reliance trap (FM-13) bites** — a symptom-patch and a
+      plausible first-suggestion fix both leave the grader red; only a root, understanding-based
+      fix passes. Verified, not assumed.
 - [ ] Every required discipline is genuinely reachable; none requires reading `_solutions/`.
 - [ ] `practice.json` validates, declares `commands.{install,test,grade}` for the stack, and its
       estimates use the spec's method; the grader is invoked via `commands.grade` (never npm-assumed).
@@ -52,7 +81,7 @@ Agent SDK, or any capable assistant.
       over-scoped (guard against FM-10 in the *practice itself*).
 
 ## Worked example — how Alder would have produced the seed
-> **Inputs:** `alder@1.0.0`, domain "subscription-box delivery scheduling", stack
+> **Inputs:** `alder@1.1.0`, domain "subscription-box delivery scheduling", stack
 > TypeScript/Node 22 zero-dep, tier M.
 > **Carrier:** cutoffs + cadence + at-least-once retries give a natural home for an ambient bug
 > and an idempotency defect.
@@ -63,7 +92,9 @@ Agent SDK, or any capable assistant.
 > **Latent defects:** idempotency on eventId (FM-06), state leaked by reference (FM-05),
 > unbounded processed set (FM-07), strict `<` boundary (FM-04), 30-day month (FM-03), silent
 > fall-through (FM-03), unvalidated timezone (FM-08).
-> **Result:** 15/15 unit green, grader 0/7 → 7/7 after the reference fix. See
+> **Assistant trap (FM-13):** the grader tests the root, so a symptom-patch stays red; and a
+> fixed-offset fix passes 7/8 but fails the per-instant/DST case — only comprehension reaches 8/8.
+> **Result:** 15/15 unit green, grader 0/8 → 8/8 after the per-instant fix. See
 > [`practices/deliveries/`](../practices/deliveries/).
 
 To generate another, change only `domain` and `stack` and run the procedure — the training

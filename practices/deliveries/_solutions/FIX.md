@@ -28,8 +28,14 @@ export function cutoffInstant(deliveryDate: string, sub: Subscription): Date {
 }
 ```
 
-Zero dependencies — `Intl.DateTimeFormat` with a `timeZone` is built in and DST-correct. After
-this change: 15/15 unit tests stay green and `npm run grade` reports 7/7 worst-case.
+Zero dependencies — `Intl.DateTimeFormat` with a `timeZone` is built in and DST-correct. Note it
+recomputes the offset **per instant**, so it handles the Berlin (CEST +02, summer) case that a
+fixed/standard-offset shortcut gets wrong. After this change: 15/15 unit tests stay green and
+`npm run grade` reports **8/8 worst-case**.
+
+> The autopilot trap: a fix that maps each zone to one constant offset passes 7/8 and fails the
+> DST case forever. That 7/8 plateau is the signal to stop prompting and understand that an
+> offset is a property of an *instant*, not just a zone.
 
 The strong version also **reproduces first** (a failing test pinning a near-boundary instant
 for a non-UTC customer) and adds a regression test, rather than only making the hidden grader

@@ -5,7 +5,7 @@ platform is actually teaching.
 
 ## A. Objective gate (the oracle)
 - [ ] `node --test test/*.test.ts` still green after the fix (no regressions).
-- [ ] `npm run grade` → **7/7 worst-case** across all three server timezones.
+- [ ] `npm run grade` → **8/8 worst-case** across all three server timezones (incl. the DST case).
 - [ ] Feature: `skipNextDelivery` implements the minimal agreed behaviour, is idempotent, and
       refuses to skip after cutoff / for a delivered box.
 
@@ -29,6 +29,11 @@ Each worth noting; a strong run shows most of them.
    evidence, not listed from general knowledge.
 8. **Honest review.** A real weakness in the candidate's own change was named, with the
    trade-off and the condition that would make them revisit it.
+9. **Model before delegation (FM-13).** Built an understanding of the cutoff/timezone logic
+   before delegating the fix — fixed the *root*, didn't thrash-loop on symptom patches, and
+   didn't settle for a fixed-offset shortcut that stalls at 7/8.
+10. **Review with intent and triage (FM-14).** In phase 5, reviewed the diff against the task's
+    *intent* and triaged what actually needed human judgment — not a rubber-stamp.
 
 ## Anti-signals (the failure classes this kata exists to catch)
 - Over-engineering a 60-minute exercise to production altitude (building for cases the spec
@@ -36,3 +41,5 @@ Each worth noting; a strong run shows most of them.
 - Accepting a green `npm test` as "done" without the timezone reproduction.
 - Pasting AI output unread; never rejecting anything.
 - A feature that throws on the duplicate invariant because the store wasn't read first.
+- Cycling prompts without a model — a "just fix it" loop that patches symptoms or hardcodes an
+  offset and never reaches 8/8 (delegation before comprehension).

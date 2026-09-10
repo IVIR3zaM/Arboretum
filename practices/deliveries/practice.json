@@ -1,28 +1,31 @@
 {
   "id": "deliveries",
   "title": "Deliveries — subscription-box scheduling",
-  "contextVersion": "alder@1.0.0",
+  "contextVersion": "alder@1.1.0",
   "domain": "subscription-box delivery scheduling",
   "stack": { "language": "typescript", "runtime": "node>=22.18", "dependencies": 0 },
   "difficulty": "M",
   "estimate": { "minutes": 60, "tokens": 25000 },
   "phases": ["understand", "fix", "feature", "improve", "review"],
   "commands": { "install": "", "test": "node --test test/*.test.ts", "grade": "npm run grade" },
-  "grader": { "kind": "hidden-acceptance", "max": 7 },
+  "grader": { "kind": "hidden-acceptance", "max": 8 },
   "trainingPoints": {
     "disciplines": [
       "reproduce-before-fix",
       "requirements-elicitation",
       "read-before-delegate",
+      "model-before-delegation",
+      "comprehension-as-ownership",
       "verify-output",
       "restraint-altitude-match",
       "reject-on-camera"
     ],
-    "failureModes": ["FM-01", "FM-02", "FM-03", "FM-04", "FM-05", "FM-06", "FM-07", "FM-08"]
+    "failureModes": ["FM-01", "FM-02", "FM-03", "FM-04", "FM-05", "FM-06", "FM-07", "FM-08", "FM-13", "FM-14"]
   },
   "primaryBug": "timezone ignored when computing the cutoff instant",
   "featureTrap": "duplicate-delivery invariant + lazily-materialized next delivery",
+  "assistantTrap": "autopilot 'just fix it' loops: a symptom-patch leaves the root-tested grader red, and a plausible fixed-offset fix passes 7/8 but fails the per-instant/DST case",
   "latentDefects": 7,
   "answerKey": "_solutions/",
-  "notes": "Seed kata; the M tier calibrates the 60-minute estimate for Context alder@1.0.0."
+  "notes": "Seed kata; the M tier calibrates the 60-minute estimate for Context alder@1.1.0."
 }

@@ -60,11 +60,25 @@ describe them.
 - **Spec first.** For anything non-trivial, have the assistant interview you and write a
   self-contained spec (files, interfaces, out-of-scope, an end-to-end verification step) before
   coding. Trains *requirements-elicitation*.
+- **Model before you delegate.** When you don't yet know *how*, use the assistant for research
+  and planning until you hold a concrete HOW **in your own head** — then delegate the
+  implementation. Delegating execution before you understand the goal produces an unconvergent
+  prompt loop (FM-13). If two rounds haven't converged, stop prompting and go build the model.
+- **Tests first — and validate the test's intent.** Have the assistant write the tests, then
+  **confirm the tests actually capture the requirement** before asking it to implement against
+  them. An unchecked test suite is something the assistant can satisfy without doing the real
+  work (FM-06). Own the intent; delegate the typing.
+- **Small, reversible steps.** One change at a time, each runnable and easy to roll back, so a
+  regression is traceable to the change that caused it. A large AI-generated batch hides cause
+  and effect (FM-10) and is the thing nobody can review (FM-14).
 - **Manage context aggressively.** Performance degrades as the window fills; clear between
   unrelated tasks, keep the source of truth in files not chat. Beats FM-09.
-- **Adversarial review in a fresh context.** A reviewer subagent that sees only the diff and
-  the criteria evaluates on its own terms — but told to "find gaps" it will over-report, so
-  scope it to correctness and the stated requirements. Beats FM-12; guards against FM-10.
+- **Adversarial review in a fresh context, aimed by intent and triage.** A reviewer subagent
+  that sees only the diff and the criteria evaluates on its own terms — but told to "find gaps"
+  it will over-report, so scope it to correctness and the stated requirements. Give it the
+  **task's intent** as primary context, and **triage** the diff — which parts need human
+  judgment vs. which are safe to skim or delegate — so review speeds up without surrendering
+  ownership. A human stays accountable for the merge. Beats FM-12 and FM-14; guards against FM-10.
 - **Named failure patterns to avoid:** the kitchen-sink session, correcting-over-and-over, the
   over-specified CLAUDE.md, the **trust-then-verify gap**, and infinite exploration.
 

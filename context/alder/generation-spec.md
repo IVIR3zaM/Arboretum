@@ -13,7 +13,8 @@ stack that trains the **same points** as the seed. The agent reads this file plu
   a learner can run it with no setup.
 - **difficulty tier** — `S` | `M` | `L` (drives size and the time/token estimate).
 - **time budget** — optional override of the tier default.
-- **coverage** — which disciplines/failure modes to train (default: the core six in goals.md).
+- **coverage** — which disciplines/failure modes to train (default: the core disciplines in
+  goals.md, including model-before-delegation; **FM-13 is required by default** — see invariant 9).
 
 ## Required output (the fixed practice shape)
 ```
@@ -47,6 +48,14 @@ stack that trains the **same points** as the seed. The agent reads this file plu
    kata declares `cargo test` / `cargo run --bin grade`; a Go kata `go test ./...`; a Python kata
    `pytest` / `python grade.py`. **The harness and AGENTS.md read these; they hardcode nothing.**
    A practice whose grader can only be invoked as `npm run grade` is a stack leak — fix it here.
+9. **An assistant-targeted over-reliance trap (FM-13) is present** — a place engineered so an
+   *autopilot* run (vague prompt, delegate-before-understand, accept-the-first-suggestion)
+   provably loops instead of converging: the objective grader tests the **root** behaviour, so a
+   symptom-patch at a call site leaves it red; and the "obvious" fix the assistant proposes (a
+   constant or special-case where the correct answer varies per case) passes the visible suite
+   but fails a case that needs genuine understanding. Only *model-before-delegation* and
+   *comprehension-as-ownership* converge. Distinct from the feature trap (#3, which targets
+   reading the code): this one targets *delegating before understanding the goal*.
 
 ## Difficulty tiers
 | Tier | Source files | ~LOC | Phases | Time |
@@ -69,5 +78,8 @@ stack that trains the **same points** as the seed. The agent reads this file plu
   the declared `commands.test` / `commands.grade`, never an assumed `npm`.
 - `practice.json` validates, declares `commands.{install,test,grade}`, and every
   `trainingPoints.failureModes` id exists in `failure-modes.md` and appears in the trap manifest.
+- **Autopilot check (FM-13):** a symptom-patch and a plausible first-suggestion fix are both
+  verified to leave the grader red; only the root, understanding-based fix reaches full marks.
+  The trap must bite an autopilot run, not just a careless one.
 - A reviewer agent (fresh context) confirms each required discipline is genuinely reachable and
   the exercise is solvable at the stated altitude/time — not over-scoped.

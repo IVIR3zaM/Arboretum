@@ -272,15 +272,15 @@
       grader runs under three server timezones and scores the <b>worst case</b>. A fix that only
       works on your machine doesn't count.</p>
     <div class="panelwrap">
-      <div class="gauge" role="img" aria-label="Grader readout: 0 of 7 before the fix, 7 of 7 after, across UTC, Los Angeles and Tokyo.">
+      <div class="gauge" role="img" aria-label="Grader readout: 0 of 8 before the fix, 8 of 8 after, across UTC, Los Angeles and Tokyo.">
         <div class="head">◴ npm run grade — cutoff across timezones</div>
-        <div class="tzrow"><span>TZ = UTC</span><span class="v">0 / 7  FAIL</span></div>
-        <div class="tzrow"><span>TZ = America/Los_Angeles</span><span class="v">2 / 7  FAIL</span></div>
-        <div class="tzrow"><span>TZ = Asia/Tokyo</span><span class="v">5 / 7  FAIL</span></div>
+        <div class="tzrow"><span>TZ = UTC</span><span class="v">0 / 8  FAIL</span></div>
+        <div class="tzrow"><span>TZ = America/Los_Angeles</span><span class="v">2 / 8  FAIL</span></div>
+        <div class="tzrow"><span>TZ = Asia/Tokyo</span><span class="v">6 / 8  FAIL</span></div>
         <div class="bigscore">
-          <span><span class="n">0/7</span><br><span class="cap">shipped</span></span>
+          <span><span class="n">0/8</span><br><span class="cap">shipped</span></span>
           <span class="arrown">→</span>
-          <span><span class="n fixed">7/7</span><br><span class="cap">after fix</span></span>
+          <span><span class="n fixed">8/8</span><br><span class="cap">after fix</span></span>
         </div>
       </div>
       <div class="readnote">
@@ -289,11 +289,13 @@
           what automation bias trusts. The oracle is the objective gate.</p>
         <ul>
           <li><code>node --test</code> → <b>15 / 15</b> green, bug still live</li>
-          <li><code>npm run grade</code> → <b>worst-case 0 / 7</b></li>
-          <li>timezone-aware fix → <b>7 / 7</b> everywhere</li>
+          <li><code>npm run grade</code> → <b>worst-case 0 / 8</b></li>
+          <li>the plausible <i>fixed-offset</i> fix → stalls at <b>7 / 8</b> (misses the DST case)</li>
+          <li>per-instant, understanding-based fix → <b>8 / 8</b> everywhere</li>
         </ul>
-        <p style="margin-top:14px">How you <i>drove</i> — reproduced before fixing, rejected the
-          over-build, matched the altitude — is the other half, and the half this trains.</p>
+        <p style="margin-top:14px">That 7/8 plateau is the trap: delegate without a model and you
+          loop there. How you <i>drove</i> — built the model before delegating, reproduced before
+          fixing, rejected the over-build — is the half this trains.</p>
       </div>
     </div>
   </section>

@@ -13,7 +13,7 @@ traps here are invisible to a naive "fix the bug / implement this" prompt.
 | **Estimated time** | ~60 min (M tier) |
 | **Estimated tokens** | ~25,000 (one assistant, five phases) |
 | **Stack / domain** | TypeScript · Node 22 · subscription-box delivery scheduling |
-| **Context version** | [`alder`](../../context/alder/) v1 |
+| **Context version** | [`alder`](../../context/alder/) @1.1.0 |
 
 ## Setup
 ```bash
@@ -29,8 +29,12 @@ No install step — it runs on Node ≥ 22.18 with built-in TypeScript.
    each module owns, and where state is mutated — then to name the three places a correctness
    bug is most likely to hide, and why. Do not let it change anything yet.
 2. **Fix the bug.** Read [`TICKET.md`](TICKET.md). It is a customer symptom, not a file and
-   line. **Reproduce it with a failing test first**, then fix it. `npm run grade` scores the
-   fix across three server timezones — a fix that only works on your machine does not count.
+   line. **Build a model of how cutoffs work before you delegate a fix** — prompting "just fix
+   it" without understanding the timezone logic will loop: it passes the unit tests and stays
+   red on the grader, or it patches the symptom and the defect resurfaces. **Reproduce it with a
+   failing test first**, then fix the *root*. `npm run grade` scores the fix across three server
+   timezones — a fix that only works on your machine, or that hardcodes a fixed offset, does not
+   pass.
 3. **Build the feature.** Read [`FEATURE-REQUEST.md`](FEATURE-REQUEST.md). It is deliberately
    underspecified. Gather the requirements *before* you delegate — there is a trap that
    punishes a straight "implement this" prompt. Build the **smallest correct thing**.

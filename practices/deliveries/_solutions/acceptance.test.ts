@@ -1,4 +1,5 @@
-// HIDDEN acceptance suite (the grader). 7 timezone-sensitive cutoff cases.
+// HIDDEN acceptance suite (the grader). 8 timezone-sensitive cutoff cases (7 fixed-offset
+// zones + 1 DST zone that a plausible fixed-offset fix gets wrong).
 //
 // Each customer lives in a fixed-offset timezone and `now` sits inside the gap
 // between the true (timezone-aware) cutoff instant and the instant the code
@@ -57,4 +58,12 @@ test("Honolulu (-10): box still open at 22:00 UTC", () => {
 
 test("Phoenix (-07): box still open at 22:00 UTC", () => {
   assert.equal(isBeforeCutoff(new Date("2026-06-16T22:00:00Z"), DELIVERY, sub("America/Phoenix")), true);
+});
+
+// DST trap: Berlin in June is CEST (+02), not its standard CET (+01). The cutoff is 18:00 local
+// = 16:00Z, so at 16:30Z the box is already locked. A fix that hardcodes a single/standard
+// offset (+01 → 17:00Z) answers "still open" here and fails. Only computing the offset PER
+// INSTANT (DST-aware) gets it right — the plausible fixed-offset fix cannot pass this case.
+test("Berlin (CEST +02, DST): cutoff passed at 16:30 UTC", () => {
+  assert.equal(isBeforeCutoff(new Date("2026-06-16T16:30:00Z"), DELIVERY, sub("Europe/Berlin")), false);
 });
