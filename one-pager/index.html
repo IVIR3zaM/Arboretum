@@ -1,0 +1,310 @@
+<title>Arboretum</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+  :root {
+    --ground: #f6f3ec;
+    --panel: #fffdf8;
+    --panel-2: #efe9dd;
+    --ink: #1a2426;
+    --ink-soft: #4c585a;
+    --ink-faint: #7b8688;
+    --line: #ddd4c4;
+    --accent: #b46b12;        /* signal amber, darkened for contrast on paper */
+    --accent-bright: #e0973c;
+    --sage: #567050;          /* alder / context */
+    --coral: #bb4a36;         /* trap / failure */
+    --shadow: 0 1px 2px rgba(26,36,38,.06), 0 8px 24px rgba(26,36,38,.05);
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --body: "Hanken Grotesk", system-ui, -apple-system, sans-serif;
+    --display: "Fraunces", Georgia, serif;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --ground: #0f1b1d;
+      --panel: #162427;
+      --panel-2: #1d2e31;
+      --ink: #eef0e9;
+      --ink-soft: #aeb8b4;
+      --ink-faint: #79857f;
+      --line: #2c3d3f;
+      --accent: #e0973c;
+      --accent-bright: #f0ad52;
+      --sage: #8fad86;
+      --coral: #e07a63;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #0f1b1d;
+    --panel: #162427;
+    --panel-2: #1d2e31;
+    --ink: #eef0e9;
+    --ink-soft: #aeb8b4;
+    --ink-faint: #79857f;
+    --line: #2c3d3f;
+    --accent: #e0973c;
+    --accent-bright: #f0ad52;
+    --sage: #8fad86;
+    --coral: #e07a63;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.28);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 0 28px; }
+  section { padding: clamp(40px, 6vw, 72px) 0; border-top: 1px solid var(--line); }
+  h1, h2, h3 { font-family: var(--display); font-weight: 500; text-wrap: balance; line-height: 1.12; letter-spacing: -.01em; }
+  p { max-width: 64ch; }
+  a { color: var(--accent); }
+
+  .eyebrow {
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    letter-spacing: .16em; text-transform: uppercase; color: var(--accent);
+  }
+
+  /* hero */
+  .hero { border-top: none; padding-top: clamp(48px, 7vw, 88px); }
+  .hero h1 { font-size: clamp(38px, 6.4vw, 68px); margin: 18px 0 0; }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+  .lede { font-size: clamp(19px, 2.3vw, 23px); color: var(--ink-soft); margin: 22px 0 0; line-height: 1.45; }
+  .origin {
+    margin-top: 28px; padding: 14px 18px; border-left: 3px solid var(--sage);
+    background: var(--panel); border-radius: 0 8px 8px 0; box-shadow: var(--shadow);
+    font-size: 15px; color: var(--ink-soft); max-width: 64ch;
+  }
+  .origin b { color: var(--ink); font-weight: 600; }
+
+  h2 { font-size: clamp(26px, 3.6vw, 36px); margin: 0 0 8px; }
+  .sectionlede { color: var(--ink-soft); margin: 0 0 32px; }
+
+  /* the loop: context -> generator -> practice */
+  .loop { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; gap: 10px; }
+  .stage {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 22px 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 8px;
+  }
+  .stage .tag { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-faint); }
+  .stage h3 { font-size: 21px; margin: 0; }
+  .stage .role { font-size: 13.5px; color: var(--accent); font-weight: 600; }
+  .stage p { font-size: 14.5px; color: var(--ink-soft); margin: 2px 0 0; }
+  .stage .path { font-family: var(--mono); font-size: 12px; color: var(--ink-faint); margin-top: auto; padding-top: 10px; }
+  .stage.ctx { border-top: 3px solid var(--sage); }
+  .stage.gen { border-top: 3px solid var(--accent); }
+  .stage.prac { border-top: 3px solid var(--coral); }
+  .arrow { align-self: center; font-family: var(--mono); color: var(--accent); font-size: 22px; }
+
+  /* failure-mode map */
+  .maplabel { font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-faint); margin: 0 0 12px; }
+  .fmgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 10px; margin-bottom: 26px; }
+  .fm {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 13px 14px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  .fm .id { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--coral); }
+  .fm .name { font-size: 14px; line-height: 1.3; }
+  .fm.drive .id { color: var(--sage); }
+
+  /* five phases */
+  .phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0; counter-reset: p; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; background: var(--panel); box-shadow: var(--shadow); }
+  .phase { padding: 20px 18px; border-right: 1px solid var(--line); }
+  .phase:last-child { border-right: none; }
+  .phase .num { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 700; }
+  .phase h3 { font-size: 17px; margin: 6px 0 5px; }
+  .phase p { font-size: 13px; color: var(--ink-soft); margin: 0; }
+
+  /* instrument readout */
+  .panelwrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 20px; align-items: start; }
+  .gauge {
+    background: var(--ink); color: #eef0e9; border-radius: 16px; padding: 26px 26px 22px;
+    font-family: var(--mono); box-shadow: var(--shadow); border: 1px solid #2c3d3f;
+  }
+  .gauge .head { font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: #8fad86; margin-bottom: 16px; }
+  .tzrow { display: flex; align-items: baseline; justify-content: space-between; padding: 7px 0; border-bottom: 1px dashed #2c3d3f; font-size: 13.5px; }
+  .tzrow .v { color: #e07a63; }
+  .tzrow.ok .v { color: #8fad86; }
+  .bigscore { display: flex; align-items: baseline; gap: 14px; margin-top: 18px; }
+  .bigscore .n { font-size: 46px; font-weight: 700; color: #e07a63; line-height: 1; }
+  .bigscore .arrown { color: #e0973c; font-size: 24px; }
+  .bigscore .n.fixed { color: #8fad86; }
+  .bigscore .cap { font-size: 11px; color: #79857f; letter-spacing: .1em; text-transform: uppercase; }
+  .readnote { font-size: 15px; color: var(--ink-soft); }
+  .readnote h3 { font-size: 20px; margin: 0 0 10px; color: var(--ink); }
+  .readnote code { font-family: var(--mono); font-size: 13px; background: var(--panel-2); padding: 1px 6px; border-radius: 5px; }
+  .readnote ul { padding-left: 18px; margin: 12px 0 0; }
+  .readnote li { margin: 6px 0; }
+
+  /* positioning */
+  .posgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .pos { padding: 18px 18px; border-radius: 12px; background: var(--panel); border: 1px solid var(--line); }
+  .pos .x { font-family: var(--mono); color: var(--coral); font-size: 13px; font-weight: 700; }
+  .pos .y { display: block; margin-top: 6px; font-size: 14.5px; color: var(--ink-soft); }
+  .pos .y b { color: var(--ink); font-weight: 600; }
+
+  footer { border-top: 1px solid var(--line); padding: 30px 0 48px; color: var(--ink-faint); font-size: 13.5px; }
+  footer .status { font-family: var(--mono); }
+
+  @media (max-width: 720px) {
+    .loop { grid-template-columns: 1fr; }
+    .arrow { transform: rotate(90deg); }
+    .panelwrap { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow">Research concept · Context v1 "Alder"</span>
+    <h1>A flight simulator for <em>AI-assisted development</em>.</h1>
+    <p class="lede">Using an AI coding assistant well is a skill of judgment, not typing. You build
+      the reflexes the way pilots do — in a simulator where the traps are deliberate, the stakes are
+      zero, and a hidden instrument tells you whether you actually flew it right.</p>
+    <div class="origin">A purpose-built kata reveals where AI slips and where <b>random prompting
+      provably can't reach the goal</b> — but the kata is only one instance. The product is the
+      <b>Context</b> that generates more, in any domain and any stack.</div>
+  </header>
+
+  <section>
+    <h2>The gap nobody fills</h2>
+    <p class="sectionlede">Three bands exist; the useful middle is empty.</p>
+    <div class="posgrid">
+      <div class="pos"><span class="x">Assessment — crowded</span><span class="y"><b>Grades you once, to hire.</b> CodeSignal, HackerEarth, Formation; Meta &amp; Google now score "how you drive AI." Proctored, one-shot.</span></div>
+      <div class="pos"><span class="x">Content — saturated</span><span class="y"><b>Tells you the traps.</b> "8 AI coding traps" listicles, essays on plausible-but-wrong code. Reading one never builds the reflex.</span></div>
+      <div class="pos" style="border-color:var(--sage)"><span class="x" style="color:var(--sage)">Practice — open</span><span class="y"><b>Lets you hit the traps yourself,</b> repeatedly, self-serve, on a seeded codebase with a grader that scores the outcome and the driving. This.</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Context → Generator → Practice</h2>
+    <p class="sectionlede">A versioned spec is the product. Any AI agent turns it into a runnable kata —
+      same training points, any domain, any stack.</p>
+    <div class="loop">
+      <div class="stage ctx">
+        <span class="tag">The product</span>
+        <h3>Context</h3>
+        <span class="role">versioned · tree-named</span>
+        <p>Training goals + known AI best practices + known AI failure modes. v1 is "Alder" — a pioneer species for the foundational version.</p>
+        <span class="path">context/alder/</span>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage gen">
+        <span class="tag">The contract</span>
+        <h3>Generator</h3>
+        <span class="role">any AI agent</span>
+        <p>Given a Context version + a domain + a stack, it emits a practice carrying the same training points. A prompt, not a tool.</p>
+        <span class="path">generator/CONTRACT.md</span>
+      </div>
+      <div class="arrow">→</div>
+      <div class="stage prac">
+        <span class="tag">An instance</span>
+        <h3>Practice</h3>
+        <span class="role">runnable kata</span>
+        <p>A green test suite hiding a real bug, an underspecified feature with a trap, ranked latent defects, and a hidden grading oracle.</p>
+        <span class="path">practices/deliveries/</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What it trains against</h2>
+    <p class="sectionlede">A catalogue of how AI slips — each one a learning objective, each
+      codebase-plantable one a recipe the generator can seed anywhere.</p>
+    <p class="maplabel">Planted in the codebase</p>
+    <div class="fmgrid">
+      <div class="fm"><span class="id">FM-01</span><span class="name">Bug invisible to the passing suite</span></div>
+      <div class="fm"><span class="id">FM-02</span><span class="name">Silent, subset-only failure</span></div>
+      <div class="fm"><span class="id">FM-03</span><span class="name">Plausible-but-wrong logic</span></div>
+      <div class="fm"><span class="id">FM-04</span><span class="name">Undefined boundary / edge</span></div>
+      <div class="fm"><span class="id">FM-05</span><span class="name">Encapsulation erosion</span></div>
+      <div class="fm"><span class="id">FM-06</span><span class="name">Retry / idempotency hazard</span></div>
+      <div class="fm"><span class="id">FM-07</span><span class="name">Unbounded growth / leak</span></div>
+      <div class="fm"><span class="id">FM-08</span><span class="name">Hallucinated package / input</span></div>
+    </div>
+    <p class="maplabel">Trained by the exercise (driving &amp; harness)</p>
+    <div class="fmgrid">
+      <div class="fm drive"><span class="id">FM-09</span><span class="name">Context loss over long sessions</span></div>
+      <div class="fm drive"><span class="id">FM-10</span><span class="name">Over-engineering an eager assistant</span></div>
+      <div class="fm drive"><span class="id">FM-11</span><span class="name">Prompt injection / untrusted content</span></div>
+      <div class="fm drive"><span class="id">FM-12</span><span class="name">Security regressions</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Five phases, on a clock</h2>
+    <p class="sectionlede">The domain and stack change; the flow never does. Each phase is one
+      discipline under pressure.</p>
+    <div class="phases">
+      <div class="phase"><span class="num">01</span><h3>Understand</h3><p>Map boundaries and invariants before anything moves. Read, don't delegate.</p></div>
+      <div class="phase"><span class="num">02</span><h3>Fix</h3><p>A symptom, not a line number. Reproduce with a failing test first.</p></div>
+      <div class="phase"><span class="num">03</span><h3>Feature</h3><p>Underspecified on purpose. Gather requirements; dodge the trap.</p></div>
+      <div class="phase"><span class="num">04</span><h3>Improve</h3><p>Find the ranked latent defects — from the code, not from memory.</p></div>
+      <div class="phase"><span class="num">05</span><h3>Review</h3><p>Name your own weakness, the trade-off, and what you'd revisit.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>One interface, three modes</h2>
+    <p class="sectionlede">The harness runs a practice for you on a <b>throwaway clone</b> — never
+      the original — with one agent executing your prompts and a separate examiner grading how you
+      drove, from its own golden context.</p>
+    <div class="posgrid">
+      <div class="pos" style="border-color:var(--sage)"><span class="x" style="color:var(--sage)">read</span><span class="y"><b>Learn the Context</b> before you try it — its disciplines, best practices, and failure modes.</span></div>
+      <div class="pos"><span class="x">assess</span><span class="y"><b>Drive it solo.</b> The assistant runs your prompts; no live help. A written debrief scores each round at the end.</span></div>
+      <div class="pos"><span class="x">train</span><span class="y"><b>Drive it coached.</b> The harness catches a weak prompt before its consequence compounds.</span></div>
+    </div>
+    <p style="font-family:var(--mono);font-size:13px;color:var(--ink-faint);margin-top:16px">suggested path:&nbsp; read → assess → train&nbsp; ·&nbsp; goal: the Context's best practices become reflexes</p>
+  </section>
+
+  <section>
+    <h2>The instrument that doesn't lie</h2>
+    <p class="sectionlede">The seed kata: a subscription-box scheduler whose cutoff ignores the
+      customer's timezone. 15 unit tests stay green — the bug is invisible to them. The hidden
+      grader runs under three server timezones and scores the <b>worst case</b>. A fix that only
+      works on your machine doesn't count.</p>
+    <div class="panelwrap">
+      <div class="gauge" role="img" aria-label="Grader readout: 0 of 7 before the fix, 7 of 7 after, across UTC, Los Angeles and Tokyo.">
+        <div class="head">◴ npm run grade — cutoff across timezones</div>
+        <div class="tzrow"><span>TZ = UTC</span><span class="v">0 / 7  FAIL</span></div>
+        <div class="tzrow"><span>TZ = America/Los_Angeles</span><span class="v">2 / 7  FAIL</span></div>
+        <div class="tzrow"><span>TZ = Asia/Tokyo</span><span class="v">5 / 7  FAIL</span></div>
+        <div class="bigscore">
+          <span><span class="n">0/7</span><br><span class="cap">shipped</span></span>
+          <span class="arrown">→</span>
+          <span><span class="n fixed">7/7</span><br><span class="cap">after fix</span></span>
+        </div>
+      </div>
+      <div class="readnote">
+        <h3>Why a hidden oracle</h3>
+        <p>Without a check it can run, "looks done" is the only signal — and a green suite is exactly
+          what automation bias trusts. The oracle is the objective gate.</p>
+        <ul>
+          <li><code>node --test</code> → <b>15 / 15</b> green, bug still live</li>
+          <li><code>npm run grade</code> → <b>worst-case 0 / 7</b></li>
+          <li>timezone-aware fix → <b>7 / 7</b> everywhere</li>
+        </ul>
+        <p style="margin-top:14px">How you <i>drove</i> — reproduced before fixing, rejected the
+          over-build, matched the altitude — is the other half, and the half this trains.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="wrap">
+    <p class="status">STATUS: research + architecture phase. IN → Context v1, seed kata, generator
+      contract, docs. NEXT → more katas · runner with time/token actuals · Claude-first transcript
+      grader · hosted playground.</p>
+    <p>The headline lesson, baked in as FM-10: match the altitude of the task — surface every
+      concern, build only the minimal spec. It's the failure engineers most reliably make with a
+      capable assistant.</p>
+  </footer>
+
+</div>

@@ -1,0 +1,27 @@
+{
+  "id": "deliveries",
+  "title": "Deliveries — subscription-box scheduling",
+  "contextVersion": "alder@1.0.0",
+  "domain": "subscription-box delivery scheduling",
+  "stack": { "language": "typescript", "runtime": "node>=22.18", "dependencies": 0 },
+  "difficulty": "M",
+  "estimate": { "minutes": 60, "tokens": 25000 },
+  "phases": ["understand", "fix", "feature", "improve", "review"],
+  "grader": { "command": "npm run grade", "kind": "hidden-acceptance", "max": 7 },
+  "trainingPoints": {
+    "disciplines": [
+      "reproduce-before-fix",
+      "requirements-elicitation",
+      "read-before-delegate",
+      "verify-output",
+      "restraint-altitude-match",
+      "reject-on-camera"
+    ],
+    "failureModes": ["FM-01", "FM-02", "FM-03", "FM-04", "FM-05", "FM-06", "FM-07", "FM-08"]
+  },
+  "primaryBug": "timezone ignored when computing the cutoff instant",
+  "featureTrap": "duplicate-delivery invariant + lazily-materialized next delivery",
+  "latentDefects": 7,
+  "answerKey": "_solutions/",
+  "notes": "Seed kata; the M tier calibrates the 60-minute estimate for Context alder@1.0.0."
+}

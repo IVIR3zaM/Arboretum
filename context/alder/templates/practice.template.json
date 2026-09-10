@@ -1,0 +1,20 @@
+{
+  "id": "<kebab-case-id>",
+  "title": "<short human title>",
+  "contextVersion": "alder@1.0.0",
+  "domain": "<business domain in a few words>",
+  "stack": { "language": "<lang>", "runtime": "<runtime+version>", "dependencies": 0 },
+  "difficulty": "S | M | L",
+  "estimate": { "minutes": 0, "tokens": 0 },
+  "phases": ["understand", "fix", "feature", "improve", "review"],
+  "grader": { "command": "npm run grade", "kind": "hidden-acceptance", "max": 0 },
+  "trainingPoints": {
+    "disciplines": ["reproduce-before-fix", "requirements-elicitation", "read-before-delegate", "verify-output", "restraint-altitude-match", "reject-on-camera"],
+    "failureModes": ["FM-01", "FM-02", "FM-03", "FM-04", "FM-05", "FM-06", "FM-07", "FM-08"]
+  },
+  "primaryBug": "<one line: the silent, subset-only bug>",
+  "featureTrap": "<one line: the invariant the naive implementation trips>",
+  "latentDefects": 0,
+  "answerKey": "_solutions/",
+  "notes": "<anything a future maintainer needs>"
+}
