@@ -30,9 +30,21 @@ Two consequences that matter:
   answer key, the hidden tests, or the rubric by inspecting their workdir.
 - The examiner reads `_solutions/` and the Context from `golden/`, which the assistant/learner
   **cannot** see. The grader — the practice's **declared** command (`practice.json` →
-  `commands.grade`; `npm run grade` for the seed, `cargo run --bin grade` for a Rust kata, …) —
-  is run by the harness against the clone, not by the learner. The harness reads the command from
-  `practice.json`; it assumes no particular toolchain.
+  `commands.grade`; `npm run grade` for the seed, `cargo run --bin grade` for a Rust kata, a
+  wrapper like `bash grade.sh` for a multi-package kata, …) — is run by the harness against the
+  clone, not by the learner. The harness reads the command from `practice.json`; it assumes no
+  particular toolchain.
+
+**Multi-package practices and a read-only `reference/` (Context Cedar).** The clone-and-jail rule
+is unchanged: the practice is still **one** cloned folder. From Cedar on, that folder may hold
+several package dirs (e.g. `backend/` + `app/`) and a top-level **`reference/`** — a read-only
+snapshot of the *external* world the repo talks to but does not own (a sibling service's contract,
+cloud infra config, a method spec). The assistant **may read `reference/`** but must not treat it
+as the working repo or edit it; it is the truth a Cedar practice's FM-16 defect depends on, and
+what the learner's research pass distills into a **`research-notes.md`** written inside `work/`.
+This is still a single clone, still jailed — `reference/` and `research-notes.md` both live inside
+`work/`, and the jail's "no reads or writes outside the clone" is untouched. `_solutions/`
+stripping is unchanged.
 
 ---
 

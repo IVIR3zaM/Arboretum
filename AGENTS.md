@@ -46,6 +46,13 @@ These come from [`harness/DESIGN.md`](harness/DESIGN.md §0–§2). Follow them 
    `go test ./...`, `pytest`, `npm run grade`, etc. The harness runs those. Assuming `npm` breaks
    every non-Node practice.
 7. **In `assess`, no feedback until the end.** In `train`, coach as you go.
+8. **A `reference/` in the clone is read-only external truth (Cedar practices).** A Cedar practice
+   is still **one** cloned folder, but it may hold several package dirs and a top-level
+   `reference/` (a sibling service's contract, cloud infra config, a method spec). The assistant
+   **may read `reference/` but must not edit it or treat it as the working repo**; the learner's
+   research pass distills it into a **`research-notes.md`** written inside `work/`. The jail is
+   unchanged — `reference/` and `research-notes.md` are inside the clone; nothing outside it is
+   ever read or written.
 
 ## Running a mode today (before the built runner exists)
 ```
@@ -59,10 +66,12 @@ has `_solutions/` or the `golden/` grader) to score; and in `assess`, write
 `.sessions/<stamp>/feedback.md` at the end per the rubric shape in `harness/DESIGN.md §2`.
 
 ## Map
-- `context/<tree>/` — the Context (start with `context/alder/`).
+- `context/<tree>/` — the Context (`context/alder/` is the foundation; `context/cedar/` adds
+  multi-repo, external-truth, and context-rot training on top of it).
 - `generator/CONTRACT.md` — generate a new practice.
 - `harness/DESIGN.md` — the full multi-agent design and the three modes.
-- `practices/deliveries/` — the seed kata.
+- `practices/deliveries/` — the seed kata (Alder). `practices/credentials/DESIGN.md` — the first
+  Cedar practice, as a blueprint (not yet runnable).
 - `docs/` — concept, prior-art, distribution, tree-naming.
 
 ## This repo's own working rules (for an agent editing Arboretum itself)

@@ -1,0 +1,125 @@
+# Best practices for AI-assisted coding — Context "Cedar" v1
+
+The other half of the Context: the known-good disciplines, drawn from Anthropic's published
+guidance (authoritative) and observed practice in AI-enabled, process-graded coding rounds.
+Each maps to the
+[`goals.md`](goals.md) discipline it trains and the [`failure-modes.md`](failure-modes.md) it
+defeats. A generated practice must create a genuine opportunity to *exercise* these, not just
+describe them.
+
+Cedar inherits Alder's sections A–E unchanged and adds **section F — working across boundaries**.
+
+## Sources (authoritative)
+- **Prompt engineering** — `platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices`
+- **Building Effective Agents** — `anthropic.com/engineering/building-effective-agents`
+- **Claude Code best practices** — `code.claude.com/docs/en/best-practices`
+- **Altitude & restraint in process-graded rounds** — see §E and `docs/CONCEPT.md`.
+- **Documentation "context rot" & multi-repo context** — see §F and `docs/PRIOR-ART.md`.
+
+---
+
+## A. Prompting craft (from Anthropic's prompt-engineering guide)
+1. **Be clear and direct.** Treat the model as a capable new colleague with no context. Specify
+   the output and constraints; if you want "above and beyond," ask for it. *Golden rule: if a
+   colleague with minimal context would be confused, so will the model.*
+2. **Add context / motivation.** Explain *why* a constraint matters; the model generalizes from
+   the reason.
+3. **Use examples (multishot).** 3–5 relevant, diverse examples wrapped in `<example>` /
+   `<examples>` tags steer format and behaviour more reliably than description.
+4. **Structure with XML tags.** Separate instructions, context, input, and examples with
+   descriptive tags so nothing is misread.
+5. **Give the model a role** via the system prompt to focus tone and judgment.
+6. **Let it think (chain of thought)** for multi-step reasoning; make the reasoning visible.
+7. **Prefill** the start of the response to pin format.
+8. **Chain prompts** — decompose into sequential calls with checkpoints rather than one giant
+   prompt.
+
+## B. The four coding-round prompt skeletons (for AI-enabled, process-graded rounds)
+1. **Understand (no writes).** *"Don't change anything. Summarise the module boundaries, the
+   invariant each module owns, and where state is mutated. Then name the three places a
+   correctness bug is most likely to hide, and why."* → trains *read-before-delegate*.
+2. **Reproduce before fixing.** *"Write a failing test that demonstrates the bug, in the
+   existing test style. Don't fix it yet — I want the failure first."* → trains
+   *reproduce-before-fix*; beats FM-01/FM-02.
+3. **Spec a feature (plan).** Requirement in your own words + constraints + the invariant that
+   must not break + *"flag anything in my requirement that's ambiguous."* → trains
+   *requirements-elicitation*; surfaces the question to ask the stakeholder.
+4. **Reject and redo.** *"No — that changes X, which must hold. Redo it keeping X fixed and
+   tell me what you traded off."* → trains *verify-output* and *reject-on-camera*; beats FM-10.
+
+## C. Agentic structure (from *Building Effective Agents*)
+- **Start simple.** A single call with retrieval + examples beats an agent for most tasks; add
+  autonomy only when simpler approaches demonstrably underperform.
+- **Three principles:** *simplicity*, *transparency* (show the plan), *good tool design*.
+- **Know the patterns** and pick the lightest that fits: prompt chaining, routing,
+  parallelization, orchestrator-workers, evaluator-optimizer. Full autonomy is the exception.
+
+## D. Claude Code working discipline (from the best-practices guide)
+- **Give the agent a check it can run** — tests, a build, a screenshot, a grader. Without one,
+  "looks done" is the only signal and you are the verification loop. *(This platform's whole
+  grader design.)* Beats FM-01.
+- **Explore → plan → code → commit.** Separate research/planning from implementation so you
+  don't solve the wrong problem. Skip planning only when the diff fits in one sentence.
+- **Spec first.** For anything non-trivial, have the assistant interview you and write a
+  self-contained spec (files, interfaces, out-of-scope, an end-to-end verification step) before
+  coding. Trains *requirements-elicitation*.
+- **Model before you delegate.** When you don't yet know *how*, use the assistant for research
+  and planning until you hold a concrete HOW **in your own head** — then delegate the
+  implementation. Delegating execution before you understand the goal produces an unconvergent
+  prompt loop (FM-13). If two rounds haven't converged, stop prompting and go build the model.
+- **Tests first — and validate the test's intent.** Have the assistant write the tests, then
+  **confirm the tests actually capture the requirement** before asking it to implement against
+  them. An unchecked test suite is something the assistant can satisfy without doing the real
+  work (FM-06). Own the intent; delegate the typing.
+- **Small, reversible steps.** One change at a time, each runnable and easy to roll back, so a
+  regression is traceable to the change that caused it. A large AI-generated batch hides cause
+  and effect (FM-10) and is the thing nobody can review (FM-14).
+- **Manage context aggressively.** Performance degrades as the window fills; clear between
+  unrelated tasks, keep the source of truth in files not chat. Beats FM-09.
+- **Adversarial review in a fresh context, aimed by intent and triage.** A reviewer subagent
+  that sees only the diff and the criteria evaluates on its own terms — but told to "find gaps"
+  it will over-report, so scope it to correctness and the stated requirements. Give it the
+  **task's intent** as primary context, and **triage** the diff — which parts need human
+  judgment vs. which are safe to skim or delegate — so review speeds up without surrendering
+  ownership. A human stays accountable for the merge. Beats FM-12 and FM-14; guards against FM-10.
+- **Named failure patterns to avoid:** the kitchen-sink session, correcting-over-and-over, the
+  over-specified CLAUDE.md, the **trust-then-verify gap**, and infinite exploration.
+
+## E. Altitude & restraint (the lesson most often missed in process-graded rounds)
+- **Match the altitude of the task.** Production rigor on a toy exercise reads as
+  over-engineering and burns the clock. The deep understand-phase analysis is *rewarded*; the
+  error is letting every surfaced concern become code.
+- **SURFACE ≠ BUILD.** Surface every concern out loud; build only the minimal spec; park the
+  rest as "noted, out of scope, here's when I'd do it." The firewall that prevents FM-10.
+- **A named production trade-off still reads as a smell in a clean-room exercise.** Implement
+  the clean/idiomatic default; keep the production alternative as a verbal aside.
+- **Finishing the minimal-correct task beats an unfinished elaborate one**, every time.
+
+## F. Working across boundaries (Cedar — multi-repo, external truth, drifting docs)
+- **F1 — Research before you delegate; write the context down.** When the truth for a change
+  lives outside the repo you started in — a sibling service, cloud infra (a hosted document, a
+  KMS config), a method spec — do an explicit **research pass first** and distill it into a
+  durable **notes file in the repo** (here: `research-notes.md`), not into chat. This is
+  *Explore → plan → code* applied across a boundary, and the notes are what a fresh session (or a
+  reviewer) reads instead of re-deriving. Spawning a subagent to read the reference and report a
+  summary keeps the main context clean. Trains *establish-cross-boundary-context*; beats FM-16.
+- **F2 — Docs are stale until verified; trust the code and the authoritative source.** A README,
+  a comment, or a contract describes what someone intended at some past commit — not necessarily
+  what the code does now. Verify each invariant against the **current code** and the
+  **authoritative reference**; when they disagree, the convenient doc is the suspect, and a large
+  green suite is **cover, not proof** (it can pass while a stale path quietly does the wrong
+  thing). Reconcile contradictions explicitly rather than picking the one that fits your plan.
+  Trains *reconcile-docs / trust-code-over-prose*; beats FM-15.
+- **F3 — Distill external repos/infra into a compact local reference, don't assume.** You cannot
+  fit another service's whole codebase (or a cloud account) into context, and guessing its
+  contract is how a single-repo assistant ships a locally-green, globally-wrong change. Capture a
+  *reliable, current snapshot* of the external contract — the interface, the invariants, the one
+  behaviour your change depends on — rather than inventing it or copying the whole thing. Trains
+  *establish-cross-boundary-context*; beats FM-16.
+
+---
+
+**Generator contract:** a valid practice gives the learner a real reason to reach for B1–B4
+(an unseen codebase to understand, a symptom to reproduce, an underspecified feature to
+elicit, eager AI output to reject) **and** for F1–F2 (external truth to research, drifting docs
+to reconcile), and is graded by a runnable check (D1). See [`generation-spec.md`](generation-spec.md).

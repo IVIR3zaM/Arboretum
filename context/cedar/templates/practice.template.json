@@ -1,0 +1,35 @@
+{
+  "id": "<kebab-case-id>",
+  "title": "<short human title>",
+  "contextVersion": "cedar@1.0.0",
+  "domain": "<business domain in a few words>",
+  "stack": {
+    "packages": [
+      { "path": "<dir, e.g. backend>", "language": "<lang>", "runtime": "<runtime+version>", "dependencies": 0 },
+      { "path": "<dir, e.g. app>", "language": "<lang>", "runtime": "<runtime+version>", "dependencies": 0 }
+    ]
+  },
+  "difficulty": "S | M | L | XL",
+  "estimate": { "minutes": 0, "tokens": 0 },
+  "phases": ["understand", "fix", "feature", "improve", "review"],
+  "reference": "reference/",
+  "researchArtifact": "research-notes.md",
+  "commands": {
+    "install": "<install deps for every package, or \"\" if none — e.g. \"cargo fetch && flutter pub get\">",
+    "test": "<run every package's unit suite — e.g. \"cargo test && flutter test\">",
+    "grade": "<wrapper that runs every package's hidden grader and reports combined worst-case — e.g. \"bash grade.sh\", \"make grade\">"
+  },
+  "grader": { "kind": "hidden-acceptance", "max": 0 },
+  "trainingPoints": {
+    "disciplines": ["reproduce-before-fix", "requirements-elicitation", "read-before-delegate", "model-before-delegation", "comprehension-as-ownership", "verify-output", "restraint-altitude-match", "reject-on-camera", "establish-cross-boundary-context", "reconcile-docs"],
+    "failureModes": ["FM-01", "FM-02", "FM-03", "FM-04", "FM-05", "FM-06", "FM-07", "FM-08", "FM-13", "FM-15", "FM-16"]
+  },
+  "primaryBug": "<one line: the silent, subset-only bug — for Cedar, its true cause lives across a boundary (reference/) and/or in a no-doc-trace stale path>",
+  "featureTrap": "<one line: the invariant the naive implementation trips>",
+  "assistantTrap": "<one line: how an autopilot run provably loops — symptom-patch stays red; the obvious fix passes the visible suite but fails a case needing real understanding (FM-13, required)>",
+  "docDriftTrap": "<one line: the authoritative-looking doc/comment that contradicts the current code, and the stale code path with no doc trace (FM-15)>",
+  "crossBoundaryTrap": "<one line: the truth that lives only in reference/ and the wrong assumption a single-scope run makes (FM-16)>",
+  "latentDefects": 0,
+  "answerKey": "_solutions/",
+  "notes": "<anything a future maintainer needs — e.g. the dual grade gate or its Rust-only fallback>"
+}
