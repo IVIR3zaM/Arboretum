@@ -2,9 +2,9 @@
 
 Copy these shapes when generating a Cedar practice. They extend Alder's skeletons with the
 multi-package layout, the read-only `reference/`, the learner's research artifact, and the extra
-`_solutions/` files for the two Cedar failure modes. The first designed Cedar practice,
-[`practices/credentials/DESIGN.md`](../../../practices/credentials/DESIGN.md), is the worked
-reference; mirror its structure and register, changing only domain and stack.
+`_solutions/` files for the two Cedar failure modes. Mirror the structure and register of an
+existing Cedar practice under [`practices/`](../../../practices/), changing only domain and stack.
+Do not name a specific practice or its domain here — these skeletons stay domain-agnostic.
 
 ## Repository layout (multi-package + read-only reference)
 ```
@@ -40,7 +40,7 @@ obvious assumption is wrong and nothing local states the truth.
 ```
 
 ## `README.md` (learner-facing) — lead with a domain primer for a niche domain
-Mirror the seed's register, and for an unfamiliar domain **open with a short, visual Background
+Match a learner-facing register, and for an unfamiliar domain **open with a short, visual Background
 section** (plain language + mermaid diagrams) that teaches the domain *without pointing at the
 bug* — scaffolding, not a hint. Then the setup block, the **estimate table** (time + tokens +
 stack + context version), the **five phases in order** (the research pass is called out inside

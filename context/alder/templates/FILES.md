@@ -1,8 +1,8 @@
 # Practice file skeletons
 
-Copy these shapes when generating a practice. The seed kata
-[`practices/deliveries/`](../../../practices/deliveries/) is the worked reference — mirror its
-structure and register, changing only domain and stack.
+Copy these shapes when generating a practice. Mirror the structure and register of an existing
+worked practice under [`practices/`](../../../practices/), changing only domain and stack. Do not
+name a specific practice or its domain here — these skeletons stay domain-agnostic.
 
 ## `TICKET.md` (phase 2) — a symptom, never a location
 ```
@@ -26,7 +26,7 @@ Expected surface: `<Service.method(...)>` (currently a stub). Build the smallest
 The 6–8 held-back requirement questions + answers go in `_solutions/feature-qa.md`.
 
 ## `README.md` (learner-facing)
-Mirror the seed: a one-paragraph domain intro, a setup block, the **estimate table** (time +
+A learner-facing README has: a one-paragraph domain intro, a setup block, the **estimate table** (time +
 tokens + stack + context version), the **five phases in order**, and the note that `_solutions/`
 is the answer key and opening it defeats the kata.
 

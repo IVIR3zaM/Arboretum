@@ -65,17 +65,58 @@ practice's declared grade command (`practice.json` → `commands.grade`, against
 has `_solutions/` or the `golden/` grader) to score; and in `assess`, write
 `.sessions/<stamp>/feedback.md` at the end per the rubric shape in `harness/DESIGN.md §2`.
 
-## Map
-- `context/<tree>/` — the Context (`context/alder/` is the foundation; `context/cedar/` adds
-  multi-repo, external-truth, and context-rot training on top of it).
-- `generator/CONTRACT.md` — generate a new practice.
-- `harness/DESIGN.md` — the full multi-agent design and the three modes.
-- `practices/deliveries/` — the seed kata (Alder). `practices/credentials/DESIGN.md` — the first
-  Cedar practice, as a blueprint (not yet runnable).
-- `docs/` — concept, prior-art, distribution, tree-naming.
+## Repository layout & where files go
+Every folder has **one** responsibility. Before creating or moving a file, find its home here.
+The recurring mistake is putting a file where it's convenient instead of where it belongs (e.g. a
+practice **proof** dropped in `docs/` instead of the practice's `_solutions/`) — don't.
+
+### The map — one responsibility per location
+| Path | Holds | Never holds |
+|---|---|---|
+| `context/<tree>/` | The abstract, versioned Context: `goals.md`, `best-practices.md`, `failure-modes.md`, `generation-spec.md`, `CHANGELOG.md`, `VERSION`, `templates/`. Domain-agnostic training theory only. | Any reference to a specific practice, its domain, or its fix (see the working rules below). |
+| `generator/` | The generation **contract** (`CONTRACT.md`) — the prompt an agent follows to turn a Context into a new practice. | Generated practices; per-practice files. |
+| `harness/` | The harness **design** (`DESIGN.md`) — the multi-agent interface and the three modes. | Session outputs; runnable code (until the Phase-2 runner, which gets its own home). |
+| `practices/<id>/` | One runnable kata: learner-facing files (`README.md`, `TICKET.md`, `FEATURE-REQUEST.md`, `practice.json`, source, tests, stack manifest) **plus** `_solutions/` (hidden). Cedar practices also hold multiple package dirs + a read-only `reference/`. A not-yet-runnable practice may be a single `DESIGN.md` blueprint. | Cross-practice or conceptual docs; anything belonging to the Context. |
+| `practices/<id>/_solutions/` | The answer key, hidden from the learner: hidden grader/acceptance tests, `grade.*`, `trap-manifest.md`, `rubric.md`, `feature-qa.md`, `FIX.md`, **proof files** (`proof-<mode>-<YYYY-MM-DD>.html`), and Cedar's `context-map.md` / `doc-drift-ledger.md`. | — |
+| `docs/` | Product & conceptual prose *about* Arboretum: `CONCEPT.md`, `PRIOR-ART.md`, `DISTRIBUTION.md`, `TREE-NAMING.md`. | Per-practice files, proofs, run outputs, or any generated/session artifact. |
+| `one-pager/` | The standalone static marketing site (`index.html`). | App/harness code. |
+| `.sessions/<stamp>/` | **All** per-run artifacts — the clone (`work/`, with the learner's `research-notes.md` inside it), the examiner's `golden/`, the transcript, `feedback.md`, `PROGRESS.md`, `session.env`. Disposable and **gitignored**. | Anything meant to be committed. |
+| repo root | Project-level files only: `README.md`, `AGENTS.md`, `CLAUDE.md`, `LICENSE`, `NOTICE`, `.gitignore`. | New loose files — put it in the folder that owns it. |
+
+### Placement rules (apply before writing any file)
+1. **Session/run output goes in `.sessions/<stamp>/`, nowhere else** — transcripts, feedback,
+   progress notes, clones, golden context, research notes. It is gitignored; never commit it and
+   never scatter these into `docs/`, `practices/`, or the repo root.
+2. **Anything that reveals a fix lives in that practice's `_solutions/`** — proofs above all
+   (`generator/CONTRACT.md` §10). The harness strips `_solutions/` from the learner's clone, so
+   this is the *only* safe home for the answer, the grader, and the recorded proof.
+3. **Per-practice content stays under `practices/<id>/`.** If it's about one kata, it does not go
+   in `docs/`, `context/`, or the root.
+4. **Abstract, cross-practice training theory goes in `context/<tree>/`** — and stays
+   domain-agnostic (see the working rules).
+5. **`docs/` is prose about the product, not artifacts of running it.** If a file is generated,
+   recorded, or tied to one practice/run, it does not belong in `docs/`.
+6. **Don't create a new top-level directory or a new kind of file location without adding it to
+   this table in the same change.** If nothing here fits, the file probably belongs inside an
+   existing owner — ask before inventing a new one.
 
 ## This repo's own working rules (for an agent editing Arboretum itself)
 - Keep it tool-agnostic: the harness and generator are contracts any assistant can follow.
+- **Work on `main`; never create a new branch unless the user explicitly asks for one.** Commit
+  and push directly to `main` by default. Don't open feature/topic branches on your own initiative,
+  and if a stray branch already exists, merge it back into `main` and delete it rather than leaving
+  it around.
+- **Keep Contexts domain-agnostic — never name a specific practice or leak its domain into
+  `context/<tree>/`.** A Context is the abstract, upstream source; practices are concrete
+  instances generated *from* it, so a Context must not reference a practice by name (`deliveries`,
+  `credentials`, …) or bake in its business domain or its planted bug/solution. Two reasons: it
+  inverts the dependency (the practice is calibrated against the Context, not the other way round),
+  and — because `read` mode primes a learner from `goals.md` + `best-practices.md` +
+  `failure-modes.md` — a "Kata X: the timezone-on-cutoff bug" aside hands that learner the answer
+  before they ever run the practice. Illustrate failure modes and generation inputs with
+  *hypothetical* domains (e.g. "metering & billing"), point at the `practices/` directory
+  generically rather than a named practice, and keep changelog entries at the level of tier and
+  version, not the practice's name or its fix.
 - A practice's `_solutions/` is the answer key — never surface it to a learner through the
   harness, and never weaken a grader to make a run pass.
 - Don't add anyone's personal or biographical origin to these files; the content stands on its

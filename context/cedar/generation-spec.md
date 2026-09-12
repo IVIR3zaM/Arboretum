@@ -12,8 +12,8 @@ new XL difficulty tier.
 
 ## Inputs
 - **context** — `cedar@1.0.0`.
-- **domain** — the business story (e.g. "decentralized identity / verifiable credentials",
-  "metering & billing"). Picks the vocabulary and the natural home for the planted bugs.
+- **domain** — the business story (e.g. "metering & billing", "warehouse inventory sync").
+  Picks the vocabulary and the natural home for the planted bugs.
 - **stack** — one or more packages, each language + runtime + test runner. Zero-dependency or
   pinned-minimal preferred; a multi-package practice pins each package's toolchain.
 - **difficulty tier** — `S` | `M` | `L` | `XL` (drives size and the time/token estimate).

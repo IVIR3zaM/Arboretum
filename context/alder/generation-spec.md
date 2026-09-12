@@ -1,7 +1,7 @@
 # Generation spec — Context "Alder" v1
 
 The contract an AI agent follows to generate a **new practice** in a different domain and tech
-stack that trains the **same points** as the seed. The agent reads this file plus
+stack that trains the **same points** as the Context. The agent reads this file plus
 [`goals.md`](goals.md), [`best-practices.md`](best-practices.md), and
 [`failure-modes.md`](failure-modes.md); the step-by-step an agent executes is in
 [`../../generator/CONTRACT.md`](../../generator/CONTRACT.md).

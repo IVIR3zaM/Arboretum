@@ -17,9 +17,9 @@ first, foundational Context. See [`../../docs/TREE-NAMING.md`](../../docs/TREE-N
 - **Generation spec:** every practice must now plant an **assistant-targeted over-reliance trap**
   (invariant 9) so an *autopilot* run provably loops; **FM-13 required by default**; added the
   autopilot validation check.
-- **Seed kata** re-aligned to `alder@1.1.0`: FM-13/FM-14 coverage, an explicit over-reliance
-  trap, and an added per-instant/DST acceptance case that a plausible fixed-offset fix fails
-  (only an understanding-based fix converges).
+- **The calibration kata** re-aligned to `alder@1.1.0`: FM-13/FM-14 coverage, an explicit
+  over-reliance trap, and an added acceptance case that a plausible autopilot fix fails (only an
+  understanding-based fix converges).
 
 ## 1.0.0 — first version
 - **Goals:** the six core disciplines (+ three optional) a practice must train.
@@ -28,8 +28,8 @@ first, foundational Context. See [`../../docs/TREE-NAMING.md`](../../docs/TREE-N
 - **Failure modes:** FM-01..FM-08 (codebase-plantable) + FM-09..FM-12 (driving/harness).
 - **Generation spec:** the fixed practice shape, invariants, difficulty tiers, and the
   time/token estimation method.
-- **Calibrated against** the `deliveries` kata (M tier), which is tagged `alder@1.0.0` and
-  proves the Context can describe a real, runnable practice.
+- **Calibrated against** a first M-tier kata, tagged `alder@1.0.0`, proving the Context can
+  describe a real, runnable practice.
 
 ### Known gaps (candidates for v2, the next tree-name)
 - Some FM-* entries still need fresh public citations (search outage during authoring).

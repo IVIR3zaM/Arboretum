@@ -37,7 +37,6 @@ rest, so it survives casual testing and "works on my machine."
 — timezone, locale, clock, currency, encoding — and grade under several values of it. Cedar
 extends the "ambient variable" to **cross-boundary / externally-hosted state** (a hosted document
 that can rotate, a sibling service's contract) — still graded across several values.
-**(Kata "deliveries" FM-01+FM-02: the timezone-on-cutoff bug, graded under three server TZs.)**
 
 ### FM-03 — Plausible-but-wrong logic ("bug steganography")
 **Manifests:** AI produces code that reads correctly and is statistically typical, but encodes
@@ -71,7 +70,7 @@ work.
 **Defeated by:** idempotency keyed on the **business entity**, not the transport event;
 verifying the check measures the real outcome.
 **Trap recipe:** de-duplicate on `eventId` where the correct key is `(entity, date)`; grade
-with a retry that carries a fresh event id. **(Kata "deliveries" latent defect #1.)**
+with a retry that carries a fresh event id.
 
 ### FM-07 — Resource leak / unbounded growth
 **Manifests:** a set/map/cache that only ever grows (dedup tables, memoization) — fine in a
@@ -86,7 +85,7 @@ string, a config key) that fails silently when wrong.
 **Defeated by:** validating external inputs against an authoritative set; verifying every
 imported symbol/package actually exists before relying on it.
 **Trap recipe:** accept a free-form identifier (IANA timezone) that is never validated, so a
-typo degrades silently. **(Kata "deliveries" latent defect #7.)**
+typo degrades silently.
 
 ### FM-13 — Delegation before comprehension (the unconvergent prompt loop)
 **Manifests:** the single most expensive failure. Work is delegated to the assistant *before*
@@ -112,7 +111,7 @@ tests the **root** behaviour directly, so a call-site or works-on-my-machine pat
 red; and the "obvious" fix the assistant will propose (a fixed constant where the real answer
 varies per case) passes the visible suite but fails a case that needs genuine understanding.
 Only comprehension converges. **This is the primary assistant-targeted trap** (see the generator
-contract). **(Kata "deliveries": the cross-environment grader + the per-instant/DST case.)**
+contract).
 
 ### FM-15 — Documentation & invariant drift ("context rot")
 **Manifests:** as an AI-grown repo accretes over a long collaboration, the descriptions of it —
@@ -148,7 +147,7 @@ restarting to keep context clean** rather than letting one session sprawl.
 
 ### FM-10 — Over-engineering under an eager assistant
 The assistant proposes abstraction, config, and generality the task never asked for; accepting
-it burns the clock and adds surface area. **This is the headline failure of the seed kata.**
+it burns the clock and adds surface area. **This is one of the headline failures in practice.**
 **Defeated by:** building the smallest thing the spec forces; *surface ≠ build* — name concerns
 out loud, build only the minimal spec; rejecting over-build on the record; and making **small,
 reversible, testable changes** so cause and effect stay isolable (a large batch hides which
@@ -194,8 +193,7 @@ re-deriving. (Best-practices §F1/§F3 are the tools; this is how you aim them.)
 assumption wrong; and grade with conformance vectors derived from the reference, so a single-scope
 fix that never read it passes the local suite but fails the grader. Public research grounds this
 failure (a cross-service change spans more than fits any context window; the missing files are
-undiscoverable without traversing the boundary). **(Kata "credentials": the current did:web
-documents live only in `reference/`; a stale did:peer:2 decode path assumes wrong.)**
+undiscoverable without traversing the boundary).
 
 ---
 

@@ -35,10 +35,9 @@ practice declares `cedar@1.0.0`.
   **multi-repo practice shape** (multiple package dirs + read-only `reference/`), the **dual grade
   gate** (both stacks graded via a wrapper `commands.grade`), and a new **XL difficulty tier** with
   a provisional re-calibrated estimate.
-- **First Cedar practice designed:** `credentials` (decentralized-identity, Flutter + Rust) — see
-  [`../../practices/credentials/DESIGN.md`](../../practices/credentials/DESIGN.md). The runnable
-  kata and its recorded proof are a follow-up build; this version ships the Context and the
-  blueprint.
+- **First Cedar practice designed** as a multi-package, dual-stack XL blueprint (see the
+  `practices/` directory). The runnable kata and its recorded proof are a follow-up build; this
+  version ships the Context and the blueprint.
 
 ### Known gaps (candidates for the next version)
 - The XL time/token model is a first estimate; Phase-2 runner actuals will re-calibrate it.
