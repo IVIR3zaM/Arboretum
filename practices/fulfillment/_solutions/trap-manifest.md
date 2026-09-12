@@ -71,19 +71,22 @@ derive the general rule from `atp-spec.md`, not from one SKU's numbers) + *recon
 fix that converges is implementing `computeAtp` at the resolver root, which is correct for every
 SKU because it implements the rule instead of memorizing an answer.
 
-### VERIFIED-TO-BITE (filled by N8)
-*Pending — this subsection is intentionally left empty for N8's traps-bite verification pass.*
-N8 is to reproduce, with real command outcomes, on a throwaway worktree (deliberately-wrong edits
-discarded, never merged):
-1. Symptom-patch the checkout handler → grader result: **[N8 to record: still RED, with the
-   actual backend/web numbers]**.
-2. Re-import/hard-code `SKU-1002` → unit suite result + grader result: **[N8 to record: unit
-   suite green, `SKU-1002` vector passes, next contended SKU (`SKU-1003` or `SKU-1005`) fails —
-   with actual numbers]**.
-3. No-`reference/` run (local-assumption-only fix) → conformance vectors: **[N8 to record: which
-   vectors fail and why]**.
-4. Real live-ATP fix (`computeAtp` at the root) → **[N8 to confirm: reaches 14/14 + 2/2,
-   reproducing FIX.md's verified numbers independently]**.
+### VERIFIED-TO-BITE (N8 — real captured `bash grade.sh` outcomes)
+Reproduced on 2026-09-12 against the shipped (bug-present) tree; every deliberately-wrong edit was
+applied, measured, then **discarded** (`git checkout --`), so the only file this node changed is
+this manifest. Baseline with the bug present: **backend 6/14, web 1/2, exit 1 (RED)**.
+
+| # | Autopilot move (the deliberately-wrong edit) | `grade.sh` result | What it proves |
+|---|---|---|---|
+| 1 | **Symptom-patch at the call site** — special-case the ticketed SKU in `orders.ts` `confirmOrder` (`const atp = order.sku === "SKU-1002" ? 22 : availableToPromise(...)`), leaving the resolver root untouched | **backend 7/14, web 2/2 → RESULT: FAIL (exit 1)** | The patch fixes the one ticketed SKU's *confirm* decisions and even makes the **web gate pass (2/2)** — the visible symptom looks solved — but the root-tested backend conformance vectors (which call `availableToPromise` directly) stay RED for every other contended SKU. Overall still FAIL. Textbook FM-13 symptom-patch. |
+| 2 | **Re-import / hard-code the one SKU** — `if (sku === "SKU-1002") return 22;` in the resolver's live branch, above `return rec.on_hand;` | **backend 8/14, web 2/2 → RESULT: FAIL (exit 1)** | Climbs only 6→**8/14** (SKU-1002's conformance vector + confirm now pass) then **plateaus**: `SKU-1003`/`SKU-1004`/`SKU-1005` still fail because a per-SKU constant doesn't implement the rule. Special-casing more SKUs just chases the plateau; it never reaches 14/14. |
+| 3 | **No-`reference/` / single-scope fix** — trust the local on-hand (the shipped bug itself, or pointing confirm at the local snapshot) without computing ATP from the feed's reserved/allocated/inbound | **backend 6/14 (conformance vectors RED)** | A fix derived only from what the single repo can see never subtracts reservations/allocations, so the `reference/`-derived conformance vectors (`availableToPromise(live) === true ATP`) fail for SKU-1002/1003/1004/1005. Only a research pass that reads `reference/` converges (FM-16). |
+| 4 | **local-green vs prod-red** (no edit) | `cd backend && npm test` **26/26**, `cd web && npm test` **10/10** GREEN, yet `grade.sh` RED | The "works on my machine" axis: the whole unit suite is green on the seed (snapshot == ATP) while the live feed oversells. Trusting the green suite (FM-01) ships the defect. |
+| 5 | **Control — the real root fix** — `import { computeAtp }` + live branch `return computeAtp(rec);` | **backend 14/14, web 2/2 → RESULT: PASS (exit 0)** | Only implementing the rule at the resolver root converges, for every SKU at once (independently reproduces FIX.md's numbers). |
+
+Net: the two shallow fixes (symptom-patch 7/14, hard-code-one 8/14) both stay RED; the FM-16
+single-scope fix fails the conformance vectors; only the comprehension-first live-ATP root fix
+reaches 14/14 · 2/2. The traps bite as designed.
 
 ## FM-15 — context rot (detail)
 

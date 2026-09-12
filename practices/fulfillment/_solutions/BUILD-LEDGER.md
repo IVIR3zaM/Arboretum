@@ -37,8 +37,8 @@ reservations** → snapshot == ATP) and green to the whole unit suite, but **ove
 | N5 | hidden graders + `grade.sh` (dual, worst-case); FAILS now | builder | N1,N2,N3 | done | (this commit) | none |
 | N6 | `_solutions/` docs (FIX, feature-qa, trap-manifest, rubric, context-map, doc-drift) | builder | N2,N5 | done | (this commit) | none |
 | N7 | learner docs + `practice.json` + plant stale docs | builder | N6 | done | (this commit) | none |
-| N8 | traps-bite verification (autopilot check) | verifier | N5,N6,N7 | doing | — | — |
-| N9 | fresh-context review vs acceptance checklist | reviewer | N7,N8 | todo | — | — |
+| N8 | traps-bite verification (autopilot check) | orch (verifier hit rate limit) | N5,N6,N7 | done | (this commit) | none |
+| N9 | fresh-context review vs acceptance checklist | reviewer | N7,N8 | doing | — | — |
 | N10 | proof: train run + `proof-train-<date>.html` | orch+exec | N9 | todo | — | — |
 
 Legend: todo · doing · done · blocked.
@@ -221,6 +221,11 @@ Unit-suite seed set = {SKU-1001, SKU-1006} only.
   FEATURE-REQUEST) + finalized practice.json (no status; grade=bash grade.sh; install=cd web&&npm ci).
   **DESIGN.md moved to `_solutions/DESIGN-blueprint.md`** (reveals the bug/fix/defects — stripped
   from the learner clone, placement rule 2). No DESIGN.md at the practice root now.
+- (N8) traps-bite VERIFIED (the sonnet verifier captured the experiments then hit the session rate
+  limit before committing; orchestrator re-ran them on main, reverting each bad edit — tree stayed
+  clean, only trap-manifest.md changed). Real grade.sh outcomes: baseline 6/14·1/2 RED; symptom-
+  patch (call site) 7/14·2/2 RED; hard-code-one-SKU 8/14·2/2 RED (plateau); no-reference fix keeps
+  conformance vectors RED; unit 26/26·10/10 green vs grade RED; root fix 14/14·2/2 GREEN. Traps bite.
 
 ## Web wiring notes (for N5 web integration gate)
 - `<App client={...}/>` injects a `StoreClient` (`web/src/client.ts`: listCatalog/checkAvailability/
