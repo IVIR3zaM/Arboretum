@@ -31,9 +31,9 @@ reservations** → snapshot == ATP) and green to the whole unit suite, but **ove
 |---|---|---|---|---|---|---|
 | N0 | ledger + per-node constraint packets | orch | — | done | cd9d331 | none |
 | N1 | `reference/` external truth + hermetic file resolver | builder | N0 | done | (this commit) | none |
-| N2 | `backend/` src (stale-snapshot bug behind resolver seam) | builder | N1 | doing | — | — |
-| N3 | `web/` src (product page, badge, cart-hold stub, checkout) | builder | N2 | todo | — | — |
-| N4 | GREEN unit suites (backend + web); bug invisible | builder | N2,N3 | todo | — | — |
+| N2 | `backend/` src + green unit suite (stale-snapshot bug + latent defects) | builder | N1 | done | (this commit) | none |
+| N3 | `web/` src + green unit suite (product page, badge, cart-hold stub, checkout) | builder | N2 | doing | — | — |
+| N4 | ~~GREEN unit suites~~ **FOLDED into N2 (backend) + N3 (web)** | — | — | done | (folded) | — |
 | N5 | hidden graders + `grade.sh` (dual, worst-case); FAILS now | builder | N1,N2,N4 | todo | — | — |
 | N6 | `_solutions/` docs (FIX, feature-qa, trap-manifest, rubric, context-map, doc-drift) | builder | N2,N5 | todo | — | — |
 | N7 | learner docs + `practice.json` + plant stale docs | builder | N6 | todo | — | — |
@@ -186,6 +186,26 @@ dropped** → for seed SKUs (1001,1006) snapshot.on_hand == ATP (unit suite gree
 SKUs the snapshot is stale (on_hand > or ≠ ATP) → the stale confirm path misprices in prod.
 Unit-suite seed set = {SKU-1001, SKU-1006} only.
 
+## Backend API surface (authored in N2 — N3 web + N5 grader bind to this)
+- Env: `ATP_SOURCE` = `live` → query ERP feed (prod); anything else → local snapshot (dev/CI
+  default). `ERP_FEED_DIR` overrides the feed dir (defaults to `reference/infra/erp-availability/`).
+- `src/atp.ts` `computeAtp(rec): number` — CORRECT ATP (uses strict `< leadTimeDays` = FM-03 latent,
+  harmless for the 6 shipped SKUs). The stale resolver never calls it — that's the bug.
+- `src/availability.ts` `availableToPromise(sku, location): number` — **primary bug**: live branch
+  returns `rec.on_hand` (not `computeAtp`). `checkAvailability(sku, location): {sku, location, atp,
+  inStock}` (`inStock: atp > 0`).
+- `src/orders.ts` `confirmOrder(order): OrderResult` — the ROOT. `Order = {orderId, requestId, sku,
+  location, qty}`; `OrderResult = {orderId, status:"confirmed"|"rejected", sku, location, qty}`.
+  Accept iff `qty < atp` (strict = FM-04 latent). Idempotency keyed on `requestId` (FM-06 latent).
+- `src/reservations.ts` `place/active/all` (FM-05 by-ref, FM-07 no eviction), `placeHold(...)` stub
+  throws (the phase-3 feature).
+- `src/catalog.ts` lists the 6 SKUs. `demo.ts` = `npm start` smoke.
+- **Grader guidance (N5):** test confirm with `ATP_SOURCE=live` across the contended SKUs; use qty
+  values AWAY from the exact-ATP boundary and VALID locations only (so the FM-04/FM-08 latent
+  defects don't block full marks after the primary fix). Oversell demo: SKU-1002 qty 30 (bug→
+  confirmed; fix→rejected since true ATP 22). Fix = `return rec.on_hand;` → `return computeAtp(rec);`.
+
 ## Checkpoint log (append one line per integrated node)
 - (N0) ledger created — cd9d331.
-- (N1) reference/ external truth (contract, ATP spec, 6-SKU hosted feed) — integrated from worktree; ATP values verified.
+- (N1) reference/ external truth (contract, ATP spec, 6-SKU hosted feed) — integrated; ATP verified.
+- (N2) backend src + 26/26 green unit suite; bug invisible (seed SKUs/snapshot branch), live-prod oversell verified (SKU-1002 qty30 confirmed @ on_hand 40 vs true ATP 22). N4 folded in.

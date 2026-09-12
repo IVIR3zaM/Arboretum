@@ -1,0 +1,8 @@
+{
+  "SKU-1001": { "on_hand": 50 },
+  "SKU-1002": { "on_hand": 40 },
+  "SKU-1003": { "on_hand": 8 },
+  "SKU-1004": { "on_hand": 30 },
+  "SKU-1005": { "on_hand": 10 },
+  "SKU-1006": { "on_hand": 25 }
+}

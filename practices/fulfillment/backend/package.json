@@ -1,0 +1,14 @@
+{
+  "name": "fulfillment-backend",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.ts",
+    "start": "node demo.ts"
+  }
+}
