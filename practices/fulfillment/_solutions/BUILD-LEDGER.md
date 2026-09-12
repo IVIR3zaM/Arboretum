@@ -34,8 +34,8 @@ reservations** → snapshot == ATP) and green to the whole unit suite, but **ove
 | N2 | `backend/` src + green unit suite (stale-snapshot bug + latent defects) | builder | N1 | done | (this commit) | none |
 | N3 | `web/` src + green unit suite (product page, badge, cart-hold stub, checkout) | builder | N2 | done | (this commit) | none |
 | N4 | ~~GREEN unit suites~~ **FOLDED into N2 (backend) + N3 (web)** | — | — | done | (folded) | — |
-| N5 | hidden graders + `grade.sh` (dual, worst-case); FAILS now | builder | N1,N2,N3 | doing | — | — |
-| N6 | `_solutions/` docs (FIX, feature-qa, trap-manifest, rubric, context-map, doc-drift) | builder | N2,N5 | todo | — | — |
+| N5 | hidden graders + `grade.sh` (dual, worst-case); FAILS now | builder | N1,N2,N3 | done | (this commit) | none |
+| N6 | `_solutions/` docs (FIX, feature-qa, trap-manifest, rubric, context-map, doc-drift) | builder | N2,N5 | doing | — | — |
 | N7 | learner docs + `practice.json` + plant stale docs | builder | N6 | todo | — | — |
 | N8 | traps-bite verification (autopilot check) | verifier | N5,N6,N7 | todo | — | — |
 | N9 | fresh-context review vs acceptance checklist | reviewer | N7,N8 | todo | — | — |
@@ -210,6 +210,11 @@ Unit-suite seed set = {SKU-1001, SKU-1006} only.
 - (N1) reference/ external truth (contract, ATP spec, 6-SKU hosted feed) — integrated; ATP verified.
 - (N2) backend src + 26/26 green unit suite; bug invisible (seed SKUs/snapshot branch), live-prod oversell verified (SKU-1002 qty30 confirmed @ on_hand 40 vs true ATP 22). N4 folded in.
 - (N3) web storefront + 10/10 green unit suite; build ok. `<App client={StoreClient}/>` injectable.
+- (N5) hidden dual grader + grade.sh. **Orchestrator VERIFIED the flip on main:** pre-fix EXIT 1
+  (backend 6/14, web 1/2, RED) → fix applied EXIT 0 (14/14, 2/2, GREEN) → reverted clean, EXIT 1.
+  Grader not weakened. Baseline numbers for the N10 proof. Reference FIX = in
+  `backend/src/availability.ts` add `import { computeAtp } from "./atp.ts";` and change the live
+  branch `return rec.on_hand;` -> `return computeAtp(rec);` (two lines).
 
 ## Web wiring notes (for N5 web integration gate)
 - `<App client={...}/>` injects a `StoreClient` (`web/src/client.ts`: listCatalog/checkAvailability/
