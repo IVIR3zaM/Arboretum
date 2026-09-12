@@ -1,0 +1,81 @@
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: #faf9f6;
+  color: #1a1a1a;
+}
+
+.storefront {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.layout {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.product-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  min-width: 220px;
+}
+
+.product-list li {
+  margin-bottom: 0.5rem;
+}
+
+.product-list button {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.product-list button[aria-pressed="true"] {
+  border-color: #2f6f4f;
+  background: #eef6f0;
+}
+
+.product-page {
+  flex: 1;
+  min-width: 260px;
+}
+
+.stock-badge {
+  display: inline-block;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.stock-badge.in-stock {
+  background: #e4f5e9;
+  color: #206b3c;
+}
+
+.stock-badge.sold-out {
+  background: #fbe7e7;
+  color: #a12b2b;
+}
+
+.qty-control {
+  margin: 1rem 0;
+}
+
+.qty-control input {
+  width: 4rem;
+  margin-left: 0.5rem;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+}

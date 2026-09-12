@@ -32,9 +32,9 @@ reservations** → snapshot == ATP) and green to the whole unit suite, but **ove
 | N0 | ledger + per-node constraint packets | orch | — | done | cd9d331 | none |
 | N1 | `reference/` external truth + hermetic file resolver | builder | N0 | done | (this commit) | none |
 | N2 | `backend/` src + green unit suite (stale-snapshot bug + latent defects) | builder | N1 | done | (this commit) | none |
-| N3 | `web/` src + green unit suite (product page, badge, cart-hold stub, checkout) | builder | N2 | doing | — | — |
+| N3 | `web/` src + green unit suite (product page, badge, cart-hold stub, checkout) | builder | N2 | done | (this commit) | none |
 | N4 | ~~GREEN unit suites~~ **FOLDED into N2 (backend) + N3 (web)** | — | — | done | (folded) | — |
-| N5 | hidden graders + `grade.sh` (dual, worst-case); FAILS now | builder | N1,N2,N4 | todo | — | — |
+| N5 | hidden graders + `grade.sh` (dual, worst-case); FAILS now | builder | N1,N2,N3 | doing | — | — |
 | N6 | `_solutions/` docs (FIX, feature-qa, trap-manifest, rubric, context-map, doc-drift) | builder | N2,N5 | todo | — | — |
 | N7 | learner docs + `practice.json` + plant stale docs | builder | N6 | todo | — | — |
 | N8 | traps-bite verification (autopilot check) | verifier | N5,N6,N7 | todo | — | — |
@@ -209,3 +209,19 @@ Unit-suite seed set = {SKU-1001, SKU-1006} only.
 - (N0) ledger created — cd9d331.
 - (N1) reference/ external truth (contract, ATP spec, 6-SKU hosted feed) — integrated; ATP verified.
 - (N2) backend src + 26/26 green unit suite; bug invisible (seed SKUs/snapshot branch), live-prod oversell verified (SKU-1002 qty30 confirmed @ on_hand 40 vs true ATP 22). N4 folded in.
+- (N3) web storefront + 10/10 green unit suite; build ok. `<App client={StoreClient}/>` injectable.
+
+## Web wiring notes (for N5 web integration gate)
+- `<App client={...}/>` injects a `StoreClient` (`web/src/client.ts`: listCatalog/checkAvailability/
+  confirmOrder, async). Default `backendClient` wraps the backend in-process.
+- Checkout DOM (`ProductPage.tsx`): product `<section aria-label={name}>`, qty `<input id="qty">`,
+  buttons "Add to cart" / "Checkout"; result `<p role="status">` = "Order confirmed" or
+  "Sorry — we can't fulfil that quantity right now." (rejected).
+- ⚠️ N3's `web/vite.config.ts` aliases `node:fs`→a throwing shim AND `define`s
+  `process.env.ATP_SOURCE`→undefined (so the browser BUILD resolves). That config also governs the
+  web's default `vitest`, so it CANNOT reach the live/feed path. **N5's web integration test MUST
+  use its OWN vitest config** (`@vitejs/plugin-react` + jsdom + globals, but NO `node:fs` alias and
+  NO `process.env` define), run via `npx vitest run --config <that>` from `web/` so react resolves.
+  Set `process.env.ATP_SOURCE="live"` + `ERP_FEED_DIR` at test runtime, inject the real backend
+  client, drive checkout of a CONTENDED sku (SKU-1002 qty 30) → expect the "Sorry…" rejection
+  (post-fix); pre-fix it shows "Order confirmed" (oversell) → gate RED.
