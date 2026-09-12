@@ -39,7 +39,7 @@ reservations** → snapshot == ATP) and green to the whole unit suite, but **ove
 | N7 | learner docs + `practice.json` + plant stale docs | builder | N6 | done | (this commit) | none |
 | N8 | traps-bite verification (autopilot check) | orch (verifier hit rate limit) | N5,N6,N7 | done | (this commit) | none |
 | N9 | fresh-context review vs acceptance checklist | reviewer/opus | N7,N8 | done | (this commit) | none |
-| N10 | proof: train run + `proof-train-<date>.html` | orch+exec | N9 | doing | — | — |
+| N10 | proof: train run + `proof-train-<date>.html` | orch+exec | N9 | done | (this commit) | none |
 
 Legend: todo · doing · done · blocked.
 
@@ -231,6 +231,15 @@ Unit-suite seed set = {SKU-1001, SKU-1006} only.
   latent defects present in source, every acceptance-checklist item holds, solvable at XL / not
   over-scoped. Nit fixed: practice.json grader.max 12→16 (+worstCase/note). Only remaining item is
   N10 (proof), correctly sequenced.
+- (N10) PROOF recorded — drove a real TRAIN run in a disposable `.sessions/` clone (stripped
+  `_solutions/`, examiner supplied graders). Captured: baseline unit 26/26 · 10/10 green, grader
+  RED 6/14 · 1/2 → after the 2-line root fix + a reproduction test 27/27, grader GREEN 14/14 · 2/2
+  → after the minimal cart-hold feature (obsolete placeholder test replaced) 28/28 · 10/10, grader
+  GREEN 14/14 · 2/2. Traps re-measured (symptom-patch 7/14, hard-code 8/14 plateau). Written to
+  `_solutions/proof-train-2026-09-12.html`. Model identifier omitted per this session's artifact
+  policy (recorded neutrally as "Claude Code (Anthropic)").
+
+## BUILD COMPLETE — all N0–N10 done. Practice `fulfillment` is runnable, graded, proof-recorded.
 
 ## Web wiring notes (for N5 web integration gate)
 - `<App client={...}/>` injects a `StoreClient` (`web/src/client.ts`: listCatalog/checkAvailability/
