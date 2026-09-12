@@ -36,8 +36,8 @@ reservations** → snapshot == ATP) and green to the whole unit suite, but **ove
 | N4 | ~~GREEN unit suites~~ **FOLDED into N2 (backend) + N3 (web)** | — | — | done | (folded) | — |
 | N5 | hidden graders + `grade.sh` (dual, worst-case); FAILS now | builder | N1,N2,N3 | done | (this commit) | none |
 | N6 | `_solutions/` docs (FIX, feature-qa, trap-manifest, rubric, context-map, doc-drift) | builder | N2,N5 | done | (this commit) | none |
-| N7 | learner docs + `practice.json` + plant stale docs | builder | N6 | done | (next commit) | none |
-| N8 | traps-bite verification (autopilot check) | verifier | N5,N6,N7 | todo | — | — |
+| N7 | learner docs + `practice.json` + plant stale docs | builder | N6 | done | (this commit) | none |
+| N8 | traps-bite verification (autopilot check) | verifier | N5,N6,N7 | doing | — | — |
 | N9 | fresh-context review vs acceptance checklist | reviewer | N7,N8 | todo | — | — |
 | N10 | proof: train run + `proof-train-<date>.html` | orch+exec | N9 | todo | — | — |
 
@@ -215,6 +215,12 @@ Unit-suite seed set = {SKU-1001, SKU-1006} only.
   Grader not weakened. Baseline numbers for the N10 proof. Reference FIX = in
   `backend/src/availability.ts` add `import { computeAtp } from "./atp.ts";` and change the live
   branch `return rec.on_hand;` -> `return computeAtp(rec);` (two lines).
+- (N6) _solutions answer-key docs (FIX, feature-qa, trap-manifest w/ pending N8 section, rubric,
+  context-map, doc-drift-ledger). 6 latent defects mapped to FM ids.
+- (N7) learner docs (README w/ verbatim primer + DB-constraint doc-drift line, TICKET symptom,
+  FEATURE-REQUEST) + finalized practice.json (no status; grade=bash grade.sh; install=cd web&&npm ci).
+  **DESIGN.md moved to `_solutions/DESIGN-blueprint.md`** (reveals the bug/fix/defects — stripped
+  from the learner clone, placement rule 2). No DESIGN.md at the practice root now.
 
 ## Web wiring notes (for N5 web integration gate)
 - `<App client={...}/>` injects a `StoreClient` (`web/src/client.ts`: listCatalog/checkAvailability/
