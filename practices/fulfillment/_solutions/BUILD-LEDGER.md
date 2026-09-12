@@ -35,8 +35,8 @@ reservations** → snapshot == ATP) and green to the whole unit suite, but **ove
 | N3 | `web/` src + green unit suite (product page, badge, cart-hold stub, checkout) | builder | N2 | done | (this commit) | none |
 | N4 | ~~GREEN unit suites~~ **FOLDED into N2 (backend) + N3 (web)** | — | — | done | (folded) | — |
 | N5 | hidden graders + `grade.sh` (dual, worst-case); FAILS now | builder | N1,N2,N3 | done | (this commit) | none |
-| N6 | `_solutions/` docs (FIX, feature-qa, trap-manifest, rubric, context-map, doc-drift) | builder | N2,N5 | doing | — | — |
-| N7 | learner docs + `practice.json` + plant stale docs | builder | N6 | todo | — | — |
+| N6 | `_solutions/` docs (FIX, feature-qa, trap-manifest, rubric, context-map, doc-drift) | builder | N2,N5 | done | (this commit) | none |
+| N7 | learner docs + `practice.json` + plant stale docs | builder | N6 | done | (next commit) | none |
 | N8 | traps-bite verification (autopilot check) | verifier | N5,N6,N7 | todo | — | — |
 | N9 | fresh-context review vs acceptance checklist | reviewer | N7,N8 | todo | — | — |
 | N10 | proof: train run + `proof-train-<date>.html` | orch+exec | N9 | todo | — | — |
