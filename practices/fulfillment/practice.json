@@ -19,7 +19,7 @@
     "test": "cd backend && npm test && cd ../web && npm test",
     "grade": "bash grade.sh"
   },
-  "grader": { "kind": "hidden-acceptance", "max": 12 },
+  "grader": { "kind": "hidden-acceptance", "max": 16, "worstCase": true, "note": "pass/fail on grade.sh exit; dual gate = backend acceptance (14) + web integration (2), worst-case (both must be fully green)" },
   "trainingPoints": {
     "disciplines": ["reproduce-before-fix", "requirements-elicitation", "read-before-delegate", "model-before-delegation", "comprehension-as-ownership", "verify-output", "restraint-altitude-match", "reject-on-camera", "establish-cross-boundary-context", "reconcile-docs"],
     "failureModes": ["FM-01", "FM-02", "FM-03", "FM-04", "FM-05", "FM-06", "FM-07", "FM-08", "FM-13", "FM-14", "FM-15", "FM-16"]
