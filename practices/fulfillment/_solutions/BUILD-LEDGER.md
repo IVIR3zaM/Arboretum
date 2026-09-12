@@ -29,9 +29,9 @@ reservations** → snapshot == ATP) and green to the whole unit suite, but **ove
 ## DAG / status
 | Node | Goal | Agent | Deps | Status | Commit | ESCALATE |
 |---|---|---|---|---|---|---|
-| N0 | ledger + per-node constraint packets | orch | — | doing | — | none |
-| N1 | `reference/` external truth + hermetic file resolver | builder | N0 | todo | — | — |
-| N2 | `backend/` src (stale-snapshot bug behind resolver seam) | builder | N1 | todo | — | — |
+| N0 | ledger + per-node constraint packets | orch | — | done | cd9d331 | none |
+| N1 | `reference/` external truth + hermetic file resolver | builder | N0 | done | (this commit) | none |
+| N2 | `backend/` src (stale-snapshot bug behind resolver seam) | builder | N1 | doing | — | — |
 | N3 | `web/` src (product page, badge, cart-hold stub, checkout) | builder | N2 | todo | — | — |
 | N4 | GREEN unit suites (backend + web); bug invisible | builder | N2,N3 | todo | — | — |
 | N5 | hidden graders + `grade.sh` (dual, worst-case); FAILS now | builder | N1,N2,N4 | todo | — | — |
@@ -170,5 +170,22 @@ Drive the practice end-to-end once (train mode) per AGENTS.md harness rules (clo
 (mirror the `deliveries/` proof shape: harness/mode/date/model, per-phase prompt → behaviour →
 designed trap → examiner output → real command outcome). Refresh if the practice changed.
 
+## Canonical dataset (authored in N1 `reference/infra/erp-availability/*.json` — all nodes reuse)
+Locations authoritative set = {`DC-WEST`, `DC-EAST`}. ATP = on_hand − reserved − allocated +
+Σ(inbound.qty where arrivesInDays ≤ leadTimeDays). leadTimeDays=30 for all.
+| SKU | loc | on_hand | reserved | allocated | inbound | ATP | role |
+|---|---|---|---|---|---|---|---|
+| SKU-1001 | DC-WEST | 50 | 0 | 0 | — | 50 | never-reserved / seed |
+| SKU-1002 | DC-WEST | 40 | 12 | 6 | — | 22 | open reservations → oversell |
+| SKU-1003 | DC-EAST | 8 | 15 | 0 | 20@7d | 13 | backorder+inbound-in-window (snapshot under-promises) |
+| SKU-1004 | DC-EAST | 30 | 25 | 0 | 50@45d | 5 | inbound OUTSIDE window (lead-time red herring) → oversell |
+| SKU-1005 | DC-WEST | 10 | 10 | 0 | — | 0 | exactly-zero ATP boundary → oversell |
+| SKU-1006 | DC-WEST | 25 | 0 | 0 | — | 25 | never-reserved / seed |
+**Local snapshot fixture (backend, N2) = {sku → on_hand} copied from the feed, reservations
+dropped** → for seed SKUs (1001,1006) snapshot.on_hand == ATP (unit suite green); for contended
+SKUs the snapshot is stale (on_hand > or ≠ ATP) → the stale confirm path misprices in prod.
+Unit-suite seed set = {SKU-1001, SKU-1006} only.
+
 ## Checkpoint log (append one line per integrated node)
-- (N0) ledger created — pending first commit.
+- (N0) ledger created — cd9d331.
+- (N1) reference/ external truth (contract, ATP spec, 6-SKU hosted feed) — integrated from worktree; ATP values verified.

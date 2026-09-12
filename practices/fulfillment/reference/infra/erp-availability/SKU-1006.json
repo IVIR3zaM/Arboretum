@@ -1,0 +1,10 @@
+{
+  "sku": "SKU-1006",
+  "name": "Switchback Trekking Poles",
+  "location": "DC-WEST",
+  "on_hand": 25,
+  "reserved": 0,
+  "allocated": 0,
+  "inbound": [],
+  "leadTimeDays": 30
+}

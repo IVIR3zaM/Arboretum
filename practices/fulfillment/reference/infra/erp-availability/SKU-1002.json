@@ -1,0 +1,10 @@
+{
+  "sku": "SKU-1002",
+  "name": "Ridgeline Sleeping Bag",
+  "location": "DC-WEST",
+  "on_hand": 40,
+  "reserved": 12,
+  "allocated": 6,
+  "inbound": [],
+  "leadTimeDays": 30
+}

@@ -1,0 +1,12 @@
+{
+  "sku": "SKU-1004",
+  "name": "Summit Hardshell Jacket",
+  "location": "DC-EAST",
+  "on_hand": 30,
+  "reserved": 25,
+  "allocated": 0,
+  "inbound": [
+    {"qty": 50, "arrivesInDays": 45}
+  ],
+  "leadTimeDays": 30
+}

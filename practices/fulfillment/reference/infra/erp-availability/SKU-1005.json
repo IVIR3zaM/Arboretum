@@ -1,0 +1,10 @@
+{
+  "sku": "SKU-1005",
+  "name": "Basecamp Lantern",
+  "location": "DC-WEST",
+  "on_hand": 10,
+  "reserved": 10,
+  "allocated": 0,
+  "inbound": [],
+  "leadTimeDays": 30
+}

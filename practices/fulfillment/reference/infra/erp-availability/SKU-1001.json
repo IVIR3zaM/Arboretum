@@ -1,0 +1,10 @@
+{
+  "sku": "SKU-1001",
+  "name": "Trailhead Backpack 30L",
+  "location": "DC-WEST",
+  "on_hand": 50,
+  "reserved": 0,
+  "allocated": 0,
+  "inbound": [],
+  "leadTimeDays": 30
+}
