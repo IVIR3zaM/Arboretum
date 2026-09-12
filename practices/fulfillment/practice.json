@@ -19,7 +19,7 @@
     "test": "cd backend && npm test && cd ../web && npm test",
     "grade": "bash grade.sh"
   },
-  "grader": { "kind": "hidden-acceptance", "max": 16, "worstCase": true, "note": "pass/fail on grade.sh exit; dual gate = backend acceptance (14) + web integration (2), worst-case (both must be fully green)" },
+  "grader": { "kind": "hidden-acceptance", "max": 16 },
   "trainingPoints": {
     "disciplines": ["reproduce-before-fix", "requirements-elicitation", "read-before-delegate", "model-before-delegation", "comprehension-as-ownership", "verify-output", "restraint-altitude-match", "reject-on-camera", "establish-cross-boundary-context", "reconcile-docs"],
     "failureModes": ["FM-01", "FM-02", "FM-03", "FM-04", "FM-05", "FM-06", "FM-07", "FM-08", "FM-13", "FM-14", "FM-15", "FM-16"]
@@ -31,5 +31,5 @@
   "crossBoundaryTrap": "the current reservations/allocations/inbound live only in reference/infra/erp-availability/*.json and the ATP spec; a single-repo run assumes the local snapshot is authoritative and passes locally but fails the reference-derived conformance vectors (works-on-my-machine, fails in prod)",
   "latentDefects": 6,
   "answerKey": "_solutions/",
-  "notes": "XL tier; provisional estimate. Dual grade gate (Node backend + React web) is hermetic via vendored reference/infra fixtures and a loopback resolver; backend-only is the documented fallback if the web gate is too heavy for CI."
+  "notes": "XL tier; provisional estimate. Grading is pass/fail on the `bash grade.sh` exit code; grader.max 16 = backend acceptance (14) + web integration (2), scored worst-case (both gates must be fully green). Dual grade gate (Node backend + React web) is hermetic via vendored reference/infra fixtures and a loopback file resolver; backend-only is the documented fallback if the web gate is too heavy for CI."
 }

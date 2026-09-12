@@ -88,6 +88,13 @@ Net: the two shallow fixes (symptom-patch 7/14, hard-code-one 8/14) both stay RE
 single-scope fix fails the conformance vectors; only the comprehension-first live-ATP root fix
 reaches 14/14 · 2/2. The traps bite as designed.
 
+### Review (FM-14) — trained by phase 5, not planted in code
+Phase 5 asks the learner to review the diff as a teammate's PR. FM-14 (review without triage or
+intent) is defeated by anchoring the review on the ticket's intent (no oversell against live ATP),
+triaging the load-bearing two-line resolver fix apart from the feature, and naming a real
+trade-off with the condition to revisit it — not rubber-stamping the AI's change. The rubric's
+driving axis scores this; there is nothing to plant in the source.
+
 ## FM-15 — context rot (detail)
 
 **The stale code path:** `backend/src/availability.ts`'s `live` branch, `return rec.on_hand;`,

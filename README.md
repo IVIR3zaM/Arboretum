@@ -78,6 +78,8 @@ Then work the five phases in [`practices/deliveries/README.md`](practices/delive
   generation-spec, templates.
 - [`generator/CONTRACT.md`](generator/CONTRACT.md) — how any agent generates a new practice.
 - [`practices/deliveries/`](practices/deliveries/) — the seed kata (aligned to `alder@1.1.0`).
+- [`practices/fulfillment/`](practices/fulfillment/) — an XL Cedar kata: inventory availability &
+  order confirmation, React + TS/Node full stack (aligned to `cedar@1.0.0`).
 
 ## What this is not
 Not an assessment/hiring tool, not a course, not domain-locked. See [`docs/CONCEPT.md`](docs/CONCEPT.md).
