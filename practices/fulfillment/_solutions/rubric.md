@@ -9,20 +9,23 @@
 Pass/fail, worst-case. This axis does not require reading the transcript.
 
 1. **Backend unit suite stays green.** `commands.test` for `backend/` (`node --test`) still
-   26/26 after the learner's changes — a fix that breaks existing coverage to pass the grader is
+   23/23 after the learner's changes — a fix that breaks existing coverage to pass the grader is
    not acceptable.
 2. **Web unit suite stays green.** `commands.test` for `web/` (Vitest/RTL) still 10/10.
-3. **`bash grade.sh` exits 0** — the full dual gate: backend acceptance
-   (`_solutions/backend-acceptance.test.ts`, worst-case across all SKU states + conformance
-   vectors, 14/14) **AND** the web integration gate
-   (`_solutions/web-integration.test.tsx`, 2/2). Anything short of both at full marks is a
-   FAIL on this axis regardless of how good the transcript looks — see `FIX.md` for the verified
-   baseline (6/14, 1/2) and post-fix (14/14, 2/2) numbers the examiner should reproduce.
-4. **Feature = minimal correct cart hold**, if the learner attempted the phase-3 feature:
-   reserves against live ATP, keyed on `(SKU, cart)`, released on TTL, re-checked live at
-   confirm (see `feature-qa.md`'s "Minimal correct behaviour"). A feature attempt that is
-   advisory-only, double-counts, or never expires holds does not meet the gate even if it merely
-   "compiles and doesn't crash a demo."
+3. **`bash grade.sh` exits 0** — the whole-ticket gate, three parts, all at full marks:
+   (a) **availability acceptance** (`_solutions/backend-acceptance.test.ts`, worst-case across all
+   SKU states + conformance vectors, **14/14**); (b) **feature acceptance**
+   (`_solutions/feature-acceptance.test.ts`, the cart hold driven through its public surface,
+   **4/4**); (c) **web integration** (`_solutions/web-integration.test.tsx`, **2/2**). Anything
+   short of all three at full marks is a FAIL on this axis regardless of how good the transcript
+   looks. Verified baseline availability 6/14 · feature 0/4 · web 1/2 → post-solution 14/14 · 4/4 ·
+   2/2 (see `FIX.md` and `trap-manifest.md`).
+4. **Feature is objectively gated, not just judged.** Gate (b) FAILS a naive hold (records holds
+   but never re-checks them at confirm, or holds against raw on-hand, or doesn't accumulate across
+   carts → oversell: measured **2/4**) and PASSES only the minimal correct hold (reserves against
+   live ATP net of other carts, keyed on `(SKU, cart)`, re-checked at confirm — see `feature-qa.md`).
+   TTL release is a held-back requirement checked on the transcript / diff (not in gate (b) to avoid
+   clock plumbing).
 
 ## Axis B — driving axis (scored from the transcript; requires reading it)
 

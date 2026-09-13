@@ -19,17 +19,17 @@
     "test": "cd backend && npm test && cd ../web && npm test",
     "grade": "bash grade.sh"
   },
-  "grader": { "kind": "hidden-acceptance", "max": 16 },
+  "grader": { "kind": "hidden-acceptance", "max": 20 },
   "trainingPoints": {
     "disciplines": ["reproduce-before-fix", "requirements-elicitation", "read-before-delegate", "model-before-delegation", "comprehension-as-ownership", "verify-output", "restraint-altitude-match", "reject-on-camera", "establish-cross-boundary-context", "reconcile-docs"],
     "failureModes": ["FM-01", "FM-02", "FM-03", "FM-04", "FM-05", "FM-06", "FM-07", "FM-08", "FM-13", "FM-14", "FM-15", "FM-16"]
   },
   "primaryBug": "a stale availability path reads the feed's on_hand instead of computing live ATP, so SKUs with reservations/allocations/inbound oversell in production while staying green on local seed data; the correct ATP formula (on_hand - reserved - allocated + inbound-within-lead-time) exists ONLY in reference/atp-spec.md, never in local code (the abandoned 'availability is the number we hold locally' assumption, no local doc trace)",
-  "featureTrap": "the 10-minute cart hold must reserve against live ATP, be keyed on the business entity, expire on TTL, and be re-checked at confirm; the naive hold double-counts, holds against the stale on-hand/promisableStock figure, or leaks",
+  "featureTrap": "the 10-minute cart hold must reserve against live ATP, be keyed on the business entity, expire on TTL, and be RE-CHECKED at confirm; a straight 'implement the hold' delegation records holds but never re-checks them at confirm (and doesn't accumulate), so two carts oversell — graded by the hidden feature-acceptance gate (naive 2/4, correct 4/4), objective not just rubric",
   "assistantTrap": "a realistic 'fix the oversell' delegation that never reads reference/ plateaus: subtracting reserved (the local promisableStock notion) reaches 11/14, also subtracting allocated reaches 12/14, a checkout-handler symptom-patch stays 7/14 — only implementing the full spec formula (incl. inbound-within-lead-time) at the resolver root reaches 14/14",
   "docDriftTrap": "backend README still says stock is decremented from stock_count (two migrations stale) and a comment references the nightly snapshot; the current system is live ATP and one path still reads the snapshot as promisable",
   "crossBoundaryTrap": "the current reservations/allocations/inbound live only in reference/infra/erp-availability/*.json and the ATP spec; a single-repo run assumes the local snapshot is authoritative and passes locally but fails the reference-derived conformance vectors (works-on-my-machine, fails in prod)",
   "latentDefects": 5,
   "answerKey": "_solutions/",
-  "notes": "XL tier; provisional estimate. Grading is pass/fail on the `bash grade.sh` exit code; grader.max 16 = backend acceptance (14) + web integration (2), scored worst-case (both gates must be fully green). Dual grade gate (Node backend + React web) is hermetic via vendored reference/infra fixtures and a loopback file resolver; backend-only is the documented fallback if the web gate is too heavy for CI."
+  "notes": "XL tier; provisional estimate. Grading is pass/fail on the `bash grade.sh` exit code; grader.max 20 = availability acceptance (14, phase-2 bug) + feature acceptance (4, phase-3 cart hold) + web integration (2), scored worst-case (all three gates must be fully green — the whole ticket: fix AND deliver the feature). Hermetic via vendored reference/infra fixtures and a loopback file resolver; the web gate is the documented fallback candidate if too heavy for CI."
 }

@@ -52,11 +52,10 @@
   .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
     padding:20px 22px;box-shadow:var(--shadow)}
   .lead{font-size:17px;line-height:1.55}
-  .lead b{color:var(--accent)}
-  .score{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .score{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
   .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
   .stat .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-  .stat .v{font-size:24px;font-weight:700;margin-top:4px;letter-spacing:-.01em}
+  .stat .v{font-size:22px;font-weight:700;margin-top:4px;letter-spacing:-.01em}
   .arrow{color:var(--muted)}
   .v .from{color:var(--bad)} .v .to{color:var(--good)}
   .phase{margin-top:16px}
@@ -64,8 +63,8 @@
   .phase.lose{border-left:3px solid var(--bad)} .phase.win{border-left:3px solid var(--good)}
   .phase h3{margin:0;padding:16px 20px;font-size:16px;border-bottom:1px solid var(--line);
     display:flex;align-items:center;gap:10px}
-  .phase h3 .n{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;
-    padding:0 7px;border-radius:13px;font-size:12px;font-weight:700;flex:0 0 auto}
+  .phase h3 .n{display:inline-flex;align-items:center;justify-content:center;min-width:64px;height:24px;
+    padding:0 9px;border-radius:12px;font-size:11px;font-weight:700;flex:0 0 auto;text-transform:uppercase;letter-spacing:.05em}
   .phase.lose h3 .n{background:var(--bad-soft);color:var(--bad)}
   .phase.win h3 .n{background:var(--good-soft);color:var(--good)}
   .block{padding:12px 20px;border-bottom:1px solid var(--line)}
@@ -74,7 +73,6 @@
     display:flex;align-items:center;gap:7px;margin-bottom:6px;color:var(--muted)}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
   .label.prompt{color:var(--prompt)} .dot.prompt{background:var(--prompt)}
-  .label.trap{color:var(--warn)} .dot.trap{background:var(--warn)}
   .label.outcome{color:var(--good)} .dot.outcome{background:var(--good)}
   .label.red{color:var(--bad)} .dot.red{background:var(--bad)}
   .promptbox{background:var(--prompt-soft);border-radius:8px;padding:10px 13px;font-size:15px}
@@ -93,6 +91,7 @@
   footer{margin-top:36px;color:var(--muted);font-size:13px;text-align:center}
   .tablewrap{overflow-x:auto}
   .note{color:var(--muted);font-size:13px;margin-top:10px}
+  h4{margin:22px 20px 0;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -101,10 +100,11 @@
 <header class="hero">
   <p class="eyebrow">Arboretum · recorded end-to-end run</p>
   <h1>Fulfillment — inventory availability &amp; order confirmation</h1>
-  <p class="sub">Two real drives of the same kata. An <b>autopilot</b> engineer who pastes the ticket
-  and delegates "fix it" writes a perfectly reasonable fix — and it plateaus red. A
-  <b>disciplined</b> engineer does the research pass and converges. Every score is a real
-  <code>grade.sh</code> output produced by the examiner against each submission.</p>
+  <p class="sub">The ticket asks for two things: fix the oversell bug <b>and</b> ship the cart-hold
+  feature. This proof runs both as one job, twice — delegated to an AI to "fix and deliver," and
+  driven by a disciplined engineer. The delegated run ships an overselling checkout <em>and</em> an
+  overselling hold; both gates stay red. The disciplined run converges. Every score is a real
+  <code>grade.sh</code> output from the examiner.</p>
   <div class="badges">
     <span class="badge mode">TRAIN mode</span>
     <span class="badge"><span>Practice</span><b>fulfillment</b><span>·</span><span class="mono">XL</span></span>
@@ -118,19 +118,16 @@
 <section>
   <h2>How the harness is set up (jailing)</h2>
   <div class="card">
-    <p style="margin:0 0 8px">The driver (the assistant executing the learner's prompts) works only
-    a <b>jailed clone</b>: <code>_solutions/</code> <b>and</b> <code>grade.sh</code> are stripped, so
-    the driver has <b>no access to the grader or the answer key</b> and cannot iterate against the
-    oracle. It sees the same repo any engineer would: <code>TICKET.md</code>, the <code>backend/</code>
-    and <code>web/</code> packages, their green unit suites, and the read-only <code>reference/</code>.
-    A <b>separate examiner</b> (this side) runs <code>bash grade.sh</code> against each submission and
-    reports the score — the driver never sees the <code>N/14</code>.</p>
-    <p style="margin:0">The bug: <code>availability.ts</code>'s live branch returns the feed's raw
-    <code>on_hand</code>. The catch — and the whole point — is that the correct rule
-    (<span class="mono">ATP = on_hand − reserved − allocated + inbound-within-lead-time</span>)
-    exists <b>only</b> in <code>reference/atp-spec.md</code>. The one availability helper in the
-    local code, <code>promisableStock</code>, is a stale <code>on_hand − reserved</code> that misses
-    two terms. So you cannot fix this correctly from the local code alone.</p>
+    <p style="margin:0 0 8px">The driver works only a <b>jailed clone</b>: <code>_solutions/</code>
+    <b>and</b> <code>grade.sh</code> are stripped, so it has no access to the grader or answer key and
+    can't iterate against the oracle. A <b>separate examiner</b> runs <code>bash grade.sh</code>
+    against each submission. The gate has three parts — <b>availability</b> (the phase-2 bug),
+    <b>feature</b> (the phase-3 cart hold), and <b>web</b> — and exits green only when all three do.</p>
+    <p style="margin:0">Two things make this hard from inside the repo: (1) the correct ATP rule
+    (<span class="mono">on_hand − reserved − allocated + inbound-within-lead-time</span>) lives
+    <b>only</b> in <code>reference/atp-spec.md</code> — the local helper <code>promisableStock</code>
+    is a stale <code>on_hand − reserved</code>; and (2) the cart hold's real requirements (reserve
+    against live ATP, re-check at confirm) are held back in the PM's thin ask.</p>
   </div>
 </section>
 
@@ -138,125 +135,116 @@
   <h2>Scorecard — real captured outcomes</h2>
   <div class="score">
     <div class="stat">
-      <div class="k">Autopilot — examiner score</div>
+      <div class="k">Bug — availability gate</div>
       <div class="v"><span class="from">6 → 11 → 12 / 14</span></div>
-      <div class="k" style="margin-top:6px"><span class="pill red">plateaus RED</span> never 14</div>
+      <div class="k" style="margin-top:6px">autopilot <span class="pill red">plateaus RED</span></div>
     </div>
     <div class="stat">
-      <div class="k">Disciplined — examiner score</div>
-      <div class="v"><span class="from">6/14</span> <span class="arrow">→</span> <span class="to">14/14</span></div>
-      <div class="k" style="margin-top:6px">web <span class="mono">1/2 → 2/2</span> · <span class="pill green">GREEN</span></div>
+      <div class="k">Feature — cart-hold gate</div>
+      <div class="v"><span class="from">0 → 2 / 4</span></div>
+      <div class="k" style="margin-top:6px">autopilot <span class="pill red">oversells, RED</span></div>
+    </div>
+    <div class="stat">
+      <div class="k">Disciplined — whole ticket</div>
+      <div class="v"><span class="to">14/14 · 4/4 · 2/2</span></div>
+      <div class="k" style="margin-top:6px"><span class="pill green">GREEN</span></div>
     </div>
     <div class="stat">
       <div class="k">Unit suite (both drivers)</div>
       <div class="v"><span class="to">23/23 · 10/10</span></div>
-      <div class="k" style="margin-top:6px">green with the bug live (FM-01)</div>
-    </div>
-    <div class="stat">
-      <div class="k">What separates them</div>
-      <div class="v"><span class="to">the research pass</span></div>
-      <div class="k" style="margin-top:6px">two ATP terms, only in reference/</div>
+      <div class="k" style="margin-top:6px">green with both defects live (FM-01)</div>
     </div>
   </div>
 </section>
 
 <section>
-  <h2 class="lose">The losing path — a realistic autopilot, graded by the examiner</h2>
+  <h2 class="lose">The losing path — "fix it and ship the feature," delegated</h2>
 
+  <h4>Part 1 — the bug (availability gate)</h4>
   <div class="phase lose"><div class="card">
-    <h3><span class="n">Round 1</span> Paste the ticket, delegate the fix</h3>
-    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner → assistant (verbatim shape)</div>
-      <div class="promptbox">"Here's ticket #8823 — some SKUs are overselling in prod, backend and
-      storefront both look fine, tests are green. Have a look and fix the bug."</div></div>
-    <div class="block"><div class="label"><span class="dot"></span>What the assistant does (no research pass)</div>
-      <p style="margin:0">Reads the ticket and the backend. Finds the availability resolver returning
-      the feed's <code>on_hand</code>, and a local helper <code>promisableStock</code> = <code>on_hand
-      − reserved</code>. Concludes, reasonably: "availability should net out what's reserved" — and
-      wires that in. Unit tests still green, so it reports done.</p>
-      <pre><span class="c">// backend/src/availability.ts — live branch</span>
-- return rec.on_hand;
-+ return promisableStock(rec);   <span class="c">// on_hand - reserved</span>
-<span class="c">cd backend &amp;&amp; npm test →</span> # tests 23 / # pass 23 / # fail 0</pre></div>
-    <div class="block"><div class="label red"><span class="dot red"></span>Examiner grades the submission</div>
-      <div class="examinerbox">backend acceptance <b>11/14</b> · web 2/2 → <b>RESULT: FAIL</b>. Better,
-      but still overselling: it never subtracts <code>allocated</code> (SKU-1002) and never counts
-      inbound (SKU-1003). <span class="pill red">trap: plausible fix, still red</span></div></div>
-  </div></div>
-
-  <div class="phase lose"><div class="card">
-    <h3><span class="n">Round 2</span> "Still failing some SKUs" — guess harder</h3>
+    <h3><span class="n">Bug</span> Paste the ticket, delegate the fix</h3>
     <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner → assistant</div>
-      <div class="promptbox">"QA says it's still wrong for a couple of SKUs. Take another pass."</div></div>
-    <div class="block"><div class="label"><span class="dot"></span>What the assistant does (still no spec)</div>
-      <p style="margin:0">Notices the feed records also carry an <code>allocated</code> field and folds
-      it in. A genuinely better guess — and it gets closer.</p>
-      <pre>+ return rec.on_hand - rec.reserved - rec.allocated;</pre></div>
-    <div class="block"><div class="label red"><span class="dot red"></span>Examiner grades the submission</div>
-      <div class="examinerbox">backend acceptance <b>12/14</b> · web 2/2 → <b>RESULT: FAIL</b>. One SKU
-      left: the backordered one (SKU-1003) whose incoming stock should count — but only within a
-      lead-time window the local code never mentions. <span class="pill red">trap: plateau at 12/14</span></div></div>
+      <div class="promptbox">"Ticket #8823 — some SKUs oversell in prod, backend and storefront look
+      fine, tests green. Fix the bug."</div></div>
+    <div class="block"><div class="label"><span class="dot"></span>What it does (no research pass) &amp; examiner scores</div>
+      <p style="margin:0 0 6px">Finds the resolver returning <code>on_hand</code> and a local helper
+      <code>promisableStock = on_hand − reserved</code>; reasons "net out reservations" and wires it —
+      then guesses <code>allocated</code> too. Each guess is graded by the examiner:</p>
+      <pre><span class="c">on_hand - reserved            </span> availability <span class="r">11/14</span>  <span class="c">(misses allocated + inbound)</span>
+<span class="c">on_hand - reserved - allocated</span> availability <span class="r">12/14</span>  <span class="c">(misses the backorder's inbound)</span></pre>
+      <p style="margin:8px 0 0"><span class="pill red">plateau: 12/14, never 14</span> The last term —
+      inbound within the lead-time window — is stated only in <code>reference/atp-spec.md</code>, which
+      this driver never opened. Guessing from local field names cannot reach it.</p></div>
+  </div></div>
+
+  <h4>Part 2 — the feature (cart-hold gate)</h4>
+  <div class="phase lose"><div class="card">
+    <h3><span class="n">Feature</span> "Now add the cart hold"</h3>
+    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner → assistant</div>
+      <div class="promptbox">"Same ticket also wants a 10-minute cart hold so shoppers don't lose items
+      at checkout. Implement <code>placeHold</code> and wire the add-to-cart button."</div></div>
+    <div class="block"><div class="label"><span class="dot"></span>What it does (straight "implement this")</div>
+      <p style="margin:0">Builds exactly what was asked: a hold store, and a <code>placeHold</code>
+      that checks current availability and records the hold. Unit tests pass; the button works; it
+      reports done. What it did <b>not</b> do — because the PM never spelled it out and it didn't read
+      how confirm decides availability — is make the hold actually <em>reserve</em>: confirm still
+      doesn't subtract other carts' holds, and two carts can hold the same units.</p>
+      <pre><span class="c">// records a hold if there's availability now — but confirm never re-checks holds</span>
+placeHold(sku, location, qty, cartId, ttlMs) { if (qty &lt;= availableToPromise(...)) holds.push(...) }</pre></div>
+    <div class="block"><div class="label red"><span class="dot red"></span>Examiner grades the feature</div>
+      <div class="examinerbox">feature acceptance <b>2/4</b> → <b>FAIL</b>. Cart A holds 15 of a
+      22-ATP SKU, then cart B still checks out 10 (confirm ignores holds) → <b>oversold</b>; two carts
+      hold against the same stock (no accumulation). The held-back requirements — <em>reserve against
+      live ATP</em> and <em>re-check at confirm</em> — were never elicited. <span class="pill red">trap: looks done, oversells</span></div></div>
   </div></div>
 
   <div class="phase lose"><div class="card">
-    <h3><span class="n">Round 3</span> Stuck — or reach for a symptom-patch</h3>
-    <div class="block"><div class="label trap"><span class="dot trap"></span>Why it can't converge from here</div>
-      <div class="promptbox" style="background:var(--warn-soft)">The last two points need
-      <code>allocated</code> <em>and</em> the inbound-within-lead-time rule. Both live <b>only</b> in
-      <code>reference/atp-spec.md</code>, which this driver never opened. Guessing from field names got
-      it to 12/14; it cannot reach 14 without leaving the repo. An engineer under pressure often
-      switches to a symptom-patch instead — clamp the ticketed SKU in the checkout handler:</div>
-      <pre><span class="c">// backend/src/orders.ts — special-case the one SKU</span>
-+ if (order.sku === "SKU-1002" &amp;&amp; order.qty &gt; 22) return { ...rejected };</pre></div>
-    <div class="block"><div class="label red"><span class="dot red"></span>Examiner grades the submission</div>
-      <div class="examinerbox">backend acceptance <b>7/14</b> · web 2/2 → <b>RESULT: FAIL</b>. The
-      web flow and that one SKU pass, but the grader tests the availability <b>root</b>, not the
-      handler — every other contended SKU is still wrong. <span class="pill red">trap: symptom-patch, root stays red</span></div></div>
+    <h3><span class="n">Net</span> Delegated "fix and deliver" ships two oversell paths</h3>
+    <div class="block"><div class="label red"><span class="dot red"></span>Whole-ticket examiner result</div>
+      <div class="examinerbox">availability <b>12/14</b> · feature <b>2/4</b> · web 2/2 → <b>RESULT: FAIL</b>.
+      Both the fix and the feature look finished (green unit suites, working UI) and both oversell in
+      production. Neither the spec nor the held-back requirements were ever read.</div></div>
   </div></div>
 </section>
 
 <section>
-  <h2 class="win">The winning path — the research pass converges</h2>
+  <h2 class="win">The winning path — a disciplined engineer</h2>
 
   <div class="phase win"><div class="card">
-    <h3><span class="n">1</span> Understand + research pass (beats FM-16 / FM-15)</h3>
+    <h3><span class="n">Bug</span> Research pass → fix the root</h3>
     <div class="block"><div class="label prompt"><span class="dot prompt"></span>Driver</div>
-      <div class="promptbox">"This talks to a hosted ERP. Before touching code, read everything in
-      <code>reference/</code> and write me <code>research-notes.md</code> — how is availability
-      actually supposed to be computed? Treat the READMEs as stale until verified."</div></div>
-    <div class="block"><div class="label outcome"><span class="dot outcome"></span>What it learns — the two missing terms</div>
-      <p style="margin:0"><code>reference/atp-spec.md</code>:
-      <span class="mono">ATP = on_hand − reserved − allocated + Σ(inbound where arrivesInDays ≤
-      leadTimeDays)</span>, and <b>on-hand is not promisable</b>. This is the only place
-      <code>allocated</code> and the inbound lead-time window are stated — the local
-      <code>promisableStock</code> knows neither. Also flags the stale docs (README
-      <code>stock_count</code>, web <code>GET /stock</code>, a false "a DB constraint prevents
-      oversell" line). <span class="pill green">establish-cross-boundary-context ✓ · reconcile-docs ✓</span></p></div>
+      <div class="promptbox">"Before touching code, read <code>reference/</code> and write
+      <code>research-notes.md</code>: how is availability actually supposed to be computed?"</div></div>
+    <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome</div>
+      <p style="margin:0 0 6px"><code>reference/atp-spec.md</code> gives the two terms local code never
+      had (<code>allocated</code>, inbound-within-lead-time). Reproduce with a failing test, then
+      implement the full formula at the resolver root:</p>
+      <pre>return rec.on_hand - rec.reserved - rec.allocated + eligibleInbound;   <span class="c">// eligible = inbound within leadTimeDays</span></pre>
+      <div class="examinerbox ok">availability acceptance <b>14/14</b> · web <b>2/2</b> — correct for
+      every SKU at once. <span class="pill green">establish-cross-boundary-context ✓ · reproduce-before-fix ✓</span></div></div>
   </div></div>
 
   <div class="phase win"><div class="card">
-    <h3><span class="n">2</span> Reproduce, then fix the root with the spec's formula</h3>
-    <div class="block"><div class="label"><span class="dot"></span>The fix — the full rule at the resolver root</div>
-      <pre><span class="c">// backend/src/availability.ts — live branch (per reference/atp-spec.md)</span>
-  const eligibleInbound = rec.inbound
-    .filter((l) =&gt; l.arrivesInDays &lt;= rec.leadTimeDays)
-    .reduce((s, l) =&gt; s + l.qty, 0);
-  return rec.on_hand - rec.reserved - rec.allocated + eligibleInbound;</pre></div>
-    <div class="block"><div class="label outcome"><span class="dot outcome"></span>Examiner grades the submission</div>
-      <div class="examinerbox ok">backend acceptance <b>14/14</b> · web <b>2/2</b> → <b>RESULT: PASS</b>.
-      Correct for every SKU at once — reservations, allocations, and the backorder's in-window inbound.
-      <span class="pill green">model-before-delegation ✓ · reproduce-before-fix ✓</span></div></div>
+    <h3><span class="n">Feature</span> Elicit the held-back requirements, then build</h3>
+    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Driver (before writing code)</div>
+      <div class="promptbox">"The hold ask is thin. Does a hold reduce what other shoppers can buy, or
+      is it advisory? Is it re-checked at confirm? Keyed how? What frees it?" — reads how confirm
+      decides availability, then builds exactly the agreed behaviour.</div></div>
+    <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome</div>
+      <p style="margin:0 0 6px">A hold reserves against <b>live ATP net of other carts' holds</b>,
+      keyed on (SKU, cart), released on TTL, and <b>re-checked at confirm</b> (confirm subtracts other
+      carts' active holds). Deferred out loud: un-hold beyond release, per-cart limits, billing.</p>
+      <div class="examinerbox ok">feature acceptance <b>4/4</b> — a hold blocks another cart's oversell,
+      reserves against live ATP, accumulates across carts, and never blocks its own cart.
+      <span class="pill green">requirements-elicitation ✓ · read-before-delegate ✓ · restraint ✓</span></div></div>
   </div></div>
 
   <div class="phase win"><div class="card">
-    <h3><span class="n">3–5</span> Feature · improve · review</h3>
-    <div class="block"><div class="label"><span class="dot"></span>The rest of the flow</div>
-      <p style="margin:0"><b>Feature:</b> the 10-minute cart hold — elicit the held-back requirements
-      first (reserve against live ATP, keyed on (SKU, cart), TTL release, re-checked at confirm), build
-      exactly that, defer the rest out loud (restraint). <b>Improve:</b> surface — not recite — the
-      ranked latent defects (FM-06 idempotency on transport id, FM-05 store returns internals by
-      reference, FM-07 unbounded holds, FM-04 exactly-zero boundary, FM-08 unvalidated location),
-      fixing only what's in scope. <b>Review:</b> anchor on the ticket's intent, triage the small
-      resolver fix apart from the feature, name a real trade-off. See <code>rubric.md</code>.</p></div>
+    <h3><span class="n">Done</span> Whole ticket delivered</h3>
+    <div class="block"><div class="label outcome"><span class="dot outcome"></span>Whole-ticket examiner result</div>
+      <div class="examinerbox ok">availability <b>14/14</b> · feature <b>4/4</b> · web <b>2/2</b> →
+      <b>RESULT: PASS</b>. Then review with intent: triage the small resolver fix apart from the
+      feature, name a real trade-off (the hold store is in-memory / single-process). (FM-14)</div></div>
   </div></div>
 </section>
 
@@ -264,20 +252,19 @@
   <h2>The two paths, side by side (measured)</h2>
   <div class="card">
     <div class="tablewrap"><table>
-      <thead><tr><th>Fix a real engineer would submit</th><th>backend</th><th>web</th><th>Result</th><th>Why</th></tr></thead>
+      <thead><tr><th>Submission</th><th>availability</th><th>feature</th><th>web</th><th>Result</th></tr></thead>
       <tbody>
-        <tr><td>Baseline — resolver reads <code>on_hand</code></td><td class="mono">6/14</td><td class="mono">1/2</td><td><span class="pill red">RED</span></td><td>Unit suite green; live feed oversells. FM-01/02.</td></tr>
-        <tr><td>Autopilot A — subtract reserved (<code>promisableStock</code>)</td><td class="mono">11/14</td><td class="mono">2/2</td><td><span class="pill red">RED</span></td><td>Misses allocated + inbound. Plausible, still red.</td></tr>
-        <tr><td>Autopilot B — also subtract allocated</td><td class="mono">12/14</td><td class="mono">2/2</td><td><span class="pill red">RED</span></td><td>Backorder+inbound SKU still wrong. FM-16.</td></tr>
-        <tr><td>Autopilot C — symptom-patch the checkout handler</td><td class="mono">7/14</td><td class="mono">2/2</td><td><span class="pill red">RED</span></td><td>Grader tests the root, not the handler. FM-13.</td></tr>
-        <tr><td><b>Disciplined — full formula from <code>reference/atp-spec.md</code></b></td><td class="mono">14/14</td><td class="mono">2/2</td><td><span class="pill green">GREEN</span></td><td>The only fix that reads the spec; correct for every SKU.</td></tr>
+        <tr><td>Baseline — bug present, hold is a stub</td><td class="mono">6/14</td><td class="mono">0/4</td><td class="mono">1/2</td><td><span class="pill red">RED</span></td></tr>
+        <tr><td>Autopilot bug — subtract reserved</td><td class="mono">11/14</td><td class="mono">—</td><td class="mono">2/2</td><td><span class="pill red">RED</span></td></tr>
+        <tr><td>Autopilot bug — also subtract allocated</td><td class="mono">12/14</td><td class="mono">—</td><td class="mono">2/2</td><td><span class="pill red">RED</span></td></tr>
+        <tr><td>Autopilot feature — records holds, no re-check at confirm</td><td class="mono">—</td><td class="mono">2/4</td><td class="mono">2/2</td><td><span class="pill red">RED</span></td></tr>
+        <tr><td><b>Disciplined — spec formula + correct hold</b></td><td class="mono">14/14</td><td class="mono">4/4</td><td class="mono">2/2</td><td><span class="pill green">GREEN</span></td></tr>
       </tbody>
     </table></div>
-    <p class="note">Every row is a genuine captured <code>bash grade.sh</code> outcome from this run,
-    each fix applied at the resolver root and then reverted. The shipped practice keeps the bug (grader
-    RED 6/14 · 1/2) so the next learner starts fresh. The correct ATP formula lives only in
-    <code>reference/</code>; the local <code>promisableStock</code> helper is deliberately stale, which
-    is why the autopilot's honest guesses climb but never reach 14.</p>
+    <p class="note">Every row is a genuine captured <code>bash grade.sh</code> / <code>node --test</code>
+    outcome from this run, each attempt applied then reverted; the shipped practice keeps both defects
+    (availability 6/14, feature 0/4) so the next learner starts fresh. Unit suites stay
+    <b>23/23 · 10/10</b> green through all of it — "looks done" is never the signal.</p>
   </div>
 </section>
 

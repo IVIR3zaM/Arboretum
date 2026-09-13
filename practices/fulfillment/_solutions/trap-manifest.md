@@ -86,6 +86,34 @@ review on the ticket's intent (no oversell against live ATP), triaging the load-
 fix apart from the feature, and naming a real trade-off with the condition to revisit it — not
 rubber-stamping the AI's change. The rubric's driving axis scores this; nothing to plant in source.
 
+## Feature trap (phase 3) — the cart hold, objectively graded
+
+`FEATURE-REQUEST.md` is a thin PM ask ("let shoppers hold an item for 10 minutes"). The held-back
+requirements — the hold must **reserve against live ATP net of other carts**, be keyed on
+**(SKU, cart)**, be released on **TTL**, and be **re-checked at confirm** — are not stated. A
+straight "implement the hold" delegation (read-before-delegate / requirements-elicitation miss)
+builds a hold *store* and a `placeHold` that checks availability once and records the hold, but
+never wires it into `confirmOrder` and never accumulates across carts. It looks done — unit suites
+green, the button works — and it **oversells**: two carts hold the same units and both confirm.
+
+This is now **objectively gated** (not just rubric-judged) by
+`_solutions/feature-acceptance.test.ts`, driven through the public surface (`placeHold` +
+`confirmOrder`) against the live feed, and wired into `grade.sh` as gate (b). Measured
+(2026-09-13, each impl applied on a fixed base then reverted):
+
+| Cart-hold implementation | feature acceptance | result |
+|---|---|---|
+| Stub (`placeHold` throws) | **0/4** | RED — feature not built |
+| Naive: records holds, checks ATP once, **confirm not re-checked**, no accumulation | **2/4** | RED — oversells (cart A holds 15, cart B still confirms 10 on a 22-ATP SKU; holds don't accumulate) |
+| Correct: reserve vs live ATP net of other carts, keyed (SKU,cart), re-checked at confirm | **4/4** | GREEN |
+
+The whole ticket (`bash grade.sh`) is GREEN only when the bug fix (availability 14/14) **and** the
+correct hold (feature 4/4) **and** web (2/2) all pass — "fix and deliver." Defeated by
+*requirements-elicitation* + *read-before-delegate* (read how confirm decides availability before
+building the hold) and *restraint* (build the minimal correct hold; defer un-hold/limits/billing).
+Note the feature also inherits the primary bug's dependency: a correct hold on an unfixed base still
+fails, because it would reserve against the wrong ATP.
+
 ## FM-15 — context rot (detail)
 
 **The stale code paths:** (a) `availability.ts`'s `live` branch, `return rec.on_hand;`, with a

@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # grade.sh — the wrapper `practice.json`'s `commands.grade` invokes.
 #
-# Runs BOTH hidden graders (backend acceptance + web integration) against the
-# live ERP feed and prints a worst-case summary. Exits 0 ONLY if both are
-# fully green; non-zero otherwise. Hermetic: reads static JSON fixtures from
-# `reference/infra/erp-availability/` off disk — no network at grade time.
+# Runs the hidden graders for the WHOLE ticket against the live ERP feed and
+# prints a worst-case summary. Three gates: (a) backend availability acceptance
+# (phase-2 bug fix), (b) feature acceptance (phase-3 cart hold), (c) web
+# integration. Exits 0 ONLY if all three are fully green; non-zero otherwise.
+# Hermetic: reads static JSON fixtures from `reference/infra/erp-availability/`
+# off disk — no network at grade time.
 #
 # This script (and everything it runs) lives OUTSIDE the learner's clone in
 # spirit: it is checked in at the practice root only because `practice.json`
@@ -46,7 +48,33 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# (b) Web integration: the real storefront (App.tsx) against the real
+# (b) Feature acceptance: the phase-3 cart hold, driven through its public
+#     surface (placeHold + confirmOrder) against the live feed. RED while the
+#     hold is a stub or built naively (not re-checked at confirm / not reserved
+#     against live ATP); GREEN only for the minimal-correct hold on a fixed base.
+# ---------------------------------------------------------------------------
+echo
+echo "--- feature acceptance (node --test) ---"
+feature_tap="$(node --test --test-reporter=tap _solutions/feature-acceptance.test.ts 2>&1)"
+feature_status=$?
+echo "$feature_tap"
+
+feature_pass="$(printf '%s\n' "$feature_tap" | grep -m1 -E '^# pass ' | grep -oE '[0-9]+' || true)"
+feature_fail="$(printf '%s\n' "$feature_tap" | grep -m1 -E '^# fail ' | grep -oE '[0-9]+' || true)"
+feature_total="$(printf '%s\n' "$feature_tap" | grep -m1 -E '^# tests ' | grep -oE '[0-9]+' || true)"
+feature_pass="${feature_pass:-0}"
+feature_fail="${feature_fail:-0}"
+feature_total="${feature_total:-0}"
+
+if [ "$feature_status" -ne 0 ] || [ "$feature_fail" != "0" ] || [ "$feature_total" = "0" ]; then
+  feature_ok=0
+  overall_exit=1
+else
+  feature_ok=1
+fi
+
+# ---------------------------------------------------------------------------
+# (c) Web integration: the real storefront (App.tsx) against the real
 #     backend, run via a SEPARATE vitest config (see vitest.web.config.ts's
 #     own comment for why web/vite.config.ts can't be reused here).
 # ---------------------------------------------------------------------------
@@ -76,12 +104,17 @@ fi
 # ---------------------------------------------------------------------------
 echo
 echo "=================================================================="
-echo " summary (worst-case; both gates must be fully green)"
+echo " summary (worst-case; all three gates must be fully green)"
 echo "=================================================================="
 if [ "$backend_ok" -eq 1 ]; then
   echo "backend acceptance : PASS  ($backend_pass/$backend_total)"
 else
   echo "backend acceptance : FAIL  ($backend_pass/$backend_total, exit=$backend_status)"
+fi
+if [ "$feature_ok" -eq 1 ]; then
+  echo "feature acceptance : PASS  ($feature_pass/$feature_total)"
+else
+  echo "feature acceptance : FAIL  ($feature_pass/$feature_total, exit=$feature_status)"
 fi
 if [ "$web_ok" -eq 1 ]; then
   echo "web integration    : PASS  ($web_pass/$web_total)"

@@ -89,8 +89,9 @@ cd ../backend && npm test                # backend unit suite, green
 cd ../web && npm test                    # web unit suite, green
 ```
 
-`bash grade.sh` (run from `practices/fulfillment/`) is the objective gate — it exercises both
-packages together and is the score that matters, not the green unit suites above.
+`bash grade.sh` (run from `practices/fulfillment/`) is the objective gate for the **whole ticket** —
+it checks availability correctness (the bug), the cart hold (the feature), and the storefront
+together, and is the score that matters, not the green unit suites above.
 
 ## The five phases (work them in order, on a clock)
 

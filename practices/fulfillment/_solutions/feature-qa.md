@@ -5,11 +5,16 @@
 **FEATURE (as given to the learner in `FEATURE-REQUEST.md`):** let a shopper reserve an item for
 10 minutes while they check out (a "cart hold"), on both the storefront and the backend.
 
-The request is intentionally underspecified — 2-3 sentences, plus a hint to read how confirm
-decides availability first (`FEATURE-REQUEST.md` points at `orders.ts`/`availability.ts`). A
-learner who elicits requirements before delegating implementation should surface something close
-to the questions below; one who doesn't will hand an assistant a vague prompt and get a plausible
-but wrong cart hold back (FM-13's thrash loop, applied to a feature instead of a bug).
+The request is a thin, realistic PM ask (2-3 sentences, no methodology and **no hint** that a trap
+exists — like the TICKET, it just states what the PM wants). A learner who elicits requirements
+before delegating should surface something close to the questions below; one who doesn't will hand
+an assistant a vague prompt and get a plausible-but-wrong cart hold back (a feature-shaped FM-13).
+
+**Objectively gated:** the phase-3 feature is graded by `_solutions/feature-acceptance.test.ts`
+(wired into `grade.sh` as gate (b)) — a naive hold that records holds but never re-checks them at
+confirm scores **2/4** (oversells), the minimal correct hold scores **4/4**. So "the AI built a
+hold and the demo works" is not enough; it has to actually reserve. See `trap-manifest.md`'s
+"Feature trap (phase 3)".
 
 Existing scaffolding the learner will find: `backend/src/reservations.ts` already has a
 `holds` store (`place`, `active`, `all`) and a `placeHold(sku, qty, ttlMs)` stub that throws

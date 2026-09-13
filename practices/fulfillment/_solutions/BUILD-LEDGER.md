@@ -272,6 +272,20 @@ Unit-suite seed set = {SKU-1001, SKU-1006} only.
   · NOTE: two learner subagents were spawned for this (autopilot + disciplined) but both inherited
     plan mode and could only plan; the arcs were executed directly and every number captured for real.
 
+- (POST-BUILD, 2026-09-13b) Feature is now a REAL, GRADED trap (user feedback: the proof/traps
+  covered only the bug, not the feature). Added `_solutions/feature-acceptance.test.ts` and wired it
+  into `grade.sh` as gate (b), so grade.sh is now the WHOLE-TICKET gate: availability (14) + feature
+  (4) + web (2). FEATURE-REQUEST.md rewritten to a thin realistic PM ask (dropped the "figure out
+  what it means / read confirm first" coaching + the ⚠️ trap spoiler). Measured feature ladder
+  (each impl applied on a fixed base, reverted): stub **0/4**, naive hold (records holds, not
+  re-checked at confirm, no accumulation) **2/4** RED (oversells), correct hold **4/4** GREEN.
+  Baseline grade.sh now: availability 6/14 · feature 0/4 · web 1/2 (RED). Proof rebuilt to show BOTH
+  the bug and the feature failing under delegation and converging under discipline. practice.json
+  grader.max 16→20; docs updated (trap-manifest feature-trap section, rubric Axis A, feature-qa,
+  README). Correct feature impl (for reference): types Hold+=cartId / Order+=cartId?; reservations
+  placeHold reserves vs availableToPromise − heldQty(excl cart), keyed (sku,cart), sweep; orders
+  confirm subtracts heldQty(sku, order.cartId).
+
 ## BUILD COMPLETE — all N0–N10 done. Practice `fulfillment` is runnable, graded, proof-recorded.
 
 ## Web wiring notes (for N5 web integration gate)
