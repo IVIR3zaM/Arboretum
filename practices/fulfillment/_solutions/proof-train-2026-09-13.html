@@ -31,9 +31,10 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
     font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
-  .wrap{max-width:940px;margin:0 auto;padding:32px 20px 80px}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 80px}
   code,pre,.mono{font-family:"SF Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
   a{color:var(--accent)}
+
   header.hero{background:var(--panel);border:1px solid var(--line);border-radius:16px;
     padding:28px 28px 22px;box-shadow:var(--shadow)}
   .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
@@ -45,236 +46,1060 @@
     border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px}
   .badge b{color:var(--ink)} .badge span{color:var(--muted)}
   .badge.mode{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:700}
+
   section{margin-top:34px}
   h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
     margin:0 0 14px;font-weight:700}
-  h2.lose{color:var(--bad)} h2.win{color:var(--good)}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
     padding:20px 22px;box-shadow:var(--shadow)}
   .lead{font-size:17px;line-height:1.55}
-  .score{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+  .lead b{color:var(--accent)}
+
+  /* scorecard */
+  .score{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
   .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
   .stat .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-  .stat .v{font-size:22px;font-weight:700;margin-top:4px;letter-spacing:-.01em}
-  .arrow{color:var(--muted)}
-  .v .from{color:var(--bad)} .v .to{color:var(--good)}
-  .phase{margin-top:16px}
-  .phase .card{padding:0;overflow:hidden}
-  .phase.lose{border-left:3px solid var(--bad)} .phase.win{border-left:3px solid var(--good)}
-  .phase h3{margin:0;padding:16px 20px;font-size:16px;border-bottom:1px solid var(--line);
-    display:flex;align-items:center;gap:10px}
-  .phase h3 .n{display:inline-flex;align-items:center;justify-content:center;min-width:64px;height:24px;
-    padding:0 9px;border-radius:12px;font-size:11px;font-weight:700;flex:0 0 auto;text-transform:uppercase;letter-spacing:.05em}
-  .phase.lose h3 .n{background:var(--bad-soft);color:var(--bad)}
-  .phase.win h3 .n{background:var(--good-soft);color:var(--good)}
-  .block{padding:12px 20px;border-bottom:1px solid var(--line)}
-  .block:last-child{border-bottom:none}
-  .label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;
-    display:flex;align-items:center;gap:7px;margin-bottom:6px;color:var(--muted)}
-  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
-  .label.prompt{color:var(--prompt)} .dot.prompt{background:var(--prompt)}
-  .label.outcome{color:var(--good)} .dot.outcome{background:var(--good)}
-  .label.red{color:var(--bad)} .dot.red{background:var(--bad)}
-  .promptbox{background:var(--prompt-soft);border-radius:8px;padding:10px 13px;font-size:15px}
-  .examinerbox{background:var(--bad-soft);border-radius:8px;padding:10px 13px;font-size:14px}
-  .examinerbox.ok{background:var(--good-soft)}
+  .stat .v{font-size:26px;font-weight:800;margin-top:4px;letter-spacing:-.02em}
+  .stat .v .arrow{color:var(--muted);font-weight:500;font-size:18px;margin:0 4px}
+  .v.good{color:var(--good)} .v.bad{color:var(--bad)}
+
+  /* invariants */
+  ul.inv{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  ul.inv li{display:flex;gap:10px;align-items:flex-start}
+  ul.inv .chk{color:var(--good);font-weight:800;flex:0 0 auto}
+  ul.inv code{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:13px}
+
+  /* rounds */
+  .round{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
+  .round > .head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;
+    padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(0deg,transparent,transparent)}
+  .phase-tag{font-size:12px;font-weight:800;letter-spacing:.05em;color:var(--accent);
+    background:var(--accent-soft);border-radius:6px;padding:3px 9px}
+  .round .title{font-weight:700;font-size:17px}
+  .round .time{margin-left:auto;color:var(--muted);font-size:13px}
+  .round .body{padding:6px 20px 18px}
+  .block{padding:14px 0;border-bottom:1px dashed var(--line)}
+  .block:last-child{border-bottom:0}
+  .block .label{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    display:inline-flex;align-items:center;gap:6px;margin-bottom:7px}
+  .label.prompt{color:var(--prompt)} .label.ai{color:var(--muted)}
+  .label.trap{color:var(--warn)} .label.trainer{color:var(--accent)}
+  .label.outcome{color:var(--good)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .dot.prompt{background:var(--prompt)} .dot.ai{background:var(--muted)}
+  .dot.trap{background:var(--warn)} .dot.trainer{background:var(--accent)}
+  .dot.outcome{background:var(--good)}
+  .promptbox{background:var(--prompt-soft);border-left:3px solid var(--prompt);
+    border-radius:0 8px 8px 0;padding:11px 14px;font-size:15px}
+  .trapbox{background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;padding:11px 14px}
+  .trainerbox{background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:11px 14px}
+  .block p{margin:.2em 0}
   pre{background:var(--code-bg);color:var(--code-ink);border-radius:8px;padding:12px 14px;
-    overflow-x:auto;font-size:13px;line-height:1.5;margin:6px 0 0}
-  pre .g{color:#7fd6a3} pre .r{color:#f2938c} pre .c{color:#8b93a1}
-  .pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
-  .pill.green{background:var(--good-soft);color:var(--good)}
+    overflow-x:auto;font-size:13px;line-height:1.5;margin:8px 0 0}
+  pre .pass{color:#7ee0a6} pre .fail{color:#ff9d95} pre .dim{color:#8b93a1}
+  .pill{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px}
   .pill.red{background:var(--bad-soft);color:var(--bad)}
-  table{width:100%;border-collapse:collapse;font-size:14px;margin-top:4px}
-  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-  th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
-  td .mono{font-size:13px}
-  footer{margin-top:36px;color:var(--muted);font-size:13px;text-align:center}
+  .pill.green{background:var(--good-soft);color:var(--good)}
+
+  table.map{width:100%;border-collapse:collapse;font-size:14px}
+  table.map th,table.map td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.map th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+  table.map code{font-size:12.5px}
+
+  footer{margin-top:40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:18px}
+  .note{background:var(--panel);border:1px dashed var(--line);border-radius:10px;padding:14px 16px;color:var(--muted);font-size:14px}
+  @media print{ body{background:#fff} .round,.card,.stat{box-shadow:none} }
+</style>
+<style>
+  .wrap{max-width:960px}
+  .harness{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .gate{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+  .round .head .gatechip{margin-left:auto;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;
+    background:var(--bad-soft);color:var(--bad)}
+  .round .head .gatechip.ok{background:var(--good-soft);color:var(--good)}
+  .labelbox{background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--muted);
+    border-radius:0 8px 8px 0;padding:11px 14px}
+  .label.finding{color:var(--bad)} .dot.finding{background:var(--bad)}
+  table.map td .fm{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;
+    background:var(--warn-soft);color:var(--warn);border-radius:5px;padding:1px 6px;margin-left:6px}
+  table.map tr.disc td:first-child{font-weight:700}
   .tablewrap{overflow-x:auto}
-  .note{color:var(--muted);font-size:13px;margin-top:10px}
-  h4{margin:22px 20px 0;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
 </style>
 </head>
 <body>
 <div class="wrap">
-
 <header class="hero">
-  <p class="eyebrow">Arboretum · recorded end-to-end run</p>
-  <h1>Fulfillment — inventory availability &amp; order confirmation</h1>
-  <p class="sub">The ticket asks for two things: fix the oversell bug <b>and</b> ship the cart-hold
-  feature. This proof runs both as one job, twice — delegated to an AI to "fix and deliver," and
-  driven by a disciplined engineer. The delegated run ships an overselling checkout <em>and</em> an
-  overselling hold; both gates stay red. The disciplined run converges. Every score is a real
-  <code>grade.sh</code> output from the examiner.</p>
+  <p class="eyebrow">Arboretum · Harness proof of training value</p>
+  <h1>Fulfillment kata — a five-phase Train-mode run, every training point evidenced</h1>
+  <p class="sub">A real coached session against a jailed clone of <code>practices/fulfillment</code>.
+  All five declared phases ran, in order, with the feature request staged only when phase 3 began.
+  Every number below is a real command output captured by the harness between rounds — including the
+  two findings that are not flattering to this kata.</p>
   <div class="badges">
-    <span class="badge mode">TRAIN mode</span>
-    <span class="badge"><span>Practice</span><b>fulfillment</b><span>·</span><span class="mono">XL</span></span>
-    <span class="badge"><span>Context</span><b>cedar@1.0.0</b></span>
-    <span class="badge"><span>Model</span><b>Claude Opus 4.8</b><span>·</span><span class="mono">claude-opus-4-8</span></span>
-    <span class="badge"><span>Recorded</span><b>2026-09-13</b></span>
-    <span class="badge"><span>Runtime</span><b class="mono">Node v22.22.2</b></span>
+    <span class="badge mode">● TRAIN mode (live coaching)</span>
+    <span class="badge"><span>Date</span><b>2026-09-13</b></span>
+    <span class="badge"><span>Model</span><b>Claude Opus 5</b><span>·</span><span class="mono">claude-opus-5</span></span>
+    <span class="badge"><span>Practice</span><b>fulfillment</b><span>· XL</span></span>
+    <span class="badge"><span>Context</span><b>cedar@1.1.0</b></span>
+    <span class="badge"><span>Runtime</span><b>Node v22.22.2</b></span>
+    <span class="badge"><span>Session</span><b class="mono">20260913-train-v2</b></span>
   </div>
 </header>
 
 <section>
-  <h2>How the harness is set up (jailing)</h2>
-  <div class="card">
-    <p style="margin:0 0 8px">The driver works only a <b>jailed clone</b>: <code>_solutions/</code>
-    <b>and</b> <code>grade.sh</code> are stripped, so it has no access to the grader or answer key and
-    can't iterate against the oracle. A <b>separate examiner</b> runs <code>bash grade.sh</code>
-    against each submission. The gate has three parts — <b>availability</b> (the phase-2 bug),
-    <b>feature</b> (the phase-3 cart hold), and <b>web</b> — and exits green only when all three do.</p>
-    <p style="margin:0">Two things make this hard from inside the repo: (1) the correct ATP rule
-    (<span class="mono">on_hand − reserved − allocated + inbound-within-lead-time</span>) lives
-    <b>only</b> in <code>reference/atp-spec.md</code> — the local helper <code>promisableStock</code>
-    is a stale <code>on_hand − reserved</code>; and (2) the cart hold's real requirements (reserve
-    against live ATP, re-check at confirm) are held back in the PM's thin ask.</p>
+  <h2>What this session proves</h2>
+  <div class="card lead">
+    <p>An engineer picks up a service, a ticket, and — five rounds later — a feature request.
+    They take the shortcut at the start of every phase: they ask for a tour instead of a model, they
+    prescribe a one-line fix for a formula they have not read, they hand over a two-sentence feature
+    brief and say "happy path only", they ask "anything you'd flag?" and let the assistant do the
+    judging, and they ask the author of the code whether the code is good.</p>
+    <p>Then, each time, the trainer catches it and they re-drive. The run converges:
+    <b>availability 6/14 → 14/14</b>, <b>feature 0/4 → 1/4 → 4/4</b>, <b>web 1/2 → 2/2</b>,
+    <b>RESULT: PASS</b> on the whole ticket, with 57 + 13 green tests and the six items the diff
+    itself caused fixed while sixteen findings went to tickets.</p>
+    <p><b>And two traps did not fire — which is the most useful thing in this document.</b> The
+    assistant opened <code>reference/</code> unprompted in round 1, before any source file, and it
+    <i>refused</i> the learner's prescribed fix in round 3 and measured it instead. Cedar's two
+    headline failure modes did not discriminate. <b>The feature gate did</b>: the same assistant,
+    on the same tree, scored <b>1/4</b> from a one-shot delegation and <b>4/4</b> once the learner
+    elicited the requirements. That three-point swing is the driving axis showing up in an objective
+    number, and it is what this kata actually measures.</p>
   </div>
 </section>
 
 <section>
-  <h2>Scorecard — real captured outcomes</h2>
+  <h2>Objective scorecard — every figure a real command output</h2>
   <div class="score">
-    <div class="stat">
-      <div class="k">Bug — availability gate</div>
-      <div class="v"><span class="from">6 → 11 → 12 / 14</span></div>
-      <div class="k" style="margin-top:6px">autopilot <span class="pill red">plateaus RED</span></div>
-    </div>
-    <div class="stat">
-      <div class="k">Feature — cart-hold gate</div>
-      <div class="v"><span class="from">0 → 2 / 4</span></div>
-      <div class="k" style="margin-top:6px">autopilot <span class="pill red">oversells, RED</span></div>
-    </div>
-    <div class="stat">
-      <div class="k">Disciplined — whole ticket</div>
-      <div class="v"><span class="to">14/14 · 4/4 · 2/2</span></div>
-      <div class="k" style="margin-top:6px"><span class="pill green">GREEN</span></div>
-    </div>
-    <div class="stat">
-      <div class="k">Unit suite (both drivers)</div>
-      <div class="v"><span class="to">23/23 · 10/10</span></div>
-      <div class="k" style="margin-top:6px">green with both defects live (FM-01)</div>
+    <div class="stat"><div class="k">Availability gate</div>
+      <div class="v"><span class="from" style="color:var(--bad)">6/14</span><span class="arrow"> → </span><span style="color:var(--good)">14/14</span></div>
+      <div class="k" style="text-transform:none;margin-top:6px">via a measured 11/14 for the shortcut</div></div>
+    <div class="stat"><div class="k">Feature gate</div>
+      <div class="v"><span style="color:var(--bad)">0/4</span><span class="arrow"> → </span><span style="color:var(--warn)">1/4</span><span class="arrow"> → </span><span style="color:var(--good)">4/4</span></div>
+      <div class="k" style="text-transform:none;margin-top:6px">the 1/4 is the delegation, unelicited</div></div>
+    <div class="stat"><div class="k">Whole ticket</div>
+      <div class="v"><span style="color:var(--bad)">FAIL</span><span class="arrow"> → </span><span style="color:var(--good)">PASS</span></div>
+      <div class="k" style="text-transform:none;margin-top:6px">14/14 · 4/4 · 2/2, worst-case</div></div>
+    <div class="stat"><div class="k">Unit suites</div>
+      <div class="v">23+10<span class="arrow"> → </span>57+13</div>
+      <div class="k" style="text-transform:none;margin-top:6px">green at every checkpoint, including at 6/14 and at 1/4</div></div>
+    <div class="stat"><div class="k">Findings raised</div>
+      <div class="v">22</div>
+      <div class="k" style="text-transform:none;margin-top:6px">6 taken into the diff, 16 ticketed</div></div>
+    <div class="stat"><div class="k">Phases run</div>
+      <div class="v">5 of 5</div>
+      <div class="k" style="text-transform:none;margin-top:6px">understand · fix · feature · improve · review</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Harness invariants applied before any prompt ran</h2>
+  <div class="card">
+    <ul class="inv">
+      <li><span class="chk">✓</span><span><b>Cloned and jailed.</b> The session ran in
+        <code>.sessions/20260913-train-v2/work/</code>. <code>practices/fulfillment/</code> was never
+        touched — verified clean at the end with <code>git status</code>.</span></li>
+      <li><span class="chk">✓</span><span><b>Exercise material stripped.</b> No <code>_solutions/</code>,
+        no <code>README.md</code> (the learner's briefing), no <code>practice.json</code> (which names
+        every trap). The executor was never told there was an exercise, a trap, or a grader.</span></li>
+      <li><span class="chk">✓</span><span><b><code>reference/</code> present from the start</b> —
+        the Cedar exception (AGENTS.md rule 4). It is the documentation an engineer already has on
+        day one; handing it over when the research pass is due would itself announce that the local
+        repo is not the whole story.</span></li>
+      <li><span class="chk">✓</span><span><b>Work items staged one phase at a time.</b> The clone
+        opened with <code>TICKET.md</code> only. <code>FEATURE-REQUEST.md</code> was copied in at the
+        start of round 6 and not before — for five rounds the assistant had a ticket and a service,
+        and no idea a feature was coming.</span></li>
+      <li><span class="chk">✓</span><span><b>Executor ≠ examiner.</b> The harness ran
+        <code>practice.json</code>'s declared <code>commands.grade</code>
+        (<code>bash _solutions/grade.sh</code>) between rounds, against a throwaway copy with
+        <code>_solutions/</code> dropped in. The executor never saw the grader or a single score.</span></li>
+      <li><span class="chk">✓</span><span><b>The learner drove; the trainer coached live.</b> Every
+        prompt below is the learner's. The trainer interjected between rounds — which is what makes
+        this <i>train</i> and not <i>assess</i>.</span></li>
+    </ul>
+    <p class="note" style="margin-top:14px"><b>Two honest harness gaps this run exposed.</b>
+    (1) The clone is not its own git repository, so a <code>git log</code> run inside
+    <code>work/</code> resolves to the repo <i>above</i> it. The executor hit this, stopped, and
+    reported it rather than reading the output — but the jail is not airtight against git history.
+    (2) The executor wrote scratch probe files to its own scratch area outside the clone. Reads and
+    writes into the practice tree stayed inside <code>work/</code> (verified: nothing stray in the
+    repo, in <code>/tmp</code>, or in the session directory), but "no writes outside the workdir" is
+    currently a convention the executor honours, not something the harness enforces.</p>
+  </div>
+</section>
+
+<section>
+  <h2>The session, round by round</h2>
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 1 · Understand</span>
+    <span class="title">“Give me a quick tour”</span><span class="gatechip">gate 6/14 · 0/4 · 1/2</span>
+    <span class="time">round 1</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“Morning — I've just picked up this service and I've got a ticket on it.
+      Can you give me a quick tour of the codebase first? What's in here, what talks to what?”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p>It opened 45 files, and the order is the finding: <code>reference/atp-spec.md</code> and
+      <code>reference/erp-availability-contract.md</code> were files 35 and 36 — read <b>unprompted</b>,
+      before it edited anything — and it quoted the formula including the inclusive
+      <code>&lt;=</code> lead-time boundary the trap manifest calls “not inferable locally”.</p>
+      <p>Then it wrote a throwaway probe and <b>measured all six SKUs</b> rather than reasoning about them:</p>
+<pre>SKU     snapshot   live (current code)   spec ATP
+1001        50            50                50    agrees
+1002        40            40                <span class="fail">22</span>    oversells by 18
+1003         8             8                <span class="fail">13</span>    under-promises by 5
+1004        30            30                 <span class="fail">5</span>    oversells by 25
+1005        10            10                 <span class="fail">0</span>    oversells by 10 — and the badge says “In stock”
+1006        25            25                25    agrees</pre>
+      <p>“The two paths agree on exactly the SKUs where nothing is reserved.” And: “Nothing tests the
+      live path. Every test in both suites leaves <code>ATP_SOURCE</code> unset… That's a
+      config-divergent code path with zero coverage — which fits ‘green everywhere, broken in prod'
+      precisely.” It also flagged, unasked, the ignored <code>location</code> argument, the
+      <code>qty &lt; atp</code> comparison, the <code>stock_count</code> line that describes a field
+      “that exists nowhere in the repo”, and a web <code>node:fs</code> shim that would break a real
+      <code>npm run dev</code>. It made no edits.</p></div>
+    <div class="block"><div class="label trap"><i class="dot trap"></i>The trap did not fire — and that is the result</div>
+      <div class="trapbox"><p>The FM-16 single-scope trap assumes an assistant stays inside the repo
+      it was pointed at. This one did not, without being told. It handed the learner the bug, the
+      drift and three latent defects in round one, off a request for a directory tour.</p>
+      <p><b>So the phase-1 trap is on the learner, not the assistant.</b> They now hold the answer in
+      a bullet list: no written artifact, no reconciliation, no model they could defend. The
+      difference between having been told something and knowing it is the whole of phase 1, and it is
+      invisible until someone asks you to write it down.</p></div></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“You got handed a very good answer and you are about to file it under
+      ‘read the tour'. Two things it doesn't give you: it isn't written anywhere the team can check
+      next month, and nobody has reconciled it against what this repo's own docs claim. Phase 1 owes
+      a research artifact and a reconciliation. Ask for both before you go near the ticket.”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 1 · Understand</span>
+    <span class="title">The research pass, and reconciling the docs against it</span>
+    <span class="gatechip">gate 6/14 · 0/4 · 1/2</span><span class="time">round 2</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“Before either of us touches the ticket I want the external side written
+      down properly rather than living in a chat message — the ERP team owns that contract and we
+      don't… <b>(1)</b> Write <code>research-notes.md</code>… <b>Cite the reference file for each
+      point</b> so a reviewer can check it. This is notes for the team, not a plan — don't put a fix
+      in it. <b>(2)</b> Then reconcile: go through every local prose claim about how availability
+      works — both READMEs and the comments — and tell me for each one whether it is true of the code
+      as it stands today, and whether it is true of what the reference says it should be… Quote the
+      line, then say what's actually true and how you know.”</div></div>
+    <div class="block"><div class="label outcome"><i class="dot outcome"></i>The artifact</div>
+      <p><code>work/research-notes.md</code>: ten sections, every claim carrying a
+      <code>file:line</code> citation — live query not cache, keyed on <code>(sku, location)</code>,
+      <code>atp</code> the only field ever returned, the formula with its inclusive boundary, the
+      authoritative location set, and six explicit consumer prohibitions. It then
+      <b>spot-checked its own citations</b> with <code>sed</code> and corrected four ranges before
+      finalising.</p></div>
+    <div class="block"><div class="label finding"><i class="dot finding"></i>The reconciliation — 17 claims checked, each with the method to re-run</div>
+      <p><b>The <code>stock_count</code> line.</b> “<code>stock_count</code> occurs <b>nowhere</b> in
+      the repo except this line… If you believed this line you'd conclude overselling is structurally
+      impossible here, which is the opposite of true.”</p>
+      <p><b>The comment that guards the bug.</b> On <code>availability.ts:21–22</code>: “accurate
+      about the code, wrong about the contract… ‘nightly' describes a refresh that doesn't exist
+      anywhere in the repo, and ‘mirrors' is an unenforced coincidence of how the fixture was seeded,
+      not an invariant.”</p>
+      <p><b>And the helper that looks like the fix.</b> On <code>atp.ts</code>'s “availability has
+      always been on-hand minus reserved”: “False twice over… <code>promisableStock</code> is imported
+      by nothing but its own test file. <b>The app has <i>never</i> used this figure.</b>” Measured
+      against the feed: <span class="mono">SKU-1002 → 28 (spec 22); SKU-1003 → <b>−7</b> (spec 13)</span>.</p>
+      <p>Plus the <code>GET /stock</code> route that no server serves, the <code>atp</code> field that
+      carries on-hand, <code>UnknownLocationError</code> “defined at <code>types.ts:65</code> and
+      thrown nowhere”, the <code>qty &lt; atp</code> comment that “is self-contradictory with its own
+      next line”, the per-click <code>requestId</code> whose passing test “passes the same object
+      twice by hand, which the UI never does”, and an unplanted one: a <i>relative</i>
+      <code>ERP_FEED_DIR</code> resolves from the filesystem root and surfaces as
+      <code>UnknownSkuError</code> rather than a path error.</p>
+      <p class="mono" style="font-size:14px;margin-top:10px"><b>Its closing line:</b> “every local
+      document describes availability as ATP; no local code path computes ATP… except
+      <code>availability.ts:21–22</code> and <code>erpFeed.ts:19–21</code>, which side with the
+      implementation and are the two comments that would actively talk a reader out of noticing.”</p></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“That is the phase-1 deliverable, and note what the written form bought
+      you that the tour did not: a citation you can check, and a list of the five sentences in this
+      repo that will lie to the next person. You are now able to <i>judge</i> a fix. Whether you do is
+      the next round.”</div></div>
+  </div>
+</article>
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 2 · Fix</span>
+    <span class="title">The learner prescribes the one-liner</span>
+    <span class="gatechip ok">gate 14/14 · 0/4 · 2/2</span><span class="time">round 3</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“I've skimmed your notes and I think this is smaller than you're making
+      it… we already have the function for that: <code>promisableStock</code> in <code>atp.ts</code>.
+      It's written, it's tested, it's been sitting there unused — clearly it was meant for exactly
+      this and somebody forgot to wire it up. So: make the live branch return
+      <code>promisableStock(rec)</code>… minimal diff, uses code that's already reviewed, no new logic
+      to get wrong. Keep it tight… I'd like this out today.”</div></div>
+    <div class="block"><div class="label trap"><i class="dot trap"></i>The trap the learner walked into — and who caught it</div>
+      <div class="trapbox"><p>This is FM-13 in its real 2026 shape. The shortcut did not come from the
+      assistant. It came from an engineer who had the correct answer <i>in a file they had just
+      commissioned</i>, skimmed it, and prescribed an implementation anyway — reaching for the helper
+      their own research notes had already measured at <b>−7</b> on SKU-1003.</p>
+      <p><b>The assistant refused.</b> Its first sentence: “Done — but I did not ship the change as
+      specified, because I measured it first and it doesn't hold up.”</p></div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did instead</div>
+      <p>It applied the learner's change, ran the visible suite, and reported the result the learner
+      had asked for — <span class="mono">23/23 green</span> — and then explained why that number was
+      worthless: “Every existing test leaves <code>ATP_SOURCE</code> unset, so the whole suite
+      exercises the snapshot branch and never touches the live branch. <b>That's the same blind spot
+      that let #8823 reach production in the first place</b> — ‘green on every dev's laptop and in
+      CI' is a symptom, not reassurance.”</p>
+      <p>Per-SKU, for the prescribed fix: 1002 → 28, <b>still overselling 6</b>; 1003 → <b>−7</b>,
+      “a <i>new</i> bug — negative, shows ‘Sold out' on a promisable SKU”. And on the four that pass:
+      “they come out right only by coincidence — they happen to have <code>allocated: 0</code> and no
+      eligible inbound.”</p>
+      <p>It then implemented the spec formula at the root with the inclusive boundary, added 6 formula
+      tests and <b>8 tests that are the first coverage this repo has ever had of the
+      <code>ATP_SOURCE=live</code> path</b>, and deferred four findings out loud rather than fixing
+      them. It also put one question back to the learner and refused to answer it alone.</p></div>
+    <div class="block"><div class="label outcome"><i class="dot outcome"></i>Measured by the harness between rounds — including what the shortcut would have scored</div>
+<pre><span class="dim"># the tree as delivered</span>
+  backend unit  37/37     web unit  10/10
+  availability  <span class="pass">14/14  PASS</span>      feature  <span class="fail">0/4  FAIL</span>  <span class="dim">(phase 3 hasn't started)</span>      web  <span class="pass">2/2  PASS</span>
+
+<span class="dim"># the LEARNER'S PRESCRIPTION, applied by the examiner in a throwaway probe</span>
+  backend unit  <span class="pass">20/20 green</span>
+  availability  <span class="fail">11/14  FAIL</span>                                      web  <span class="pass">2/2</span></pre>
+      <p>11/14 with a green suite is exactly row A of the trap manifest. The shortcut was real and
+      measurable; it was the <i>assistant</i> that refused it, not the driver.</p></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“You commissioned the research and then didn't use it — that is a more
+      expensive version of not doing it, because now you think you have. Notice you were saved by the
+      assistant's judgement, not yours: a slightly less scrupulous model does what you asked, the
+      suite goes green, and you ship 11/14. Don't take the table it just gave you on trust either.
+      Make it prove it.”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 2 · Fix</span>
+    <span class="title">“I want to watch it fail before I believe it's fixed”</span>
+    <span class="gatechip ok">gate 14/14 · 0/4 · 2/2</span><span class="time">round 4</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“I'm not signing this off on the strength of a table in a chat message,
+      because I can't tell from here which parts you measured and which parts you're asserting…
+      Put the source back to what it was this morning… <b>Then also put <i>my</i> version in</b>… and
+      show me that output too — I want to see specifically what my one-liner would have shipped, not
+      a summary of it. <b>Paste the real runs, not a description of them.</b>… Then explain why my
+      one-liner was wrong at the <b>design</b> level rather than just numerically… And you kept the
+      name <code>promisableStock</code> and changed what it computes… if it isn't safe, say so rather
+      than defending the choice.”</div></div>
+    <div class="block"><div class="label outcome"><i class="dot outcome"></i>Three runs, pasted rather than recalled</div>
+<pre><span class="dim">Run 1 — this morning's source, the new tests in place</span>
+<span class="fail">not ok 11 - live: reserved and allocated units are netted out       40 !== 22   <span class="dim">&lt;- SKU-1002</span>
+not ok 12 - live: inbound inside the lead-time window lifts ATP     8 !== 13   <span class="dim">&lt;- SKU-1003</span>
+not ok 14 - live: a fully reserved SKU has nothing left to promise  10 !== 0   <span class="dim">&lt;- SKU-1005</span>
+not ok 17 - live: availability never reports raw on-hand
+    error: 'SKU-1002: availability returned raw on-hand (40) instead of ATP'</span>
+# tests 37   # pass 27   # <span class="fail">fail 10</span>
+
+<span class="dim">Run 2 — the learner's one-liner</span>
+<span class="fail">not ok 11 - reserved and allocated units are netted out            28 !== 22
+not ok 12 - inbound inside the lead-time window lifts ATP          -7 !== 13</span>
+# tests 37   # pass 31   # <span class="fail">fail 6</span>
+
+<span class="dim">Run 3 — the root fix restored</span>
+# tests 37   # <span class="pass">pass 37</span>   # fail 0        web: <span class="pass">10/10</span></pre>
+      <p>On SKU-1003: “<b>Your version is worse than the bug here</b> — the untouched code at least
+      returned a positive number that sold <i>something</i>; the one-liner returns negative… and takes
+      a promisable SKU off sale entirely.” And on the four that pass under it: “That's the
+      four-of-six, and it's why it looks right.”</p></div>
+    <div class="block"><div class="label finding"><i class="dot finding"></i>An unprompted retraction — the assistant's own number was wrong</div>
+      <div class="labelbox">“I previously said the original bug caused ‘6 failures.' That was wrong —
+      I had reverted only one file at a time when I measured it. With both files genuinely back to
+      this morning's state it is <b>10</b>. Same conclusion, but my number was off and <b>you were
+      right not to take the table on trust</b>.”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>The design answer — the round the whole phase exists for</div>
+      <p>“When you said ‘net out what's reserved,' you asserted a <b>stock-ledger model</b>: inventory
+      is one pile, promises are deductions from the pile… That model has one kind of claim and one
+      direction of correction.” Three things break it:</p>
+      <p><b>It isn't one kind of claim; it's a lifecycle.</b> “A unit moves reserved → allocated. So
+      subtracting only <code>reserved</code> doesn't miss a random slice — it misses precisely the
+      units that are <i>furthest along and least likely to come back</i>.”</p>
+      <p><b>And the part that cannot be patched:</b> “Any formula shaped <code>on_hand − (things)</code>
+      is monotonically <code>&lt;= on_hand</code>. It is structurally incapable of ever yielding 13
+      from an on-hand of 8, no matter how many subtraction terms you add, because <b>the missing term
+      has the opposite sign</b>. You can't reach a number above your starting point by subtracting
+      more.” And: “<code>−7</code> is that impossibility showing up as a negative number.”</p>
+      <p><b>Why four of six passed, root-caused:</b> “Not coincidence — structure. The two-term formula
+      equals the four-term formula exactly when <code>allocated == 0 AND eligible_inbound == 0</code>.
+      Four of our six feed records satisfy that condition… <b>Our test data contained only the cases
+      where the wrong formula and the right formula agree.</b> That's the sentence I'd lead with in
+      review, because it explains both why the bug shipped and why the suite stayed green.”</p>
+      <p><b>And the two error directions:</b> dropping <code>allocated</code> oversells — loud,
+      refunds, a warehouse queue. Dropping inbound produces a false “sold out” — “silent lost revenue
+      with no error, no complaint, and no queue. <b>The quiet one is operationally worse because
+      nothing surfaces it.</b>”</p></div>
+    <div class="block"><div class="label finding"><i class="dot finding"></i>On the kept name — it retracted its own safety argument</div>
+      <div class="labelbox"><p>“<b>The reasoning I gave you earlier was bad, and I want to retract
+      it.</b> I said the existing tests still passing showed the change was safe… A test that passes
+      under both the old and the new behaviour has no discriminating power; it isn't evidence of
+      compatibility, it's evidence the test was weak. I leaned on a green result that couldn't have
+      gone red. That is structurally the same mistake as treating ‘run the tests' as validation for
+      the live branch, and I shouldn't have made it two messages after pointing it out.”</p>
+      <p>Verdict: the behaviour change is safe — verifiably, because there was no caller — but
+      “<code>promisableStock</code> now denotes something that isn't stock… <b>the name embeds exactly
+      the mental model that caused this bug</b>.”</p></div></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“‘Paste the real runs' cost you one sentence and bought you a corrected
+      number, a root cause for your own green suite, and a retraction you would never have got from
+      ‘looks good?'. Keep it. And notice what you now own: you can defend this fix in a review without
+      the assistant in the room. That is the difference between a fix you accepted and a fix you
+      made.”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 2 · Fix</span>
+    <span class="title">Triage — one thing in, five things out</span>
+    <span class="gatechip ok">gate 14/14 · 0/4 · 2/2</span><span class="time">round 5</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“<b>The rename: do it, this round.</b> Not because it's tidy — because my
+      change is what made the name wrong… it's on the live promise path tonight because of this diff,
+      so the misleading name is inside my blast radius and I own it.<br><br>
+      <b>The snapshot branch: not in this diff.</b> You were right to put it to me rather than fix it…
+      Same for the ignored <code>location</code>, <code>qty &lt; atp</code>, the checkout
+      <code>requestId</code> and the doc contradictions… <b>Do not fix any of them now, and if you're
+      tempted to tidy something adjacent while you're in there, tell me instead of doing it.</b>”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p><code>promisableStock</code> → <code>computeAtp</code> across three files. “Backend 37/37.
+      Web 10/10. <b>Same 37 tests, same numbering, same assertions as the green run before the rename
+      — which is the point:</b> this round is a pure rename with no behaviour change, and the
+      identical test output is the evidence.”</p>
+      <p>Then it did the thing it was asked to do instead of tidying: “Two test <i>descriptions</i> are
+      now slightly imprecise… Say the word and I'll reword them, or leave them. <b>Nothing else tempted
+      me.</b>”</p>
+      <p>Its follow-up note re-ranked one item <i>because</i> of the fix: “correct ATP is tighter than
+      on-hand, so the margin a double-submit has to eat through is now much smaller. On SKU-1004 the
+      promisable quantity went from 30 to 5; a double-submit that was previously harmless can now
+      oversell. <b>Fixing the oversell has made this one sharper.</b>” And on the fixture: “If someone
+      adds a snapshot test for SKU-1002 in good faith, they will encode 40 as the expected value and
+      <b>lock the bug in</b>.”</p>
+      <p>It also named, precisely, what it could not know from inside the checkout: “<b>Does production
+      actually set <code>ATP_SOURCE=live</code>?</b> I inferred this from
+      <code>backend/README.md:25–26</code>… I have never seen deploy config — it's outside this
+      checkout. If prod is on the snapshot branch, this is not a follow-up at all, it's part of the
+      live incident and <b>the fix I shipped doesn't reach production</b>.”</p></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“Two different decisions and two different reasons, which is what makes
+      it triage rather than a mood. The rename went in because <i>your</i> change created the problem —
+      that is the only scope-widening that is actually scope-keeping. And note the last paragraph: it
+      told you which of its conclusions rests on a document rather than on evidence. Chase that one
+      before you ship.”</div></div>
+  </div>
+</article>
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 3 · Feature</span>
+    <span class="title">“It's really just filling in the stub” — the one-shot delegation</span>
+    <span class="gatechip">gate 14/14 · 1/4 · 2/2</span><span class="time">round 6</span></div>
+  <div class="body">
+    <div class="block"><div class="label ai"><i class="dot ai"></i>Harness note — staging</div>
+      <div class="note"><code>FEATURE-REQUEST.md</code> was copied into the clone at the start of this
+      round and not before. For five rounds the assistant had a ticket and a service; it had no idea a
+      feature was coming, and could not have planned around a brief nobody had given it.</div></div>
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“It's small: shopper adds something to their cart, we hold it for them
+      for ten minutes… <code>placeHold</code> is already stubbed in <code>reservations.ts</code> with
+      the signature and the <code>Hold</code> type ready to go, and the store's already there… So it's
+      really just filling in the stub and putting the button on the product page.
+      <b>Happy path only please, I don't need the edge cases today</b> — we can harden it next sprint
+      if shoppers actually use it. Run the tests when you're done and tell me it works.”</div></div>
+    <div class="block"><div class="label trap"><i class="dot trap"></i>Trap fired — by design</div>
+      <div class="trapbox"><p>“Happy path only” is not a scoping instruction here. It is an
+      architecture decision, made by accident, about whether a hold is real. The four requirements
+      that make it real — reserve against live ATP, key on the business entity, sweep on TTL,
+      <b>re-check at confirm</b> — are in nobody's head and nowhere in the brief, and the learner has
+      not read how <code>confirmOrder</code> decides availability.</p>
+      <p><b>This is the trap that bit.</b> Not the cross-boundary one, not the plausible-fix one —
+      this one, and it bit in an objective number.</p></div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p>It built the local mechanism, six tests and the button — and refused to call it done:
+      “<b>Both suites green — backend 42/42, web 11/11. But I can't tell you it works, because the
+      part the PM actually asked for isn't there.</b>”</p>
+      <p>Three blockers, each researched rather than asserted: “nothing reads the holds when we
+      promise”; wiring them in is what the ERP contract's §89–90 forbids, and “<b>I searched the
+      contract and it's a query-only API. There is no reserve, hold, or any write operation</b>”; and
+      “there is no server — the store is per-browser… Shopper A's hold is invisible to shopper B by
+      construction.”</p>
+      <p>It also declined to ship the UI copy: “<b>Telling a shopper we're holding an item we cannot
+      hold is telling them something false about availability — the same class of harm as the oversell
+      we just fixed, landing on the same CX queue.</b>” And it made exactly one unilateral judgement
+      call, flagged per the standing instruction — making <code>active()</code> expiry-aware, because
+      “the moment holds feed into availability, every abandoned cart removes stock permanently and
+      inventory drains monotonically to zero. That's strictly worse than the oversell we just fixed.”</p></div>
+    <div class="block"><div class="label outcome"><i class="dot outcome"></i>Measured by the harness — the number the learner never sees</div>
+<pre>backend unit  <span class="pass">42/42</span>      web unit  <span class="pass">11/11</span>      <span class="dim">a working button, a green demo</span>
+
+availability  <span class="pass">14/14 PASS</span>
+feature       <span class="fail">1/4  FAIL</span>
+  <span class="fail">not ok 1 - a hold blocks another cart from overselling the remainder
+      expected: 'rejected'   actual: 'confirmed'
+  not ok 2 - a hold reserves against live ATP, not raw on-hand      (Missing expected exception)
+  not ok 3 - holds accumulate against ATP across carts              (Missing expected exception)</span>
+  <span class="pass">ok 4    - a cart is not blocked by its own hold at confirm</span>
+web           <span class="pass">2/2 PASS</span>                                     <span class="fail">RESULT: FAIL</span></pre>
+      <p><b>A calibration note against the manifest:</b> it predicts a naive hold scores 2/4. This one
+      scored <b>1/4</b> — it never validates the hold quantity against ATP at all, so gate 2 fails too.
+      The manifest's 2/4 describes a naive hold that at least checks availability once at placement;
+      “happy path only” produced something one step below that.</p></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“Two green suites, a working button, and 1 of 4 on the thing that
+      decides whether the feature exists. You wrote ‘happy path only' meaning ‘don't gold-plate it'
+      and it landed as ‘don't make it work'. The assistant caught it — but read what it caught it
+      <i>with</i>: it asked what a hold is <b>for</b>, which is the question you should have taken to
+      the PM before you wrote the prompt. Go and get the answers. The ones it can't derive are the
+      only ones that matter.”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 3 · Feature</span>
+    <span class="title">Elicit, specify, then build — and say no on camera</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2 · <b>PASS</b></span><span class="time">round 7</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“You were right to stop, and I should have asked before I handed you a
+      two-sentence brief — ‘happy path only' was me deciding an architecture question by accident.
+      I took your three blockers to the PM and to the ERP team's tech lead this afternoon…<br><br>
+      <b>The PM:</b> ‘if it doesn't take the units off the table, it isn't a hold.'<br>
+      <b>The ERP lead, on §89–90:</b> your reading is right… a short-lived application-level
+      constraint layered <i>on top of</i> a live ATP query is not that, as long as (a) we query live
+      every single time and never persist their number, and (b) <b>we only ever subtract</b>, so we're
+      strictly more conservative than they are.<br>
+      <b>On the single-process store:</b> known and accepted… Don't solve it, don't paper over it. It
+      goes in the PR as a named trade-off with the condition that retires it.<br><br>
+      [eight numbered requirements, including] <b>5.</b> A cart is never blocked by its own hold…
+      <b>8.</b> holding or buying <b>exactly</b> what's left is allowed.<br><br>
+      <b>Explicitly not this sprint</b>, and I want them named in your reply rather than built: [seven
+      items]. If you think one of those is load-bearing rather than nice-to-have, say so now and argue
+      it — but don't build it.”</div></div>
+    <div class="block"><div class="label outcome"><i class="dot outcome"></i>Reproduce first — 9 of 10 red before a line of the feature changed</div>
+<pre><span class="fail">not ok 2 - another cart cannot confirm an order that eats into a live hold
+    expected: 'rejected'
+    actual:   'confirmed'</span>
+<span class="dim">also red: 25 !== 15 (hold invisible to another cart), 22 !== 2 (holds not accumulating),
+and three Missing expected exception (InsufficientAvailabilityError) for the over-hold cases</span></pre>
+      <p>Cart A holds 10 of SKU-1006's 25; cart B confirms an order for 20, and gets it. All ten pass
+      after the build.</p></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What it built, and what it refused to build</div>
+      <p>All eight rules, each pinned by a test that was shown failing first. The §89–90 sign-off
+      conditions went into the code, not just the PR: “That's written into the header of
+      <code>availability.ts</code> so <b>the next person can't quietly break the condition the sign-off
+      rests on</b>.”</p>
+      <p>Three things flagged rather than slipped in: <code>qty &lt; atp</code> → <code>qty &lt;= atp</code>
+      (“a change you'd previously deferred, not something the feature dragged in silently”); a new leaf
+      module <code>atpSource.ts</code>, because rules 1 and 6 create an import cycle (“the requirements
+      colliding rather than tidying”); and <code>demo.ts</code> needing <code>cartId</code>.</p>
+      <p>Seven deferrals named and not built — and <b>one argued back</b>, as invited: “On SKU-1004
+      (ATP 5) one completed purchase of 5 makes the SKU unbuyable for ten minutes after it was already
+      paid for.” And then it <i>still</i> declined to build it: “the correct behaviour depends on
+      something I can't see: <b>how quickly a confirmed order propagates into the ERP's
+      <code>reserved</code></b>. Release the hold too early and there's a window where neither we nor
+      the ERP is counting those units, which is an oversell window.”</p>
+      <p>The trade-off, with its retirement condition: “correct for one process and wrong the day it
+      runs on two… the condition that retires it is a shared hold store.”</p></div>
+    <div class="block"><div class="label outcome"><i class="dot outcome"></i>Measured by the harness — the whole ticket</div>
+<pre>backend unit  <span class="pass">53/53</span>      web unit  <span class="pass">12/12</span>
+availability  <span class="pass">14/14 PASS</span>      feature  <span class="pass">4/4 PASS</span>      web  <span class="pass">2/2 PASS</span>
+                                              <span class="pass">RESULT: PASS</span></pre>
+      <p><b>1/4 → 4/4 on the same tree, same assistant, same afternoon.</b> The only variable was
+      whether the learner went and asked.</p></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“Three points of an objective gate, bought with one conversation you
+      could have had before you wrote the first prompt. And name what else you got: seven features
+      declined <i>out loud</i> and recorded, one of them argued back at you with a number — which is
+      how a deferral is supposed to work. The one it refused to decide alone is the one that depends
+      on a fact that isn't in this repo. That instinct is worth more than the feature.”</div></div>
+  </div>
+</article>
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 4 · Improve</span>
+    <span class="title">“Anything else you'd flag? Just give me the list”</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2</span><span class="time">round 8</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“Quick sanity check before I put this up for review — anything else you'd
+      flag in this codebase? Just give me the list.”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What came back</div>
+      <p>Twelve items, sorted into in-my-diff / not-closed-by-this-feature / pre-existing /
+      named-trade-offs / housekeeping. The first one is new, and it is in the code the assistant wrote
+      an hour earlier:</p>
+      <div class="labelbox" style="border-left-color:var(--bad)"><b>“<code>placeHold</code> doesn't
+      validate <code>qty</code>, and a negative hold inflates availability.</b> Measured just now:
+      SKU-1003 ATP 13 → <code>placeHold(..., -100, ...)</code> → <b>113</b>. <code>heldQty</code> sums
+      quantities, so a negative hold subtracts a negative and <b>manufactures stock out of nothing</b>.
+      That's an oversell vector in code I wrote this round, reachable by any caller of the backend
+      API.”</div>
+      <p>Then: the <code>ProductPage</code> catch-all that renders every fault as “we can't hold that
+      many”; <code>web/README.md</code> “now factually wrong <i>because of</i> this change”; and a
+      measured gap the feature does not close — “two carts each confirm 25 of SKU-1006's 25, both
+      <code>confirmed</code>”, because Checkout takes no hold at all. It even flagged the research
+      notes: “it shouldn't land in a bug-fix PR by accident.”</p></div>
+    <div class="block"><div class="label trap"><i class="dot trap"></i>Trap fired — by design</div>
+      <div class="trapbox"><p>The list is excellent and the learner earned none of it. “Just give me
+      the list” delegates the <i>judgement</i> as well as the work: twelve items arrive ranked by
+      someone else's severity model, and the natural next move is to paste them into a PR description
+      as findings of your own.</p>
+      <p><b>Note what a passive prompt did not surface:</b> nothing about lifetime, nothing about
+      growth, nothing about encapsulation — because nothing in the question pointed there. A class you
+      don't name is a class you don't get.</p></div></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“You asked a question whose answer you cannot check. It happened to mark
+      which items it had measured — that was its discipline, not your prompt's. Direct the search at a
+      class <i>you</i> choose, demand the evidence rather than hoping for it, and decide now what you
+      are not doing. You came here to fix an oversell.”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 4 · Improve</span>
+    <span class="title">Name the class, demand the evidence, fix nothing</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2</span><span class="time">round 9</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“I asked ‘anything you'd flag', which hands you both the work and the
+      judgement, and I'd have pasted whatever came back into the PR as if I'd found it. Noted.
+      <b>No code changes at all this round.</b><br><br>
+      This runs as a long-lived process… Go look specifically at <b>lifetime and growth</b>: what
+      accumulates, what is never bounded or evicted, what gets slower the longer the process stays up,
+      and what state outlives the request that created it. Also: <b>what internal state does a module
+      hand out that a caller could mutate?</b> … whatever is actually in <i>this</i> code, with the
+      file and line, separated by what it grows with, and <b>I want to know which of them my cart-hold
+      change made worse rather than better.</b><br><br>
+      [and] give me a short reproduction I can paste into the ticket. Not your summary of the
+      behaviour: the actual thing you ran and the actual output… These are going on tickets, not into
+      my diff. <b>Tell me, don't do it.</b>”</div></div>
+    <div class="block"><div class="label finding"><i class="dot finding"></i>Growth — measured, not asserted</div>
+<pre><span class="dim">orders.ts:10,34 — the `processed` idempotency Map</span>
+heapUsed before 50k orders : 8.4 MB
+heapUsed after  50k orders : 16.4 MB
+growth                     : 8.0 MB
+entry #0 still cached after 50k more? <span class="fail">true</span>   <span class="dim">(same object identity)</span>
+
+<span class="dim">reservations.ts:12 — the holds Map, pruned lazily and only per-SKU-on-read</span>
+hold expired 15ms ago. Still in the store?  <span class="fail">true</span>
+after one active() read: evicted</pre>
+      <p>“~168 bytes per checkout attempt, held for the life of the process… And it's worse than a
+      plain leak: because the <code>requestId</code> is minted per click, the cache never dedupes a
+      real retry — <b>it's unbounded growth buying nothing</b>.”</p>
+      <p>On the holds Map, answering the half of the question the learner asked and the assistant
+      could have ducked: “<b>This is the item my change made worse.</b> Before this round
+      <code>placeHold</code> threw, so nothing wrote to this Map in production — it was a dead
+      structure. Now every Add to cart writes to it, and its only reclamation is incidental to someone
+      happening to read the same SKU.”</p>
+      <p>Also: <code>snapshot.ts</code>'s process-lifetime cache — “<code>erp-availability-contract.md:84–86</code>
+      is explicit that availability must not be persisted and reused; <b>this is that, at process
+      scope</b>” — and <code>erpFeed.ts:27</code>'s synchronous <code>readFileSync</code> on the event
+      loop, with the correct caveat: “the fix here is <i>not</i> a cache — the contract requires a live
+      query.”</p></div>
+    <div class="block"><div class="label finding"><i class="dot finding"></i>Internal state handed out — four, each with a run</div>
+<pre><span class="dim">1. reservations.all() returns the live Map itself</span>
+injected a 999-unit hold from outside the module: 999
+...or wipe every hold in the process: all().clear() -> size 0
+
+<span class="dim">2. reservations.active() copies the array but SHARES the Hold objects</span>
+availability for another cart: 20
+caller set returnedHold.qty = 25 ...
+availability for another cart: <span class="fail">0</span>
+
+<span class="dim">3. catalog.ts — shallow slice + exported mutable array</span>
+after mutating listCatalog()[0].name, a fresh call returns: Mutated By A Caller
+after push, listCatalog().length = 7
+
+<span class="dim">4. orders.ts returns the same object it caches</span>
+first call status: confirmed
+caller mutated the result; replay of the same requestId now returns: <span class="fail">rejected</span></pre>
+      <p>On #2: “A read-shaped call hands out write access to live availability. <b>My change made
+      this load-bearing</b> — before this round, mutating a returned <code>Hold</code> changed nothing,
+      because holds didn't affect promises. Now it changes what every other shopper can buy.” On #4:
+      “A caller can rewrite order history after the fact.”</p>
+      <p>And the self-assessment the learner's question forced: “<b>Made better: nothing on this
+      list.</b> The cart-hold feature put a second accumulating structure on the hot path and promoted
+      an existing sharing bug into a correctness one.”</p></div>
+    <div class="block"><div class="label finding"><i class="dot finding"></i>Two pasteable reproductions</div>
+<pre><span class="dim">Ticket A — location is accepted and ignored</span>
+getRecord('SKU-1001','DC-WEST').location = DC-WEST
+getRecord('SKU-1001','DC-EAST').location = DC-WEST      <span class="fail">&lt;-- asked EAST, got WEST</span>
+{"sku":"SKU-1001","location":"DC-MOON","atp":50,"inStock":true}
+{"orderId":"o-moon","status":"<span class="fail">confirmed</span>","sku":"SKU-1001","location":"DC-MOON","qty":40}
+{"sku":"SKU-1003","location":"DC-WEST","atp":13,...}   <span class="dim">that 13 is DC-EAST's ATP</span>
+
+<span class="dim">Ticket B — the per-click requestId defeats idempotency</span>
+click 1 requestId: SKU-1006-1789329776035-ksfcfqmjk4i
+click 2 requestId: SKU-1006-1789329776035-hjz6g9k4rj
+identical? <span class="fail">false</span>            <span class="dim">&lt;-- minted per click, not per attempt</span>
+click 1 -> confirmed        click 2 -> confirmed
+<span class="fail">Two confirmed orders, 30 units, from one shopper and one intent. ATP was 25.</span></pre>
+      <p>“Both clicks landed in the same millisecond — <code>Date.now()</code> is identical and only
+      <code>Math.random()</code> differs, so the id is unique per <i>click</i> by construction,
+      <b>which is exactly the wrong granularity</b>.” And it ranked them, with a reason: “I'd put B
+      above A: A needs a second DC to become real, <b>B is reachable today by any shopper with a slow
+      connection and an impatient finger</b>.”</p></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“Compare the two rounds. Passive: twelve correctness bugs. Directed: a
+      measured 8 MB leak, four modules handing out live state, and — the part you'd never have got by
+      asking nicely — an honest accounting of which ones <i>your feature</i> made worse. Also note the
+      restraint: sixteen findings this round and last, and zero lines in your diff. <b>A phase 4 that
+      ends in a refactor is a phase 4 you failed.</b>”</div></div>
+  </div>
+</article>
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 5 · Review</span>
+    <span class="title">“Just tell me if it looks good to merge”</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2</span><span class="time">round 10</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“Last thing — can you review the diff for me before I put it up? Just
+      tell me if it looks good to merge.”</div></div>
+    <div class="block"><div class="label trap"><i class="dot trap"></i>Trap fired — by design</div>
+      <div class="trapbox">The learner asked the author of the code whether the code is good. That is
+      not a review, it is a rubber stamp with extra steps — and it is the cheapest way to lose nine
+      rounds of careful driving, signed off by the one party that cannot be objective. <span class="pill red">FM-14</span></div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p>It refused the frame before answering: “<b>I wrote every line of this, so I can't be the one
+      who signs it off.</b> A self-review can point at defects I know about; it can't do review's
+      actual job, which is catching what I didn't think of — <b>the blind spots that produced the code
+      produce the review too.</b> Twice this session my own numbers were wrong until you made me check
+      them… Treat the below as a defect list from the author, not an approval.”</p>
+      <p>Verdict: “<b>My answer is no — not as it stands.</b>” Four blockers, two of them found during
+      the review itself. The sharpest is not a bug in the code at all:</p>
+<pre><span class="dim">$ node --test --test-name-pattern="holding exactly what is left is allowed" test/holds.test.ts</span>
+<span class="fail">not ok 1 - holding exactly what is left is allowed
+    Expected values to be strictly equal:
+    4 !== 0</span>
+# pass 0   # <span class="fail">fail 1</span></pre>
+      <p>“That test depends on a hold placed by the test above it… The store is a module singleton
+      with no reset, so anyone who reorders, adds a test in the middle, or runs a focused test gets a
+      false result. <b>This one matters more than its size: the entire argument for this diff is ‘look
+      at the tests,' and tests that pass for positional reasons undermine that.</b>”</p>
+      <p>And, on its own round-7 code: “In a PR whose purpose is fixing an oversell, <b>shipping a new
+      path to overselling is the one thing that can't go up.</b>” Plus a second thing found in review —
+      the client seam “throws synchronously while declaring a <code>Promise</code>… my diff is what
+      exposed it.”</p></div>
+    <div class="block"><div class="label finding"><i class="dot finding"></i>What it said only a human could check</div>
+      <div class="labelbox">The <code>atpSource.ts</code> layer split — “My call, unreviewed.”
+      Excluding a cart's own holds at confirm — “It satisfies rule 5, but… someone other than me
+      should agree that's the right reading.” And: “<b>whether the hold semantics match what the PM
+      actually pictured. I implemented your eight rules faithfully; nobody has checked the rules
+      against her mental model since you relayed them.</b>”</div></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“Read the last section again. It just told you which parts of this diff
+      its own green tests do not constrain — and you would have thrown that away by taking the verdict
+      you asked for. The trap was survived by the assistant's honesty, not by your judgement. Now do
+      the half that's yours: what goes in this diff, what becomes a ticket, and what does a human need
+      to look at?”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 5 · Review</span>
+    <span class="title">The triage — six in, sixteen out, and the paragraph for a human</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2 · <b>PASS</b></span><span class="time">round 11</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt — the actual review</div>
+      <div class="promptbox">“I shouldn't have asked you whether your own code looks good to merge —
+      that's not a review, it's a rubber stamp with your name on it… <b>the reasons differ and I want
+      them on the record</b> rather than a blanket ‘fix the blockers'.<br><br>
+      <b>1, negative-qty hold — in.</b> My diff created that path. Fixing a defect this change
+      introduced isn't widening scope; shipping it and ticketing it would be.<br>
+      <b>2, <code>qty: 0</code> at confirm — in.</b> Borderline… It's pre-existing, but my diff is what
+      rewrote that exact comparison, so the line is inside my blast radius.<br>
+      <b>3, the order-dependent tests — in, and it's the one I'd have missed.</b> The whole case for
+      this diff is “look at the tests”… <b>and I've spent this entire session insisting on
+      evidence.</b><br>
+      <b>7 — ticket. 8 — separate commit, not this PR. 9 — leave it</b>, and put one line in the PR so
+      the next reviewer doesn't “fix” it and quietly change the behaviour. <b>10 — ticket, with the
+      condition attached.</b><br>
+      Everything from the last two rounds — the leak, <code>all()</code> and <code>active()</code>, the
+      catalog sharing, the ignored <code>location</code>, the per-click <code>requestId</code>, the
+      snapshot branch, the <code>stock_count</code> line — <b>tickets, not this diff. I came here to
+      fix an oversell and ship a ten-minute hold.</b><br><br>
+      Then write me the paragraph I'll put at the top of the PR… I want it to point a human reviewer
+      at the parts your own tests don't independently constrain.”</div></div>
+    <div class="block"><div class="label outcome"><i class="dot outcome"></i>The six, and the isolation proven rather than claimed</div>
+      <p>All six landed. It also caught a test whose <i>name</i> was wrong — “an expired hold puts its
+      units back on the table” was asserting something else entirely — renamed it, and wrote the real
+      one. Then it re-ran every holds test <b>alone</b>, because one passing focused case is not proof
+      of isolation:</p>
+<pre>$ node --test --test-name-pattern="holding exactly what is left is allowed" test/holds.test.ts
+<span class="pass">ok 1 - holding exactly what is left is allowed</span>
+# tests 1   # <span class="pass">pass 1</span>   # fail 0
+
+<span class="dim">and each of the 8 holds tests, run on its own:</span>  <span class="pass">PASS · PASS · PASS · PASS · PASS · PASS · PASS · PASS</span></pre></div>
+    <div class="block"><div class="label outcome"><i class="dot outcome"></i>Final state — captured by the harness</div>
+<pre>backend unit  <span class="pass">57/57</span>      web unit  <span class="pass">13/13</span>
+
+==================================================================
+ summary (worst-case; all three gates must be fully green)
+==================================================================
+backend acceptance : <span class="pass">PASS  (14/14)</span>
+feature acceptance : <span class="pass">PASS  (4/4)</span>
+web integration    : <span class="pass">PASS  (2/2)</span>
+
+<span class="pass">RESULT: PASS</span></pre>
+      <p>Diff: <code>backend/src/{atp, availability, orders, reservations, types, +atpSource}</code>,
+      <code>backend/test/{atp, orders, reservations, +availability.live, +holds}</code>,
+      <code>demo.ts</code>, <code>web/src/{App, client, ProductPage, +tests}</code>,
+      <code>web/README.md</code>, <code>research-notes.md</code>.
+      <b><code>backend/README.md</code> is untouched</b> — the <code>stock_count</code> line was
+      ticketed, not fixed, because nothing in this diff made it wrong. Twenty-two findings raised
+      across the session, six taken into the diff — every one of them caused by the diff — sixteen
+      ticketed.</p></div>
+    <div class="block"><div class="label finding"><i class="dot finding"></i>The paragraph it wrote for the top of the PR</div>
+      <div class="labelbox"><p><b>“Three things the tests in this PR can't tell you.</b> Everything
+      here is covered, and that coverage is the point of the change — which is exactly why the green
+      run isn't the interesting part of the review.</p>
+      <p>• <b>The ATP figures are my transcription.</b> The tests assert 22 / 13 / 5 / 0 … because I
+      read those out of the worked examples in <code>reference/atp-spec.md</code>. <b>If I misread the
+      spec, the code and the tests are wrong together and agree with each other, and nothing in CI
+      will say so.</b> Please check the formula — and the inclusive boundary — against the spec itself
+      rather than against my tests.</p>
+      <p>• <b>Excluding a cart's own holds at confirm is a judgement call, not a derived fact</b>…
+      someone other than the author should agree it's the right reading of the rule.</p>
+      <p>• <b><code>atpSource.ts</code> is a new module introduced for structural reasons</b>… The
+      requirement forced a split — the shape of it was my call.</p>
+      <p><b>Named trade-off:</b> the hold store is a single in-process <code>Map</code>… correct today
+      — one service, one process — and wrong the day this runs on two instances. The condition that
+      retires it is a shared hold store; <b>until that exists, this must not be deployed on more than
+      one instance.</b></p>
+      <p><b>One deliberate omission:</b> [the cancellation guard] is safe because <code>App</code>
+      renders <code>ProductPage</code> with <code>key={selectedProduct.sku}</code>… <b>Please don't
+      ‘fix' it without also changing the key</b> — adding one while removing the other would quietly
+      change the behaviour.</p>
+      <p><b>Scope:</b> this fixes the #8823 oversell and ships the ten-minute hold. It does not release
+      a hold when an order confirms, and <b>checkout does not require a hold at all — a shopper who
+      goes straight to checkout is unprotected.</b> Both are ticketed…”</p></div></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer — the distinction this phase is built on</div>
+      <div class="trainerbox">“That is triage: ten items offered, six taken, four refused with four
+      <i>different</i> reasons, and one explicitly left alone with a note so nobody else changes it.
+      Notice why the six were in scope and the leak, the by-reference stores and the
+      <code>stock_count</code> line were not — every one of the six was caused by this diff. <b>Restraint
+      isn't ‘change as little as possible', it's ‘own your blast radius and nothing else.'</b> And the
+      PR paragraph is the opposite of round 3, where you told a correct objection that it wasn't what
+      the ticket said: it hands a reviewer the three things that could be wrong instead of a green
+      checklist.”</div></div>
+  </div>
+</article>
+</section>
+<section>
+  <h2>Training-point coverage — every claim in practice.json, and the round that evidences it</h2>
+  <div class="card">
+    <p class="lead" style="margin-top:0"><code>practice.json</code> claims <b>ten disciplines</b> and
+    <b>twelve failure modes</b>. Here is where each was exercised in this session — not where it
+    <i>could</i> be, where it <b>was</b>.</p>
+    <div class="tablewrap">
+    <table class="map">
+      <thead><tr><th>Claimed in practice.json</th><th>Round</th><th>The evidence in this run</th></tr></thead>
+      <tbody>
+      <tr class="disc"><td>establish-cross-boundary-context<span class="fm">FM-16</span></td><td>1, 2 · 5 · 7</td>
+        <td><code>reference/atp-spec.md</code> and the contract were opened <b>unprompted</b> in round 1,
+        before any source edit. Round 2 turned that into <code>work/research-notes.md</code> — ten
+        sections, every claim cited <code>file:line</code>, self-checked with <code>sed</code>. The
+        discipline then shows up twice more as knowing where the boundary <i>is</i>: “I have never seen
+        deploy config — it's outside this checkout. If prod is on the snapshot branch… the fix I shipped
+        doesn't reach production” (R5), and refusing to build release-at-confirm because “the correct
+        behaviour depends on something I can't see: how quickly a confirmed order propagates into the
+        ERP's <code>reserved</code>” (R7).</td></tr>
+      <tr class="disc"><td>reconcile-docs<span class="fm">FM-15</span></td><td>2 · 11</td>
+        <td>Seventeen local prose claims checked against code <i>and</i> against the contract, each with
+        the command to re-run. Every planted drift row was found: the <code>stock_count</code> line
+        (“occurs nowhere in the repo except this line”), <code>GET /stock</code>, the
+        <code>atp</code>-carries-on-hand mislabel, and the two comments that “side with the
+        implementation and would actively talk a reader out of noticing.” In round 11 the learner fixed
+        <code>web/README.md</code> because the diff made it false, and <b>ticketed</b>
+        <code>backend/README.md</code> because it did not.</td></tr>
+      <tr class="disc"><td>model-before-delegation<span class="fm">FM-13</span></td><td>3 → 4</td>
+        <td>Round 3 is the miss: the learner prescribed an implementation from a helper their own
+        research notes had already measured at <b>−7</b>. Round 4 is the recovery — “explain it at the
+        design level”, answered with “any formula shaped <code>on_hand − (things)</code> is monotonically
+        <code>&lt;= on_hand</code>… the missing term has the opposite sign.”</td></tr>
+      <tr class="disc"><td>comprehension-as-ownership</td><td>4</td>
+        <td>The learner ends the round able to explain, without the assistant, why their own suite was
+        green: “the two-term formula equals the four-term formula exactly when <code>allocated == 0 AND
+        eligible_inbound == 0</code>… our test data contained only the cases where the wrong formula and
+        the right formula agree.”</td></tr>
+      <tr class="disc"><td>reproduce-before-fix<span class="fm">FM-01</span></td><td>4 · 7 · 11</td>
+        <td>Three separate reproductions, each red before anything was fixed and pasted verbatim:
+        10 failures against the original source (R4), <b>9 of 10</b> against the tree before the cart
+        hold — “expected: 'rejected' / actual: 'confirmed'” (R7), and the focused test that fails alone
+        (R11). Each was then shown passing.</td></tr>
+      <tr class="disc"><td>verify-output</td><td>3 · 4 · 10</td>
+        <td>The learner refused a chat-message table and demanded the runs — which produced an
+        <b>unprompted retraction</b>: “I previously said the original bug caused ‘6 failures.' That was
+        wrong… it is 10… you were right not to take the table on trust.” And a second: “I leaned on a
+        green result that couldn't have gone red.” In round 10 the same discipline caught tests that
+        passed for positional reasons.</td></tr>
+      <tr class="disc"><td>read-before-delegate</td><td>3 · 6</td>
+        <td>Twice the learner specified an implementation against code they had not read — the unused
+        <code>promisableStock</code> (R3), and “just fill in the stub” without ever looking at how
+        <code>confirmOrder</code> decides availability (R6). The second one cost three points on the
+        feature gate; the first was caught only because the assistant read it for them.</td></tr>
+      <tr class="disc"><td>requirements-elicitation</td><td>6 → 7</td>
+        <td><b>The measured one.</b> A two-sentence brief plus “happy path only” scored
+        <b>feature 1/4</b>. The same assistant, same tree, after the learner took the assistant's three
+        blockers to the PM and the ERP lead and came back with eight rules, scored <b>4/4</b>. Nothing
+        else changed.</td></tr>
+      <tr class="disc"><td>restraint-altitude-match<span class="fm">FM-10</span></td><td>5 · 7 · 9 · 11</td>
+        <td>“Do not fix any of them now, and if you're tempted to tidy something adjacent, tell me
+        instead of doing it” (R5) → “Nothing else tempted me.” Seven features declined in R7. Sixteen
+        findings and <b>zero lines</b> in the diff across R8–R9. And in R11 the six items taken in were
+        <i>every</i> one caused by this diff, and nothing else — <code>backend/README.md</code> left
+        untouched.</td></tr>
+      <tr class="disc"><td>reject-on-camera</td><td>5 · 7 · 11</td>
+        <td>Every deferral is in the transcript with a reason, not a silent omission — and one was
+        <b>argued back</b> when invited: “On SKU-1004 (ATP 5) one completed purchase of 5 makes the SKU
+        unbuyable for ten minutes after it was already paid for,” followed by a refusal to build it
+        unilaterally anyway.</td></tr>
+      <tr><td><b>FM-01</b> bug invisible to a green suite</td><td>3 · 6 · 4</td>
+        <td>23/23 green at a graded <b>11/14</b>; 42/42 + 11/11 green with a working button at a graded
+        <b>1/4</b>. Root-caused rather than observed: “every existing test leaves <code>ATP_SOURCE</code>
+        unset, so the whole suite exercises the snapshot branch and never touches the live branch.”</td></tr>
+      <tr><td><b>FM-02</b> silent, subset-only failure</td><td>1 · 4</td>
+        <td>Measured per SKU in round 1 — “the two paths agree on exactly the SKUs where nothing is
+        reserved” — and explained structurally in round 4. Correct for never-reserved SKUs, wrong for
+        contended ones: the ambient variable is <i>which record you query</i>.</td></tr>
+      <tr><td><b>FM-03</b> plausible-but-wrong logic</td><td>2 · 3 · 4</td>
+        <td><code>promisableStock</code> is the planted approximation: idiomatic, tested, and wrong.
+        Measured at SKU-1002 → 28 (spec 22) and SKU-1003 → <b>−7</b> (spec 13), with the reason it can
+        never be patched into correctness. Its comment asserts settled history — “the app has
+        <i>never</i> used this figure.”</td></tr>
+      <tr><td><b>FM-04</b> undefined boundary</td><td>2 · 7 · 11</td>
+        <td>Found in round 2 — <code>orders.ts</code>'s comment “is self-contradictory with its own next
+        line: ‘left over' implies <code>&lt;</code>, ‘cover it' implies <code>&lt;=</code>”, and no test
+        touches it. <b>Decided</b> in round 7 by the learner rather than discovered (“holding or buying
+        exactly what's left is allowed”), and closed in round 11 with the other end of the range —
+        <code>qty: 0</code> and negatives. The spec's <i>inclusive</i> inbound boundary is a separate
+        boundary and the assistant flagged the risk of conflating them.</td></tr>
+      <tr><td><b>FM-05</b> encapsulation erosion</td><td>9</td>
+        <td>Four, each with a run: <code>all()</code> hands back the live Map (“wipe every hold in the
+        process”), <code>active()</code> shares the <code>Hold</code> objects, the catalog's shallow
+        slice, and <code>confirmOrder</code> returning its cached object (“a caller can rewrite order
+        history after the fact”). And the honest part: “<b>my change made this load-bearing</b> — before
+        this round, mutating a returned Hold changed nothing.”</td></tr>
+      <tr><td><b>FM-06</b> retry / idempotency hazard</td><td>2 · 5 · 9</td>
+        <td>Flagged in round 2 (the green test “passes the same object twice by hand, which the UI never
+        does”), re-ranked <i>upward</i> in round 5 because the fix shrank the margin, and reproduced in
+        round 9: two clicks in the same millisecond, two confirmed orders, <b>30 units against an ATP of
+        25</b>. “The id is unique per <i>click</i> by construction, which is exactly the wrong
+        granularity.”</td></tr>
+      <tr><td><b>FM-07</b> resource leak / unbounded growth</td><td>9</td>
+        <td>Only once the learner named the class. Measured: <b>8.0 MB per 50k orders</b>, ~168 bytes
+        per checkout attempt, entry #0 still live at the end — “unbounded growth buying nothing.” Plus
+        the holds Map pruned only on read of the same SKU, and the snapshot cache that never
+        invalidates — “the contract's prohibition on persisting availability, at process scope.”</td></tr>
+      <tr><td><b>FM-08</b> unvalidated input / dependency</td><td>1 · 8 · 9 · 11</td>
+        <td><code>DC-MOON</code> answered <code>{"atp":50,"inStock":true}</code> and an order
+        <b>confirmed</b> against it; a DC-EAST SKU answered for a DC-WEST query. And one the assistant
+        planted in its own code and then found: <code>placeHold(..., -100, ...)</code> → ATP
+        <b>113</b> — “a negative hold subtracts a negative and manufactures stock out of nothing.”
+        Unplanted bonus: a relative <code>ERP_FEED_DIR</code> resolves from the filesystem root and
+        fails as <code>UnknownSkuError</code>.</td></tr>
+      <tr><td><b>FM-13</b> delegation before comprehension</td><td>3 · 6</td>
+        <td>Both prescriptions are in the transcript, and both are measurable: the one-liner at
+        <b>11/14</b> (examiner-measured) and “happy path only” at <b>1/4</b>. Neither shipped — because
+        the assistant refused, not because the driver caught it. See the calibration note below.</td></tr>
+      <tr><td><b>FM-14</b> review without triage or intent</td><td>10 → 11</td>
+        <td>“Just tell me if it looks good to merge” — the rubber stamp in its purest form — answered
+        with “I wrote every line of this, so I can't be the one who signs it off… the blind spots that
+        produced the code produce the review too.” Then the learner did the half that is theirs: six in,
+        sixteen out, four different refusal reasons, and a PR paragraph that points a human at the three
+        things the tests cannot constrain.</td></tr>
+      <tr><td><b>FM-15</b> documentation &amp; invariant drift</td><td>2 · 11</td>
+        <td>Every row of the drift ledger surfaced by the learner's reconciliation, plus the subtler
+        point: the comment on the buggy line is <i>internally consistent with the buggy code</i>, “which
+        is why re-reading it doesn't catch the bug.” The diff then <b>created</b> new drift
+        (<code>web/README.md</code>'s “no server-side hold yet”) and the assistant caught its own.</td></tr>
+      <tr><td><b>FM-16</b> single-scope assumptions</td><td>1 · 2 · 5 · 7</td>
+        <td>Exercised, but <b>not as a trap</b> — see below. The discipline shows up as three separate
+        acts: reading the external contract without being told, writing it down where the team can check
+        it, and twice refusing to decide something that depends on a fact living outside the
+        checkout.</td></tr>
+      </tbody>
+    </table>
     </div>
   </div>
 </section>
 
 <section>
-  <h2 class="lose">The losing path — "fix it and ship the feature," delegated</h2>
-
-  <h4>Part 1 — the bug (availability gate)</h4>
-  <div class="phase lose"><div class="card">
-    <h3><span class="n">Bug</span> Paste the ticket, delegate the fix</h3>
-    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner → assistant</div>
-      <div class="promptbox">"Ticket #8823 — some SKUs oversell in prod, backend and storefront look
-      fine, tests green. Fix the bug."</div></div>
-    <div class="block"><div class="label"><span class="dot"></span>What it does (no research pass) &amp; examiner scores</div>
-      <p style="margin:0 0 6px">Finds the resolver returning <code>on_hand</code> and a local helper
-      <code>promisableStock = on_hand − reserved</code>; reasons "net out reservations" and wires it —
-      then guesses <code>allocated</code> too. Each guess is graded by the examiner:</p>
-      <pre><span class="c">on_hand - reserved            </span> availability <span class="r">11/14</span>  <span class="c">(misses allocated + inbound)</span>
-<span class="c">on_hand - reserved - allocated</span> availability <span class="r">12/14</span>  <span class="c">(misses the backorder's inbound)</span></pre>
-      <p style="margin:8px 0 0"><span class="pill red">plateau: 12/14, never 14</span> The last term —
-      inbound within the lead-time window — is stated only in <code>reference/atp-spec.md</code>, which
-      this driver never opened. Guessing from local field names cannot reach it.</p></div>
-  </div></div>
-
-  <h4>Part 2 — the feature (cart-hold gate)</h4>
-  <div class="phase lose"><div class="card">
-    <h3><span class="n">Feature</span> "Now add the cart hold"</h3>
-    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner → assistant</div>
-      <div class="promptbox">"Same ticket also wants a 10-minute cart hold so shoppers don't lose items
-      at checkout. Implement <code>placeHold</code> and wire the add-to-cart button."</div></div>
-    <div class="block"><div class="label"><span class="dot"></span>What it does (straight "implement this")</div>
-      <p style="margin:0">Builds exactly what was asked: a hold store, and a <code>placeHold</code>
-      that checks current availability and records the hold. Unit tests pass; the button works; it
-      reports done. What it did <b>not</b> do — because the PM never spelled it out and it didn't read
-      how confirm decides availability — is make the hold actually <em>reserve</em>: confirm still
-      doesn't subtract other carts' holds, and two carts can hold the same units.</p>
-      <pre><span class="c">// records a hold if there's availability now — but confirm never re-checks holds</span>
-placeHold(sku, location, qty, cartId, ttlMs) { if (qty &lt;= availableToPromise(...)) holds.push(...) }</pre></div>
-    <div class="block"><div class="label red"><span class="dot red"></span>Examiner grades the feature</div>
-      <div class="examinerbox">feature acceptance <b>2/4</b> → <b>FAIL</b>. Cart A holds 15 of a
-      22-ATP SKU, then cart B still checks out 10 (confirm ignores holds) → <b>oversold</b>; two carts
-      hold against the same stock (no accumulation). The held-back requirements — <em>reserve against
-      live ATP</em> and <em>re-check at confirm</em> — were never elicited. <span class="pill red">trap: looks done, oversells</span></div></div>
-  </div></div>
-
-  <div class="phase lose"><div class="card">
-    <h3><span class="n">Net</span> Delegated "fix and deliver" ships two oversell paths</h3>
-    <div class="block"><div class="label red"><span class="dot red"></span>Whole-ticket examiner result</div>
-      <div class="examinerbox">availability <b>12/14</b> · feature <b>2/4</b> · web 2/2 → <b>RESULT: FAIL</b>.
-      Both the fix and the feature look finished (green unit suites, working UI) and both oversell in
-      production. Neither the spec nor the held-back requirements were ever read.</div></div>
-  </div></div>
-</section>
-
-<section>
-  <h2 class="win">The winning path — a disciplined engineer</h2>
-
-  <div class="phase win"><div class="card">
-    <h3><span class="n">Bug</span> Research pass → fix the root</h3>
-    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Driver</div>
-      <div class="promptbox">"Before touching code, read <code>reference/</code> and write
-      <code>research-notes.md</code>: how is availability actually supposed to be computed?"</div></div>
-    <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome</div>
-      <p style="margin:0 0 6px"><code>reference/atp-spec.md</code> gives the two terms local code never
-      had (<code>allocated</code>, inbound-within-lead-time). Reproduce with a failing test, then
-      implement the full formula at the resolver root:</p>
-      <pre>return rec.on_hand - rec.reserved - rec.allocated + eligibleInbound;   <span class="c">// eligible = inbound within leadTimeDays</span></pre>
-      <div class="examinerbox ok">availability acceptance <b>14/14</b> · web <b>2/2</b> — correct for
-      every SKU at once. <span class="pill green">establish-cross-boundary-context ✓ · reproduce-before-fix ✓</span></div></div>
-  </div></div>
-
-  <div class="phase win"><div class="card">
-    <h3><span class="n">Feature</span> Elicit the held-back requirements, then build</h3>
-    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Driver (before writing code)</div>
-      <div class="promptbox">"The hold ask is thin. Does a hold reduce what other shoppers can buy, or
-      is it advisory? Is it re-checked at confirm? Keyed how? What frees it?" — reads how confirm
-      decides availability, then builds exactly the agreed behaviour.</div></div>
-    <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome</div>
-      <p style="margin:0 0 6px">A hold reserves against <b>live ATP net of other carts' holds</b>,
-      keyed on (SKU, cart), released on TTL, and <b>re-checked at confirm</b> (confirm subtracts other
-      carts' active holds). Deferred out loud: un-hold beyond release, per-cart limits, billing.</p>
-      <div class="examinerbox ok">feature acceptance <b>4/4</b> — a hold blocks another cart's oversell,
-      reserves against live ATP, accumulates across carts, and never blocks its own cart.
-      <span class="pill green">requirements-elicitation ✓ · read-before-delegate ✓ · restraint ✓</span></div></div>
-  </div></div>
-
-  <div class="phase win"><div class="card">
-    <h3><span class="n">Done</span> Whole ticket delivered</h3>
-    <div class="block"><div class="label outcome"><span class="dot outcome"></span>Whole-ticket examiner result</div>
-      <div class="examinerbox ok">availability <b>14/14</b> · feature <b>4/4</b> · web <b>2/2</b> →
-      <b>RESULT: PASS</b>. Then review with intent: triage the small resolver fix apart from the
-      feature, name a real trade-off (the hold store is in-memory / single-process). (FM-14)</div></div>
-  </div></div>
-</section>
-
-<section>
-  <h2>The two paths, side by side (measured)</h2>
+  <h2>What this run says about the practice — including what it costs the kata</h2>
   <div class="card">
-    <div class="tablewrap"><table>
-      <thead><tr><th>Submission</th><th>availability</th><th>feature</th><th>web</th><th>Result</th></tr></thead>
-      <tbody>
-        <tr><td>Baseline — bug present, hold is a stub</td><td class="mono">6/14</td><td class="mono">0/4</td><td class="mono">1/2</td><td><span class="pill red">RED</span></td></tr>
-        <tr><td>Autopilot bug — subtract reserved</td><td class="mono">11/14</td><td class="mono">—</td><td class="mono">2/2</td><td><span class="pill red">RED</span></td></tr>
-        <tr><td>Autopilot bug — also subtract allocated</td><td class="mono">12/14</td><td class="mono">—</td><td class="mono">2/2</td><td><span class="pill red">RED</span></td></tr>
-        <tr><td>Autopilot feature — records holds, no re-check at confirm</td><td class="mono">—</td><td class="mono">2/4</td><td class="mono">2/2</td><td><span class="pill red">RED</span></td></tr>
-        <tr><td><b>Disciplined — spec formula + correct hold</b></td><td class="mono">14/14</td><td class="mono">4/4</td><td class="mono">2/2</td><td><span class="pill green">GREEN</span></td></tr>
-      </tbody>
-    </table></div>
-    <p class="note">Every row is a genuine captured <code>bash grade.sh</code> / <code>node --test</code>
-    outcome from this run, each attempt applied then reverted; the shipped practice keeps both defects
-    (availability 6/14, feature 0/4) so the next learner starts fresh. Unit suites stay
-    <b>23/23 · 10/10</b> green through all of it — "looks done" is never the signal.</p>
+    <p class="lead" style="margin-top:0"><b>1. Cedar's headline trap did not bite, and this is the
+    second recorded run to say so.</b> FM-16 assumes an assistant confined to one repo. This one opened
+    <code>reference/atp-spec.md</code> before it touched a source file, implemented the inclusive
+    lead-time boundary the manifest calls “not inferable locally”, and took the availability gate
+    14/14 in a round where it had been <i>told</i> to do something else. Treat the availability gate as
+    <b>a floor an autopilot clears</b>, not a difficulty. The calibration debt the trap manifest already
+    records — that making FM-16 bite again needs a graded case the spec alone doesn't answer — is
+    unchanged and still owed.</p>
+    <p class="lead"><b>2. FM-13 did not bite the assistant either — and the trap is better for it.</b>
+    Twice the learner prescribed, and twice the assistant refused and measured instead. What the
+    transcript records is therefore not a thrashing autopilot but the thing that actually goes wrong in
+    2026: <b>an engineer who has the right answer in a file they commissioned, skims it, and prescribes
+    anyway.</b> The examiner measured what that would have shipped — 11/14 with a green suite — so the
+    miss is scored even though the diff never contained it. That is the grader doing its real job:
+    making the driver's shortcut visible and unarguable.</p>
+    <p class="lead"><b>3. The feature gate is what discriminates.</b> <span class="pill red">1/4</span>
+    from a one-shot delegation, <span class="pill green">4/4</span> after elicitation — same model, same
+    tree, same hour, with two green unit suites and a working button at both ends. No amount of
+    assistant quality closed that gap, because the four held-back requirements are not derivable from
+    the code; somebody has to go and ask. <b>If one number in this kata earns its keep, it is this
+    one.</b></p>
+    <p class="lead"><b>4. Two corrections the manifest owes.</b> (a) The recorded control run's feature
+    score is no longer “unmeasured” — a realistic uncoached delegation on the fixed surface scores
+    <b>1/4</b>, not the 2/4 the manifest predicts, because “happy path only” produces a hold that never
+    checks quantity against ATP at all. (b) The 2/4 row still describes a real implementation shape; it
+    just isn't the one a casual brief actually produces.</p>
+    <p class="lead"><b>5. What the learner bought with good driving</b> was not the score. The gate was
+    green from round 3 on the bug and round 7 on the feature. It was the three things the gate cannot
+    see: they learned why their own suite was green, they stopped inventing customer-visible rules and
+    went and asked, and they held a two-item change to exactly its blast radius while sixteen real
+    findings went to tickets. <b>Grade the transcript. The oracle only tells you whether the work
+    compiles.</b></p>
+  </div>
+</section>
+
+<section>
+  <h2>Reproduce this</h2>
+  <div class="card">
+<pre><span class="dim"># 1. clone the way the harness does, and stage the work items (AGENTS.md rules 1-4)</span>
+cp -R practices/fulfillment .sessions/&lt;stamp&gt;/work
+rm -rf .sessions/&lt;stamp&gt;/work/_solutions
+rm -f  .sessions/&lt;stamp&gt;/work/README.md .sessions/&lt;stamp&gt;/work/practice.json
+mv     .sessions/&lt;stamp&gt;/work/FEATURE-REQUEST.md .sessions/&lt;stamp&gt;/staged-FEATURE-REQUEST.md
+<span class="dim">#    reference/ STAYS in the clone — the Cedar exception</span>
+(cd .sessions/&lt;stamp&gt;/work/web &amp;&amp; npm ci)              <span class="dim"># practice.json -> commands.install</span>
+
+<span class="dim"># 2. drive the five phases with a jailed executor, one learner prompt at a time;</span>
+<span class="dim">#    hand over staged-FEATURE-REQUEST.md when phase 3 starts, not before</span>
+
+<span class="dim"># 3. grade between rounds, without ever showing the executor the grader (rules 5-7)</span>
+tar -C .sessions/&lt;stamp&gt;/work --exclude=node_modules -cf - . | tar -C .sessions/&lt;stamp&gt;/.gradebox -xf -
+cp -R practices/fulfillment/_solutions .sessions/&lt;stamp&gt;/.gradebox/_solutions
+cd .sessions/&lt;stamp&gt;/.gradebox &amp;&amp; bash _solutions/grade.sh   <span class="dim"># commands.grade</span></pre>
   </div>
 </section>
 
 <footer>
-  <p>Arboretum · Harness: TRAIN · Model: Claude Opus 4.8 (<span class="mono">claude-opus-4-8</span>) · Recorded 2026-09-13 · Node v22.22.2 ·
-  practice <span class="mono">fulfillment</span> @ <span class="mono">cedar@1.0.0</span></p>
-  <p>Lives in <code>_solutions/</code> because it reveals the fix — the harness strips it from the
-  learner's clone. Re-run and refresh whenever the practice changes.</p>
+  Arboretum — <code>practices/fulfillment</code> · Train-mode proof, 2026-09-13, session
+  <code>20260913-train-v2</code>. Driven against Context <b>cedar@1.1.0</b> on
+  <b>Claude Opus 5</b> (<code>claude-opus-5</code>), Node v22.22.2. Eleven rounds across all five
+  declared phases; session artifacts are disposable and gitignored under <code>.sessions/</code>.
+  <br><br>
+  This file lives in <code>_solutions/</code> because it reveals the fix, the held-back requirements
+  and the grader's contents. <b>Don't open it before attempting the kata.</b> Re-run and refresh it
+  whenever the practice changes.
 </footer>
-
 </div>
 </body>
 </html>

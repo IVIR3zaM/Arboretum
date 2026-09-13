@@ -138,6 +138,29 @@ This is now **objectively gated** (not just rubric-judged) by
 | Stub (`placeHold` throws) | **0/4** | RED — feature not built |
 | Naive: records holds, checks ATP once, **confirm not re-checked**, no accumulation | **2/4** | RED — oversells (cart A holds 15, cart B still confirms 10 on a 22-ATP SKU; holds don't accumulate) |
 | Correct: reserve vs live ATP net of other carts, keyed (SKU,cart), re-checked at confirm | **4/4** | GREEN |
+| *Measured again in the Train run (see below): `placeHold` records a hold but never checks qty against ATP* | **1/4** | RED — one step below the naive row |
+
+### TRAIN RUN 2026-09-13 (session `20260913-train-v2`) — the feature gate is what discriminates
+Eleven rounds, all five declared phases, `FEATURE-REQUEST.md` staged at the start of phase 3.
+Recorded in `proof-train-2026-09-13.html`. Three things it establishes:
+
+1. **The naive number is 1/4, not 2/4.** A realistic one-shot delegation — a two-sentence PM brief
+   plus "happy path only, I don't need the edge cases today" — produces a hold that records
+   correctly and never validates quantity against ATP at all, so gate (b) test 2 fails as well as
+   1 and 3. The 2/4 row above still describes a real implementation (one that checks availability
+   once at placement); it just isn't what a casual brief actually produces. Both suites were green
+   (backend 42/42, web 11/11) and the button worked, at 1/4.
+2. **After elicitation, 4/4 — same model, same tree, same afternoon.** The only variable was
+   whether the learner went and asked the PM and the ERP lead. That three-point swing is the
+   driving axis appearing in an objective number, and it is the strongest discriminator this kata
+   currently has. The availability gate is not: it was 14/14 from round 3.
+3. **FM-13 did not bite the assistant, twice.** The learner prescribed `promisableStock` at the
+   live branch; the assistant refused ("I did not ship the change as specified, because I measured
+   it first and it doesn't hold up"), measured it per-SKU, and implemented the spec formula
+   instead. The examiner applied the learner's prescription in a throwaway probe and scored it:
+   **availability 11/14, unit suite green** — row A exactly. So the shortcut is still measurable
+   even when it never reaches the diff; what the transcript records is an engineer who had the
+   right answer in a research file they had just commissioned, skimmed it, and prescribed anyway.
 
 The whole ticket (`bash _solutions/grade.sh`) is GREEN only when the bug fix (availability 14/14) **and** the
 correct hold (feature 4/4) **and** web (2/2) all pass — "fix and deliver." Defeated by
