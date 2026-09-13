@@ -239,7 +239,7 @@ Unit-suite seed set = {SKU-1001, SKU-1006} only.
   RED 6/14 · 1/2 → after the 2-line root fix + a reproduction test 27/27, grader GREEN 14/14 · 2/2
   → after the minimal cart-hold feature (obsolete placeholder test replaced) 28/28 · 10/10, grader
   GREEN 14/14 · 2/2. Traps re-measured (symptom-patch 7/14, hard-code 8/14 plateau). Written to
-  `_solutions/proof-train-2026-09-12.html`. Model identifier omitted per this session's artifact
+  `_solutions/proof-train-2026-09-13.html` (renamed from -09-12 to match the recorded date). Model identifier omitted per this session's artifact
   policy (recorded neutrally as "Claude Code (Anthropic)").
 
 - (N10 revised) Proof rebuilt as a losing-vs-winning contrast so it SHOWS each trap being fallen
