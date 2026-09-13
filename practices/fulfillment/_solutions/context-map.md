@@ -53,8 +53,8 @@ ATP = on_hand − reserved − allocated + eligible_inbound
 eligible_inbound = sum(line.qty for line in inbound if line.arrivesInDays <= leadTimeDays)
 ```
 
-(inclusive boundary — see `trap-manifest.md`'s FM-03 entry for where the shipped `computeAtp`
-implements this one comparison strictly instead, currently harmless for every shipped SKU).
+(inclusive boundary — the inbound lead-time window is one of the two terms, along with
+`allocated`, that exist **only** in `reference/atp-spec.md`, not anywhere in the local repo).
 
 ## What a research pass should come away with
 
@@ -65,7 +65,8 @@ learner's own words, at minimum:
   in-window inbound;
 - the reserved/allocated/inbound truth lives only in `reference/`, never locally derived;
 - the authoritative location set is `{DC-WEST, DC-EAST}`;
-- which local code path currently honors this (`atp.ts`'s `computeAtp`) and which one doesn't
-  (`availability.ts`'s stale `live` branch) — i.e., the research pass should connect the external
-  contract back to the specific place in the local repo it's being violated, not stop at
-  restating the contract in isolation.
+- that **no local code path honors this** — the only local helper (`atp.ts`'s `promisableStock`,
+  `on_hand − reserved`) is stale and incomplete, and `availability.ts`'s `live` branch is more
+  stale still (`on_hand`). The research pass should connect the external contract back to the
+  specific place in the local repo it's being violated, and recognize that the `allocated` and
+  inbound-window terms have to be brought in from the spec, not copied from local code.

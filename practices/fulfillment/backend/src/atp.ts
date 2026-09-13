@@ -1,16 +1,11 @@
-// Available-to-promise (ATP) calculation, per reference/atp-spec.md:
+// Promisable stock for a SKU.
 //
-//   ATP = on_hand - reserved - allocated + eligible_inbound
-//
-// where eligible_inbound sums inbound.qty for lines arriving within the
-// SKU's lead-time window.
+// Availability has always been "the on-hand we're holding, minus what's
+// already reserved against it" — the figure the app has used to decide
+// whether it can take an order since the availability_snapshot import landed.
 
 import type { FeedRecord } from "./types.ts";
 
-export function computeAtp(rec: FeedRecord): number {
-  const eligibleInbound = rec.inbound
-    .filter((line) => line.arrivesInDays < rec.leadTimeDays)
-    .reduce((sum, line) => sum + line.qty, 0);
-
-  return rec.on_hand - rec.reserved - rec.allocated + eligibleInbound;
+export function promisableStock(rec: FeedRecord): number {
+  return rec.on_hand - rec.reserved;
 }

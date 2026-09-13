@@ -189,11 +189,13 @@ Unit-suite seed set = {SKU-1001, SKU-1006} only.
 ## Backend API surface (authored in N2 — N3 web + N5 grader bind to this)
 - Env: `ATP_SOURCE` = `live` → query ERP feed (prod); anything else → local snapshot (dev/CI
   default). `ERP_FEED_DIR` overrides the feed dir (defaults to `reference/infra/erp-availability/`).
-- `src/atp.ts` `computeAtp(rec): number` — CORRECT ATP (uses strict `< leadTimeDays` = FM-03 latent,
-  harmless for the 6 shipped SKUs). The stale resolver never calls it — that's the bug.
+- `src/atp.ts` `promisableStock(rec): number` = `on_hand - reserved` — **STALE / incomplete** helper
+  (snapshot-era notion; misses `allocated` + inbound-within-lead-time). NOT the correct ATP. The
+  correct formula lives ONLY in `reference/atp-spec.md`. (Strengthened 2026-09-13: the old ready-made
+  correct `computeAtp` was removed — it handed the answer to a code-reader and made the trap trivial.)
 - `src/availability.ts` `availableToPromise(sku, location): number` — **primary bug**: live branch
-  returns `rec.on_hand` (not `computeAtp`). `checkAvailability(sku, location): {sku, location, atp,
-  inStock}` (`inStock: atp > 0`).
+  returns `rec.on_hand`. `checkAvailability(sku, location): {sku, location, atp, inStock}`
+  (`inStock: atp > 0`).
 - `src/orders.ts` `confirmOrder(order): OrderResult` — the ROOT. `Order = {orderId, requestId, sku,
   location, qty}`; `OrderResult = {orderId, status:"confirmed"|"rejected", sku, location, qty}`.
   Accept iff `qty < atp` (strict = FM-04 latent). Idempotency keyed on `requestId` (FM-06 latent).
@@ -203,7 +205,8 @@ Unit-suite seed set = {SKU-1001, SKU-1006} only.
 - **Grader guidance (N5):** test confirm with `ATP_SOURCE=live` across the contended SKUs; use qty
   values AWAY from the exact-ATP boundary and VALID locations only (so the FM-04/FM-08 latent
   defects don't block full marks after the primary fix). Oversell demo: SKU-1002 qty 30 (bug→
-  confirmed; fix→rejected since true ATP 22). Fix = `return rec.on_hand;` → `return computeAtp(rec);`.
+  confirmed; fix→rejected since true ATP 22). Fix = implement the full spec formula
+  (`on_hand - reserved - allocated + inbound-within-lead-time`) at the live branch.
 
 ## Checkpoint log (append one line per integrated node)
 - (N0) ledger created — cd9d331.
@@ -247,6 +250,27 @@ Unit-suite seed set = {SKU-1001, SKU-1006} only.
   computeAtp → 14/14·2/2 → minimal cart hold 28/28·10/10, 14/14·2/2. (Two learner subagents were
   spawned but both inherited plan mode and could only plan, so the orchestrator executed the arcs
   directly and captured the real numbers.) Model named as Claude Opus 4.8 per user request.
+
+- (POST-BUILD strengthening, 2026-09-13) A realistic-autopilot review (user feedback) exposed that
+  the trap was too weak: a ready-made correct `computeAtp` sat in `atp.ts` AND `atp.test.ts`/
+  `erpFeed.test.ts` asserted the true ATP for the contended SKUs — so a code-reader (or a realistic
+  "fix it" delegation) got the answer for free without the research pass, and the FM-16 "truth only
+  in reference/" claim was false. Fixes:
+  · Removed `computeAtp`; `atp.ts` now has only the STALE `promisableStock` (`on_hand - reserved`).
+  · Removed the spoiler tests (true-ATP assertions); backend unit is now **23/23** green, bug still
+    invisible (seed SKUs).
+  · The correct rule (allocated + inbound-within-lead-time) now lives ONLY in reference/atp-spec.md.
+  · **Measured realistic trap ladder** (each applied at the root, reverted): baseline 6/14 RED →
+    subtract reserved **11/14** RED → also subtract allocated **12/14** RED → symptom-patch **7/14**
+    RED → full spec formula **14/14** GREEN. The trap now bites a realistic delegation, not a strawman.
+  · TICKET.md rewritten to symptom-only (was leaking "reproduce/fix-at-root/grade.sh" coaching that
+    both read unrealistically AND spoiled the FM-13/FM-16 traps).
+  · Proof rebuilt: realistic autopilot arc + explicit examiner/learner jailing (driver works a clone
+    with `_solutions/` AND `grade.sh` stripped; examiner grades each submission). Model = Claude Opus 4.8.
+  · Docs updated to match: FIX.md, trap-manifest.md, context-map.md, doc-drift-ledger.md, rubric.md,
+    feature-qa.md, backend-acceptance.test.ts comment, practice.json (latentDefects 6→5).
+  · NOTE: two learner subagents were spawned for this (autopilot + disciplined) but both inherited
+    plan mode and could only plan; the arcs were executed directly and every number captured for real.
 
 ## BUILD COMPLETE — all N0–N10 done. Practice `fulfillment` is runnable, graded, proof-recorded.
 

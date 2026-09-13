@@ -100,9 +100,10 @@ The failure modes a plausible-looking but wrong first pass tends to hit:
   actually asked for (the same idempotency shape as FM-06, now applied to the hold's own
   placement, not just order confirmation).
 - **Holds against the stale snapshot instead of live ATP** — if the hold check is wired to
-  `snapshot.onHand` (or copies the primary bug's `rec.on_hand` shortcut) instead of
-  `computeAtp`/live ATP, the hold "succeeds" against a number that was never promisable in the
-  first place, reproducing the exact defect this practice's phase 2 exists to fix, one layer up.
+  `snapshot.onHand`, the stale `promisableStock` helper, or copies the primary bug's `rec.on_hand`
+  shortcut instead of the live ATP query, the hold "succeeds" against a number that was never
+  promisable in the first place, reproducing the exact defect this practice's phase 2 exists to
+  fix, one layer up.
 - **Leaks holds forever** — no TTL sweep, so every abandoned cart holds inventory hostage
   indefinitely; ATP visibly and permanently shrinks over time even though nothing was actually
   sold (the FM-07 unbounded-growth shape, now user-visible as "why does this say sold out when

@@ -28,8 +28,8 @@ Pass/fail, worst-case. This axis does not require reading the transcript.
 
 Score each as present/absent/partial with a one-line justification citing the actual prompt
 text. No credit for the *right answer appearing in the diff* if the transcript shows it was
-reached by luck (e.g. copy-pasting `computeAtp`'s formula without ever articulating why the
-`live` branch needed to call it).
+reached by luck (e.g. pasting a formula guessed from the local field names without ever reading
+`reference/atp-spec.md` or articulating why the `live` branch was wrong).
 
 - **Reproduce-before-fix (FM-01).** Did the learner establish the failure *before* proposing a
   change — e.g. running the confirm/availability path against a contended SKU under

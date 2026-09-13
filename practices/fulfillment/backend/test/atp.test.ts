@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { computeAtp } from "../src/atp.ts";
+import { promisableStock } from "../src/atp.ts";
 import type { FeedRecord } from "../src/types.ts";
 
 function record(overrides: Partial<FeedRecord>): FeedRecord {
@@ -16,44 +16,14 @@ function record(overrides: Partial<FeedRecord>): FeedRecord {
   };
 }
 
-test("computeAtp: no reservations, no inbound", () => {
-  const atp = computeAtp(record({ on_hand: 50 }));
-  assert.equal(atp, 50);
+test("promisableStock: with nothing reserved, it's all on-hand", () => {
+  assert.equal(promisableStock(record({ on_hand: 50 })), 50);
 });
 
-test("computeAtp: reservations and allocations reduce ATP below on-hand", () => {
-  const atp = computeAtp(record({ on_hand: 40, reserved: 12, allocated: 6 }));
-  assert.equal(atp, 22);
+test("promisableStock: subtracts what's reserved against the SKU", () => {
+  assert.equal(promisableStock(record({ on_hand: 40, reserved: 12 })), 28);
 });
 
-test("computeAtp: inbound within the lead-time window counts", () => {
-  const atp = computeAtp(
-    record({ on_hand: 8, reserved: 15, inbound: [{ qty: 20, arrivesInDays: 7 }] }),
-  );
-  assert.equal(atp, 13);
-});
-
-test("computeAtp: inbound outside the lead-time window is excluded", () => {
-  const atp = computeAtp(
-    record({ on_hand: 30, reserved: 25, inbound: [{ qty: 50, arrivesInDays: 45 }] }),
-  );
-  assert.equal(atp, 5);
-});
-
-test("computeAtp: ATP can be zero", () => {
-  const atp = computeAtp(record({ on_hand: 10, reserved: 10 }));
-  assert.equal(atp, 0);
-});
-
-test("computeAtp: on the shipped SKU-1003 feed record", () => {
-  const atp = computeAtp(
-    record({
-      sku: "SKU-1003",
-      location: "DC-EAST",
-      on_hand: 8,
-      reserved: 15,
-      inbound: [{ qty: 20, arrivesInDays: 7 }],
-    }),
-  );
-  assert.equal(atp, 13);
+test("promisableStock: SKU-1006-style seed record", () => {
+  assert.equal(promisableStock(record({ sku: "SKU-1006", on_hand: 25 })), 25);
 });

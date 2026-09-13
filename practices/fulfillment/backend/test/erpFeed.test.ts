@@ -1,7 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { getRecord } from "../src/erpFeed.ts";
-import { computeAtp } from "../src/atp.ts";
 import { UnknownSkuError } from "../src/types.ts";
 
 test("getRecord: reads a simple SKU's raw feed fields", () => {
@@ -20,9 +19,10 @@ test("getRecord: reads a contended SKU's raw feed fields", () => {
   assert.equal(rec.inbound.length, 1);
 });
 
-test("getRecord + computeAtp together reproduce the ATP spec's worked example", () => {
-  const rec = getRecord("SKU-1003", "DC-EAST");
-  assert.equal(computeAtp(rec), 13);
+test("getRecord: exposes the reserved/allocated/inbound fields the feed carries", () => {
+  const rec = getRecord("SKU-1002", "DC-WEST");
+  assert.equal(rec.allocated, 6);
+  assert.equal(rec.leadTimeDays, 30);
 });
 
 test("getRecord: unknown SKU raises UnknownSkuError", () => {

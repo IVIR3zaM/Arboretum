@@ -4,7 +4,8 @@
 // not the feed's raw on_hand — and that confirmOrder's accept/reject decisions
 // track true ATP for contended SKUs. This must FAIL while the primary bug
 // (availability.ts's live branch returning rec.on_hand) is present, and PASS
-// once the resolver calls computeAtp(rec) instead.
+// once the resolver computes the full ATP formula from reference/atp-spec.md
+// (on_hand - reserved - allocated + inbound-within-lead-time) at the root.
 //
 // ES module imports are hoisted ahead of any top-level statement regardless of
 // textual position, so setting these env vars is safe here: availability.ts's
