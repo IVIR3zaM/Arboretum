@@ -8,14 +8,16 @@
 # Hermetic: reads static JSON fixtures from `reference/infra/erp-availability/`
 # off disk — no network at grade time.
 #
-# This script (and everything it runs) lives OUTSIDE the learner's clone in
-# spirit: it is checked in at the practice root only because `practice.json`
-# needs a stable path to invoke, but its actual grading logic reads
-# `_solutions/`, which the harness strips before a learner ever sees the
-# clone (see AGENTS.md rule 3). Never weaken these checks to make a run pass.
+# This script lives INSIDE `_solutions/`, which the harness strips before a
+# learner ever sees the clone (AGENTS.md rule 3, cedar@1.1.0 invariant 12). At
+# the practice root it was carried into the clone, where it announced that a
+# hidden gate exists and that the visible suite is not the bar. The harness runs
+# it against a copy that still has `_solutions/`. Never weaken these checks to
+# make a run pass.
 
 set -uo pipefail
-cd "$(dirname "${BASH_SOURCE[0]}")"
+# run from the practice root; this script sits one level down in _solutions/
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 overall_exit=0
 

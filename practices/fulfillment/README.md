@@ -15,7 +15,7 @@ axis on top of the basics: the system spans two packages plus a **read-only exte
 | **Estimated time** | ~135 min (XL tier) |
 | **Estimated tokens** | ~60,000 (one assistant, five phases) |
 | **Stack / domain** | TypeScript/Node backend + React (Vite + TS) storefront · commerce fulfillment / inventory ATP |
-| **Context version** | [`cedar`](../../context/cedar/) @1.0.0 |
+| **Context version** | [`cedar`](../../context/cedar/) @1.1.0 |
 
 ## Background
 
@@ -89,9 +89,13 @@ cd ../backend && npm test                # backend unit suite, green
 cd ../web && npm test                    # web unit suite, green
 ```
 
-`bash grade.sh` (run from `practices/fulfillment/`) is the objective gate for the **whole ticket** —
-it checks availability correctness (the bug), the cart hold (the feature), and the storefront
-together, and is the score that matters, not the green unit suites above.
+This file, `practice.json` and `_solutions/` are **exercise material**, and the harness keeps all
+three out of the clone your assistant works in. What it gets is the two packages, the read-only
+`reference/`, and the work items — a task, not a briefing.
+
+A hidden grader is the objective gate for the **whole ticket** — availability correctness (the
+bug), the cart hold (the feature), and the storefront together — and **the harness runs it, not
+you and not your assistant.** The green unit suites above are not the bar.
 
 ## The five phases (work them in order, on a clock)
 
@@ -105,7 +109,7 @@ together, and is the score that matters, not the green unit suites above.
    **Build a model of how availability is actually decided before you delegate a fix** —
    prompting "just fix it" without reproducing first will loop: it passes the local unit tests and
    stays red on the grader, or it patches one symptom and the defect resurfaces on the next SKU.
-   **Reproduce it with a failing test first**, then fix the *root*. `bash grade.sh` checks the fix
+   **Reproduce it with a failing test first**, then fix the *root*. The grader checks the fix
    against the real ERP feed across several SKU states — a fix that only satisfies your local
    seed data does not pass.
 3. **Build the feature.** Read [`FEATURE-REQUEST.md`](FEATURE-REQUEST.md). It is deliberately
@@ -118,11 +122,14 @@ together, and is the score that matters, not the green unit suites above.
    say what you verified and what the AI got wrong, and state one trade-off you made and the
    condition under which you'd revisit it.
 
-> **Grading.** `bash grade.sh` is the objective gate (correctness against the real availability
-> feed, backend and web together). How you *drove* — reproduced before fixing, established the
-> cross-package/external context before delegating, rejected bad output, matched the altitude of
-> the exercise instead of over-building — is the other half, and the half this platform cares
-> about most. See the [rubric](_solutions/rubric.md) after you finish (don't read it first).
+> **Grading.** The hidden grader is the objective gate (correctness against the real availability
+> feed, backend and web together), and **the harness runs it — not you, and not your assistant.**
+> Neither of you ever sees it. But be clear about what that gate is worth: a strong assistant can
+> get some distance on it from a single careless prompt, and that is **not** the same as having
+> driven well. How you *drove* — reproduced before fixing, established the cross-package/external
+> context before delegating, rejected bad output, matched the altitude of the exercise instead of
+> over-building — is the other half, and the half this platform cares about most. See the
+> [rubric](_solutions/rubric.md) after you finish (don't read it first).
 
 `_solutions/` holds the answer key (hidden tests, held-back requirements, trap manifest, rubric).
 **Opening it defeats the kata** — the whole point is to reach the answers by driving the assistant

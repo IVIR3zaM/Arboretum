@@ -1,6 +1,5 @@
-// ATP_SOURCE is left unset here on purpose: these tests exercise the
-// snapshot resolver branch against never-reserved seed SKUs, where the
-// snapshot's on-hand figure and true ATP agree.
+// ATP_SOURCE is left unset so the suite runs off the local snapshot and
+// doesn't need the ERP feed to be reachable.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";

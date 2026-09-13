@@ -1,7 +1,7 @@
 {
   "id": "<kebab-case-id>",
   "title": "<short human title>",
-  "contextVersion": "cedar@1.0.0",
+  "contextVersion": "cedar@1.1.0",
   "domain": "<business domain in a few words>",
   "stack": {
     "packages": [
@@ -17,7 +17,7 @@
   "commands": {
     "install": "<install deps for every package, or \"\" if none — e.g. \"cargo fetch && flutter pub get\">",
     "test": "<run every package's unit suite — e.g. \"cargo test && flutter test\">",
-    "grade": "<wrapper that runs every package's hidden grader and reports combined worst-case — e.g. \"bash grade.sh\", \"make grade\">"
+    "grade": "<wrapper that runs every package's hidden grader and reports combined worst-case, living inside _solutions/ so the clone never carries it — e.g. \"bash _solutions/grade.sh\">"
   },
   "grader": { "kind": "hidden-acceptance", "max": 0 },
   "trainingPoints": {
@@ -29,7 +29,15 @@
   "assistantTrap": "<one line: how an autopilot run provably loops — symptom-patch stays red; the obvious fix passes the visible suite but fails a case needing real understanding (FM-13, required)>",
   "docDriftTrap": "<one line: the authoritative-looking doc/comment that contradicts the current code, and the stale code path with no doc trace (FM-15)>",
   "crossBoundaryTrap": "<one line: the truth that lives only in reference/ and the wrong assumption a single-scope run makes (FM-16)>",
+  "controlRun": {
+    "date": "<YYYY-MM-DD>",
+    "method": "fresh assistant, harness-shaped clone (reference/ present, FEATURE-REQUEST.md held back), one casual uncoached prompt, no follow-up",
+    "score": "<n>/<max> — what an uncoached one-shot actually scores",
+    "reference": "<did it open reference/ unprompted? the FM-16 measurement>",
+    "finding": "<what the control run did and did not expose; if it clears the gate, say so and say what still discriminates>"
+  },
   "latentDefects": 0,
   "answerKey": "_solutions/",
-  "notes": "<anything a future maintainer needs — e.g. the dual grade gate or its Rust-only fallback>"
+  "proof": "_solutions/proof-<mode>-<YYYY-MM-DD>.html",
+  "notes": "<anything a future maintainer needs — e.g. the dual grade gate or its single-stack fallback>"
 }

@@ -6,12 +6,13 @@ stack that trains the **same points** as the Context. The agent reads this file 
 [`failure-modes.md`](failure-modes.md); the step-by-step an agent executes is in
 [`../../generator/CONTRACT.md`](../../generator/CONTRACT.md).
 
-Cedar is a superset of Alder's spec: **invariants 1–9 below are Alder's, unchanged**; Cedar
-extends invariant 2, adds invariants 10–11, a multi-repo practice shape, a dual grade gate, and a
-new XL difficulty tier.
+Cedar is a superset of Alder's spec (`alder@1.2.0`): **invariants 1 and 3–9 below are Alder's,
+unchanged**, and **invariant 12 is Alder's invariant 10, carried forward and extended** — Cedar
+numbers it 12 because 10 and 11 were already taken when Cedar branched. Cedar extends invariant 2,
+adds invariants 10–11, a multi-repo practice shape, a dual grade gate, and a new XL difficulty tier.
 
 ## Inputs
-- **context** — `cedar@1.0.0`.
+- **context** — `cedar@1.1.0`.
 - **domain** — the business story (e.g. "metering & billing", "warehouse inventory sync").
   Picks the vocabulary and the natural home for the planted bugs.
 - **stack** — one or more packages, each language + runtime + test runner. Zero-dependency or
@@ -23,17 +24,43 @@ new XL difficulty tier.
   covers **FM-15 and FM-16** — see invariants 10–11).
 
 ## Required output (the fixed practice shape)
+A practice is **three layers**, not two — what gets cloned, what stays out of the clone, and what
+stays hidden:
 ```
 <practice>/
+  ── cloned (the assistant sees this) ────────────────────────────────────────
   <package>/…       # one or more package dirs (e.g. backend/ + app/), each the size of the tier
   test/ or <pkg>/test/   # a GREEN unit suite per package; the primary bug is invisible to it
   reference/        # READ-ONLY external truth: sibling service contract, infra config, method spec
-  _solutions/       # hidden: acceptance grader, trap-manifest, feature Q&A, rubric, FIX, context-map
-  TICKET.md         # the bug as a SYMPTOM — never a file+line
-  FEATURE-REQUEST.md  # 2–3 sentences, underspecified; 6–8 held-back questions in _solutions
-  README.md         # domain primer + the 5-phase flow + the time & token estimate
+  TICKET.md         # the bug as a SYMPTOM — never a file+line, never a method
+  FEATURE-REQUEST.md  # 2–3 sentences, underspecified; staged in at phase 3, not before
+  ── exercise material (NOT cloned) ──────────────────────────────────────────
+  README.md         # the LEARNER's briefing: domain primer + the 5-phase flow + the estimate
   practice.json     # metadata + trainingPoints coverage (validates against templates/)
+  ── hidden (NOT cloned) ─────────────────────────────────────────────────────
+  _solutions/       # acceptance graders, the grade wrapper, trap-manifest, feature Q&A,
+                    # rubric, FIX, context-map, doc-drift ledger, proofs
 ```
+`README.md` is the *learner's* briefing — it names the phases and the disciplines under test — and
+`practice.json` names the planted bug, the doc-drift trap and the cross-boundary trap outright. An
+assistant that reads either one has been coached by the instrument measuring it (invariant 12, and
+`AGENTS.md` rule 3). The **grade wrapper lives in `_solutions/`** for the same reason: a `grade.sh`
+at the practice root is carried into the clone and announces that a hidden grader exists and that
+the visible suite is not the bar.
+
+**The work items are staged, one phase at a time.** The clone starts with `TICKET.md`;
+`FEATURE-REQUEST.md` is handed over when phase 3 begins. A learner never holds a bug report and a
+feature brief at once — work does not arrive that way, and a clone carrying both lets the assistant
+read ahead and plan around a brief nobody has given it.
+
+**`reference/` is the exception: it is in the clone from the start, never staged.** It is the
+external documentation an engineer already has access to on day one — a vendor's published API
+docs, the infra console, a protocol spec — and in most Cedar practices the local packages read it
+at runtime, so withholding it breaks the repo. More to the point, handing it over at the moment the
+research pass is due *is* the coaching: it tells the learner that the local repo is not the whole
+story, which is precisely the judgement FM-16 exists to measure. The trap is not that `reference/`
+is hidden; it is that a single-scope run never opens it.
+
 The learner produces **`research-notes.md`** in their workdir during the understand phase (their
 distillation of `reference/`); it is not shipped in the source.
 
@@ -86,6 +113,36 @@ distillation of `reference/`); it is not shipped in the source.
     locally green; it is defeatable **only** by a research pass that distills `reference/` into
     `research-notes.md` *before* delegating. The grader includes **conformance vectors derived from
     the reference**, so a fix that never read it fails.
+12. **Nothing the assistant can read coaches it** (Alder's invariant 10, extended for Cedar).
+    Everything in the clone reads as the working repo of a team that does not yet know it has a
+    bug. Concretely: the **ticket** reports a symptom and states the rule the customer was
+    promised, then stops — it does not prescribe method ("reproduce first", "read the spec", "fix
+    the root cause"), does not hint at the mechanism, and never mentions that a grader exists or
+    how it is invoked. The **feature request** is the PM's ask plus the expected surface — it does
+    not warn that the obvious implementation trips an invariant, or that there is a trap at all.
+    **Source and test comments** state intent and contract, and may leave the *evidence* a careful
+    reader needs; they never narrate the planted defect or confess the suite's own blind spot. The
+    **grade command** is not runnable from inside the clone, no package manifest carries a `grade`
+    script, and nothing in the clone refers to one. The learner's briefing and the manifest stay
+    outside the clone (see the practice shape above). Cedar adds three of its own:
+    - **The drifting doc must mislead, not confess.** The FM-15 contradiction is written by
+      someone who believed it — a stale README paragraph, a comment describing the previous
+      design. A doc that hedges ("this may be out of date", "TODO: verify against the spec") is
+      coaching wearing a doc's clothes, and hands over the reconciliation for free.
+    - **`reference/` reads as a vendor snapshot, not a hint sheet.** Its `README.md` says what the
+      directory is and that it is read-only. It does not tell the reader to study it, to distill
+      it, to compare it against the local repo, or that the local repo disagrees with it. The
+      spec inside states the method as a spec states a method — it never points at the local
+      implementation or notes that anything local is wrong.
+    - **A pointer to external truth is evidence, not coaching.** A module that genuinely consumes
+      the reference may cite it the way real code cites a spec (`see reference/<spec>.md`). That
+      is the trail a careful reader follows; removing it would make the practice unfair rather
+      than uncoached. The line to hold is between *citing* the source and *interpreting* it.
+
+    The discipline under test is the *learner's* to bring: a workdir that tells the assistant to
+    reproduce before fixing, or to go read the reference, has already spent the thing it was
+    measuring. **Coaching belongs to the learner's briefing and to the trainer — never to the
+    workdir.**
 
 ## The multi-repo practice shape (Cedar)
 - **One clone, multiple packages, one read-only `reference/`.** The harness's clone-and-jail rule
@@ -100,9 +157,12 @@ distillation of `reference/`); it is not shipped in the source.
   driving axis; its absence when the bug required it is the FM-16 tell.
 
 ## The dual grade gate (Cedar, when the practice spans stacks)
-- `commands.grade` may be a **wrapper** (e.g. `bash grade.sh`, `make grade`) that runs **every**
-  package's grader and reports a **combined worst-case** — all stacks must pass, across all ambient
-  values. Example for a Rust backend + Flutter app: (a) `cargo run --bin grade` for the backend's
+- `commands.grade` may be a **wrapper** that runs **every** package's grader and reports a
+  **combined worst-case** — all stacks must pass, across all ambient values. **The wrapper lives in
+  `_solutions/`** (`bash _solutions/grade.sh`), not at the practice root and not as a `make grade`
+  target in a file the clone keeps: it is stripped with the rest of the answer key, so the clone
+  carries no evidence that a hidden gate exists (invariant 12). Example for a Rust backend +
+  Flutter app: (a) `cargo run --bin grade` for the backend's
   acceptance across ≥3 ambient values plus the reference-derived conformance vectors; (b)
   `flutter test integration_test/` for the app producing a presentation the backend accepts and
   correctly rejecting a tampered/expired one. The wrapper exits 0 only if both pass at worst-case.
@@ -144,5 +204,21 @@ distillation of `reference/`); it is not shipped in the source.
 - **Cross-boundary check (FM-16):** a run that never opens `reference/` makes a provably wrong
   assumption and fails the reference-derived conformance vectors; a run that does the research pass
   converges. The `_solutions/context-map.md` states the true cross-boundary contract.
+- **Control run (invariant 12) — the one that actually settles it.** Clone the practice exactly as
+  the harness would (`_solutions/`, `README.md` and `practice.json` stripped, `reference/` present),
+  hand a *fresh* assistant nothing but that clone and one casual, uncoached prompt, let it finish,
+  and grade the result. The clone carries **the work items the grade command actually grades** —
+  staging is a property of a multi-phase session, and a control run is a single uncoached shot at
+  whatever the gate measures, so a whole-ticket gate gets the ticket *and* the feature request or
+  the score is not comparable to `grader.max`. Record
+  the score in the proof and in `practice.json` → `controlRun`. A trap that a control run walks past
+  unharmed is not a trap, and the two ways that happens have different fixes: if the material told
+  it what to do, that is an invariant-12 leak, so cut the coaching; if the material said nothing and
+  the trap still failed to bite, the trap is too weak for the assistants of the day, so make the
+  graded case one that only genuine understanding reaches. Verifying a trap's mechanism by hand is
+  not a substitute — mechanisms hold while the prose quietly gives the answer away. For a Cedar
+  practice the control run is also the **cross-boundary check's** real evidence: what an uncoached
+  run does with `reference/` sitting in front of it — open it, skim it, or never mention it — is the
+  FM-16 measurement, and the transcript should say which.
 - A reviewer agent (fresh context) confirms each required discipline is genuinely reachable and
   the exercise is solvable at the stated altitude/time — not over-scoped.

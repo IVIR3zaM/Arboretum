@@ -1,7 +1,7 @@
 {
   "id": "fulfillment",
   "title": "Fulfillment — inventory availability & order confirmation",
-  "contextVersion": "cedar@1.0.0",
+  "contextVersion": "cedar@1.1.0",
   "domain": "commerce fulfillment / inventory available-to-promise",
   "stack": {
     "packages": [
@@ -17,7 +17,7 @@
   "commands": {
     "install": "cd web && npm ci",
     "test": "cd backend && npm test && cd ../web && npm test",
-    "grade": "bash grade.sh"
+    "grade": "bash _solutions/grade.sh"
   },
   "grader": { "kind": "hidden-acceptance", "max": 20 },
   "trainingPoints": {
@@ -31,5 +31,6 @@
   "crossBoundaryTrap": "the current reservations/allocations/inbound live only in reference/infra/erp-availability/*.json and the ATP spec; a single-repo run assumes the local snapshot is authoritative and passes locally but fails the reference-derived conformance vectors (works-on-my-machine, fails in prod)",
   "latentDefects": 5,
   "answerKey": "_solutions/",
-  "notes": "XL tier; provisional estimate. Grading is pass/fail on the `bash grade.sh` exit code; grader.max 20 = availability acceptance (14, phase-2 bug) + feature acceptance (4, phase-3 cart hold) + web integration (2), scored worst-case (all three gates must be fully green — the whole ticket: fix AND deliver the feature). Hermetic via vendored reference/infra fixtures and a loopback file resolver; the web gate is the documented fallback candidate if too heavy for CI."
+  "proof": "_solutions/proof-train-2026-09-13.html",
+  "notes": "XL tier; provisional estimate. Grading is pass/fail on the `bash _solutions/grade.sh` exit code; grader.max 20 = availability acceptance (14, phase-2 bug) + feature acceptance (4, phase-3 cart hold) + web integration (2), scored worst-case (all three gates must be fully green — the whole ticket: fix AND deliver the feature). Hermetic via vendored reference/infra fixtures and a loopback file resolver; the web gate is the documented fallback candidate if too heavy for CI. The grade wrapper lives in `_solutions/` (cedar@1.1.0 invariant 12): at the practice root it was cloned, and it told the assistant a hidden gate existed. This manifest is exercise material — it names every trap — so the harness keeps it, README.md and _solutions/ out of the assistant's clone."
 }

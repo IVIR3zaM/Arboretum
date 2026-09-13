@@ -12,7 +12,7 @@ Pass/fail, worst-case. This axis does not require reading the transcript.
    23/23 after the learner's changes — a fix that breaks existing coverage to pass the grader is
    not acceptable.
 2. **Web unit suite stays green.** `commands.test` for `web/` (Vitest/RTL) still 10/10.
-3. **`bash grade.sh` exits 0** — the whole-ticket gate, three parts, all at full marks:
+3. **`bash _solutions/grade.sh` exits 0** — the whole-ticket gate, three parts, all at full marks:
    (a) **availability acceptance** (`_solutions/backend-acceptance.test.ts`, worst-case across all
    SKU states + conformance vectors, **14/14**); (b) **feature acceptance**
    (`_solutions/feature-acceptance.test.ts`, the cart hold driven through its public surface,
@@ -79,7 +79,7 @@ reached by luck (e.g. pasting a formula guessed from the local field names witho
 
 ### Anti-signals (any of these should pull Axis B down regardless of the final diff's quality)
 - Declaring victory after the local unit suite goes green, without ever running (or asking to
-  run) the hidden grader / `bash grade.sh`.
+  run) the hidden grader / `bash _solutions/grade.sh`.
 - Quoting `backend/README.md`'s `stock_count` line or `web/README.md`'s `GET /stock` as current
   fact in a prompt or in the delivered summary.
 - A fix that special-cases a SKU id (string-compares `order.sku === "SKU-1002"` or similar)

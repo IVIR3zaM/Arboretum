@@ -11,7 +11,44 @@ See [`../../docs/TREE-NAMING.md`](../../docs/TREE-NAMING.md).
 Cedar **inherits the whole of Alder** — every discipline in [`goals.md`](goals.md), every entry
 FM-01..FM-14 in [`failure-modes.md`](failure-modes.md), and best practices A–E — and extends it.
 A practice pins the exact Context it trains to via `practice.json` → `contextVersion`; a Cedar
-practice declares `cedar@1.0.0`.
+practice declares `cedar@1.1.0`.
+
+## 1.1.0 — the workdir stops coaching, across a boundary
+Cedar 1.0.0 branched from `alder@1.1.0` and shipped before Alder learned its hardest lesson. Alder
+1.2.0's control run — a fresh assistant, a cloned practice, one casual uncoached prompt — showed
+that the material in the clone was handing over the method, and Cedar inherited none of the fix:
+its spec still claimed "invariants 1–9 are Alder's", its ticket skeleton still ended with
+"reproduce first… the grade command checks it", its feature-request skeleton still carried a ⚠️
+pointing at the trap, and its layout still put the grade wrapper at the practice root, inside the
+clone. This version carries Alder 1.2.0 forward and works out what it means when the truth lives
+across a boundary.
+- **Generation spec:** Alder's invariant 10 arrives as Cedar's **invariant 12** — *nothing the
+  assistant can read coaches it* — numbered 12 because 10 (context rot) and 11 (cross-boundary
+  cause) were taken when Cedar branched. Three Cedar-specific clauses: the FM-15 drifting doc must
+  **mislead, not confess** (a doc that hedges "may be out of date" hands over the reconciliation);
+  `reference/` reads as a **vendor snapshot, not a hint sheet** (it never tells the reader to study
+  it, distill it, or compare it with the local repo); and a module citing the spec it consumes is
+  **evidence, not coaching** — the line is between citing a source and interpreting it.
+- **The practice shape is now three layers,** not two: the cloned repo + work items,
+  the exercise material (`README.md`, `practice.json`), and `_solutions/`. The **grade wrapper moves
+  into `_solutions/`** — at the practice root it was cloned, and it announced the hidden gate.
+- **Work items are staged, one phase at a time** — the ticket first, the feature request at phase 3
+  — **but `reference/` is not.** It is in the clone from the start: it is the external
+  documentation an engineer already has on day one, most Cedar packages read it at runtime, and
+  handing it over at the moment the research pass is due *is* the coaching, because it announces
+  that the local repo is not the whole story — the exact judgement FM-16 exists to measure. The
+  trap is not that `reference/` is hidden; it is that a single-scope run never opens it.
+  `AGENTS.md` and `harness/DESIGN.md` corrected to match.
+- **Validation:** added the **control run**, and made it do double duty — for a Cedar practice,
+  what an uncoached run does with `reference/` sitting in front of it *is* the cross-boundary
+  measurement, and the transcript must say which.
+- **Templates:** the `TICKET.md` and `FEATURE-REQUEST.md` skeletons no longer prescribe the method
+  or flag the trap; `README.md` is documented as the out-of-clone briefing where coaching belongs;
+  `practice.template.json` gains `controlRun` (with a `reference` field recording whether the run
+  opened it) and `proof`.
+- **The first Cedar practice** re-aligned to `cedar@1.1.0`: the grade wrapper moved out of the
+  clone, a source comment that named the grader and two test comments that confessed the suite's
+  blind spot removed, and a control run recorded.
 
 ## 1.0.0 — multi-repo, external truth, and context rot
 - **New failure modes:** **FM-15** — documentation & invariant drift ("context rot"): as an

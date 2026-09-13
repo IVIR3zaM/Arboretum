@@ -11,7 +11,7 @@ before delegating should surface something close to the questions below; one who
 an assistant a vague prompt and get a plausible-but-wrong cart hold back (a feature-shaped FM-13).
 
 **Objectively gated:** the phase-3 feature is graded by `_solutions/feature-acceptance.test.ts`
-(wired into `grade.sh` as gate (b)) — a naive hold that records holds but never re-checks them at
+(wired into `_solutions/grade.sh` as gate (b)) — a naive hold that records holds but never re-checks them at
 confirm scores **2/4** (oversells), the minimal correct hold scores **4/4**. So "the AI built a
 hold and the demo works" is not enough; it has to actually reserve. See `trap-manifest.md`'s
 "Feature trap (phase 3)".

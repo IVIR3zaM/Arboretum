@@ -1,5 +1,5 @@
-// Order confirmation: the root a caller (storefront checkout, or a grader)
-// invokes to try to confirm a customer's order against current availability.
+// Order confirmation: the root the storefront checkout calls to try to confirm
+// a customer's order against current availability.
 
 import { availableToPromise } from "./availability.ts";
 import type { Order, OrderResult } from "./types.ts";

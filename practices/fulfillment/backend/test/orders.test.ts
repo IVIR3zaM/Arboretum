@@ -1,5 +1,5 @@
-// ATP_SOURCE is left unset here (snapshot branch), and only the never-reserved
-// seed SKUs are used, so confirm decisions match true ATP.
+// ATP_SOURCE is left unset here too, so confirmation is exercised off the
+// local snapshot like the rest of the suite.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";

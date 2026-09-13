@@ -6,12 +6,18 @@ agent follows — not a coded tool (a coded runner is Phase 3). It works with Cl
 Agent SDK, or any capable assistant.
 
 ## Inputs
-`context` (e.g. `alder@1.2.0`) · `domain` · `stack` · `difficulty` (S|M|L) · optional
-`time budget` and `coverage`. Read the whole Context first:
+`context` (e.g. `alder@1.2.0`, `cedar@1.1.0`) · `domain` · `stack` · `difficulty` (S|M|L, +XL from
+Cedar) · optional `time budget` and `coverage`. Read the whole Context first — the paths below
+point at Alder; substitute `context/<tree>/` for whichever version you were given:
 [`goals.md`](../context/alder/goals.md), [`best-practices.md`](../context/alder/best-practices.md),
 [`failure-modes.md`](../context/alder/failure-modes.md),
 [`generation-spec.md`](../context/alder/generation-spec.md), and the
 [`templates/`](../context/alder/templates/).
+
+> **Invariant numbering.** This contract says "invariant 10" for *nothing the assistant can read
+> coaches it*, which is its number in Alder. **In Cedar it is invariant 12** — 10 and 11 were
+> already spent on context rot and the cross-boundary cause. Same rule, different number; read
+> your Context's own spec for the authoritative list.
 
 ## Procedure
 1. **Pick the carrier.** Choose a small domain whose natural rules have room for the required
@@ -104,8 +110,11 @@ fresh assistant one casual uncoached prompt, and grade what comes back.
 - [ ] **Nothing in the clone coaches the assistant** (invariant 10): the ticket carries no method,
       no mechanism and no reference to the grader; the feature request flags no trap; code and
       test comments leave evidence but never narrate the defect or the suite's blind spot; no
-      manifest inside the clone exposes a grade command; `README.md` and `practice.json` are kept
-      out of the clone entirely.
+      manifest inside the clone exposes a grade command and no grade wrapper sits at the practice
+      root (it belongs in `_solutions/`); `README.md` and `practice.json` are kept out of the clone
+      entirely. *Cedar also:* the drifting doc misleads rather than hedges, and `reference/` reads
+      as a vendor snapshot — it never tells the reader to study it or hints that the local repo
+      disagrees with it.
 - [ ] **A control run is recorded** — a fresh assistant, the clone, one casual uncoached prompt —
       and it does **not** clear the gate. If it does, the practice is not calibrated: cut the
       coaching, or strengthen the graded case until only understanding reaches it.

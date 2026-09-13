@@ -9,7 +9,7 @@
 
 ## Overview
 - **id:** `fulfillment` · **title:** "Fulfillment — inventory availability & order confirmation"
-- **Context:** `cedar@1.0.0` · **difficulty:** `XL`
+- **Context:** `cedar@1.1.0` (built against 1.0.0; re-aligned when 1.1.0 landed) · **difficulty:** `XL`
 - **Domain:** commerce fulfillment — a storefront checks whether an item can be shipped and confirms
   orders against a warehouse/ERP's **available-to-promise (ATP)**.
 - **Stack (multi-package, both graded — React + TS Node full stack):**
@@ -37,7 +37,8 @@ fulfillment/
   web/                # React: src/ (product page, stock badge, cart hold, checkout) + tests
   reference/          # READ-ONLY: erp-availability-contract.md, infra/erp-availability/*.json, atp-spec.md
   _solutions/         # hidden answer key (see plan below)
-  TICKET.md  FEATURE-REQUEST.md  README.md  practice.json  grade.sh
+  TICKET.md  FEATURE-REQUEST.md            # cloned (FEATURE-REQUEST staged in at phase 3)
+  README.md  practice.json                # exercise material — NOT cloned
 ```
 
 ---
@@ -235,7 +236,7 @@ released on TTL, re-checked at confirm; everything else deferred out loud.
    only if created today" cadence bug adjacent to the hold logic.
 
 ## Dual grade design (both stacks; combined worst-case)
-`commands.grade` = **`bash grade.sh`**, which runs and ANDs:
+`commands.grade` = **`bash _solutions/grade.sh`**, which runs and ANDs:
 - **(a) backend acceptance** (`node --test`, or `vitest run`, in `backend/`) — the hidden suite calls
   the availability/confirm **root** directly with the resolver pointed at the **production**
   `reference/` feed (not the local seed), across ≥3 SKU states (never-reserved / reserved /
@@ -269,7 +270,7 @@ level.
 {
   "id": "fulfillment",
   "title": "Fulfillment — inventory availability & order confirmation",
-  "contextVersion": "cedar@1.0.0",
+  "contextVersion": "cedar@1.1.0",
   "domain": "commerce fulfillment / inventory available-to-promise",
   "stack": {
     "packages": [
@@ -285,7 +286,7 @@ level.
   "commands": {
     "install": "cd backend && npm ci; cd ../web && npm ci",
     "test": "cd backend && npm test; cd ../web && npm test",
-    "grade": "bash grade.sh"
+    "grade": "bash _solutions/grade.sh"
   },
   "grader": { "kind": "hidden-acceptance", "max": 12 },
   "trainingPoints": {
@@ -305,7 +306,7 @@ level.
 
 ## `_solutions/` plan (build session produces these)
 - `backend/…/acceptance.test.ts` + `web/…/integration.test.tsx` — hidden graders; start failing.
-- `grade.sh` — the wrapper; resolver pointed at the `reference/` feed; ≥3 SKU states + conformance
+- `_solutions/grade.sh` — the wrapper (inside `_solutions/`, never at the practice root); resolver pointed at the `reference/` feed; ≥3 SKU states + conformance
   vectors; combined worst-case.
 - `FIX.md` — the real live ATP query at the resolver root; why the re-import fix plateaus; the caching
   aside.
@@ -324,7 +325,7 @@ level.
    confirm, catalog), `web/` (product page + stock badge + cart hold + checkout), and `reference/`
    fixtures + the loopback resolver.
 2. Write the GREEN unit suites (bug invisible: local seed SKUs never have reservations).
-3. Wire the hidden graders + `grade.sh`; **verify the traps bite** (symptom-patch red; re-import
+3. Wire the hidden graders + `_solutions/grade.sh`; **verify the traps bite** (symptom-patch red; re-import
    plateaus; no-research run fails the conformance vectors; local-green vs prod-red demonstrated).
 4. Fill the real `practice.json` (drop `status`), lift the primer into `README.md`, write `TICKET.md` /
    `FEATURE-REQUEST.md`.

@@ -5,4 +5,4 @@ availability service's contract (`erp-availability-contract.md`), the available-
 calculation method spec (`atp-spec.md`), and that service's hosted availability feed
 (`infra/erp-availability/<SKU>.json`), one file per SKU. It is not the working repo. Do not edit
 it — treat it the way you would treat a vendor's published API docs and a snapshot of its data:
-something you read and distill, not something you change.
+something you read, not something you change.

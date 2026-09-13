@@ -23,7 +23,7 @@ coincide. The local `snapshot.ts` fixture is built the same way, so even flippin
 doesn't expose the gap under seed data. The bug only produces a wrong answer for SKUs with open
 reservations, allocations, or lead-time inbound — none of which the unit suites touch. It is caught
 only by the hidden dual grader (`_solutions/backend-acceptance.test.ts` +
-`_solutions/web-integration.test.tsx`, wired through `grade.sh`), which calls the resolver root
+`_solutions/web-integration.test.tsx`, wired through `_solutions/grade.sh`), which calls the resolver root
 directly with `ATP_SOURCE=live` against the full `reference/` feed. Verified flip: backend 6/14 →
 14/14, web 1/2 → 2/2 (see `FIX.md`).
 
@@ -63,7 +63,7 @@ and learn the two terms (`allocated`, inbound-within-lead-time) the local repo n
 the stale `promisableStock`/READMEs). Only implementing the full spec formula at the root converges,
 correct for every SKU at once (**14/14**).
 
-### VERIFIED-TO-BITE (real captured `bash grade.sh` outcomes)
+### VERIFIED-TO-BITE (real captured `bash _solutions/grade.sh` outcomes)
 Reproduced 2026-09-13 against the shipped (bug-present, strengthened) tree; every fix attempt was
 applied at the root, measured, then reverted, so the shipped tree keeps the bug. Baseline:
 **backend 6/14, web 1/2, exit 1 (RED)**.
@@ -98,7 +98,7 @@ green, the button works — and it **oversells**: two carts hold the same units 
 
 This is now **objectively gated** (not just rubric-judged) by
 `_solutions/feature-acceptance.test.ts`, driven through the public surface (`placeHold` +
-`confirmOrder`) against the live feed, and wired into `grade.sh` as gate (b). Measured
+`confirmOrder`) against the live feed, and wired into `_solutions/grade.sh` as gate (b). Measured
 (2026-09-13, each impl applied on a fixed base then reverted):
 
 | Cart-hold implementation | feature acceptance | result |
@@ -107,7 +107,7 @@ This is now **objectively gated** (not just rubric-judged) by
 | Naive: records holds, checks ATP once, **confirm not re-checked**, no accumulation | **2/4** | RED — oversells (cart A holds 15, cart B still confirms 10 on a 22-ATP SKU; holds don't accumulate) |
 | Correct: reserve vs live ATP net of other carts, keyed (SKU,cart), re-checked at confirm | **4/4** | GREEN |
 
-The whole ticket (`bash grade.sh`) is GREEN only when the bug fix (availability 14/14) **and** the
+The whole ticket (`bash _solutions/grade.sh`) is GREEN only when the bug fix (availability 14/14) **and** the
 correct hold (feature 4/4) **and** web (2/2) all pass — "fix and deliver." Defeated by
 *requirements-elicitation* + *read-before-delegate* (read how confirm decides availability before
 building the hold) and *restraint* (build the minimal correct hold; defer un-hold/limits/billing).

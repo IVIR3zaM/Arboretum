@@ -37,15 +37,16 @@ Two consequences that matter:
   trap that the workdir warns about measures nothing. The learner reads the README *before* the
   session, outside the clone.
 - **The work items are staged, not dumped.** The clone starts with `TICKET.md` only;
-  `FEATURE-REQUEST.md` is handed over when phase 3 begins, and a Cedar `reference/` when the
-  research pass begins. A learner never holds a bug report and a feature brief at the same time —
-  work does not arrive that way, and a clone carrying both lets the assistant read ahead and plan
-  around a brief nobody has given it, which blunts the phase it has not reached. The harness holds
-  each item until its phase.
+  `FEATURE-REQUEST.md` is handed over when phase 3 begins. A learner never holds a bug report and a
+  feature brief at the same time — work does not arrive that way, and a clone carrying both lets
+  the assistant read ahead and plan around a brief nobody has given it, which blunts the phase it
+  has not reached. The harness holds each item until its phase. **A Cedar `reference/` is not a
+  work item and is not staged** — it is in the clone from the start, for the reasons in the next
+  paragraph.
 - The examiner reads `_solutions/` and the Context from `golden/`, which the assistant/learner
   **cannot** see. The grader — the practice's **declared** command (`practice.json` →
   `commands.grade`; `node _solutions/grade.mjs` for the seed, `cargo run --bin grade` for a Rust kata, a
-  wrapper like `bash grade.sh` for a multi-package kata, …) — is run by the harness against the
+  wrapper like `bash _solutions/grade.sh` for a multi-package kata, …) — is run by the harness against the
   clone, not by the learner. The harness reads the command from `practice.json`; it assumes no
   particular toolchain.
 
@@ -59,6 +60,14 @@ what the learner's research pass distills into a **`research-notes.md`** written
 This is still a single clone, still jailed — `reference/` and `research-notes.md` both live inside
 `work/`, and the jail's "no reads or writes outside the clone" is untouched. `_solutions/`
 stripping is unchanged.
+
+`reference/` is present **from the first prompt of the session**, not staged with the research
+pass. It stands for documentation an engineer already has access to on day one — a vendor's
+published API docs, the infra console, a protocol spec — and a Cedar practice's packages typically
+read it at runtime, so a clone without it does not run. Handing it over at the moment the research
+pass is due would be the coaching the Context forbids: it announces that the local repo is not the
+whole story, which is the judgement FM-16 exists to measure. What the harness watches is whether
+the learner opens it unprompted.
 
 ---
 

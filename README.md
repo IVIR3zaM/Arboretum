@@ -74,12 +74,12 @@ Then work the five phases in [`practices/deliveries/README.md`](practices/delive
 - [`docs/PRIOR-ART.md`](docs/PRIOR-ART.md) — landscape + sources.
 - [`docs/DISTRIBUTION.md`](docs/DISTRIBUTION.md) — how people play; the roadmap.
 - [`docs/TREE-NAMING.md`](docs/TREE-NAMING.md) — how Context versions are named.
-- [`context/alder/`](context/alder/) — **Context v1**: goals, best-practices, failure-modes,
-  generation-spec, templates.
+- [`context/alder/`](context/alder/) and [`context/cedar/`](context/cedar/) — the **Contexts**:
+  goals, best-practices, failure-modes, generation-spec, templates.
 - [`generator/CONTRACT.md`](generator/CONTRACT.md) — how any agent generates a new practice.
 - [`practices/deliveries/`](practices/deliveries/) — the seed kata (aligned to `alder@1.2.0`).
 - [`practices/fulfillment/`](practices/fulfillment/) — an XL Cedar kata: inventory availability &
-  order confirmation, React + TS/Node full stack (aligned to `cedar@1.0.0`).
+  order confirmation, React + TS/Node full stack (aligned to `cedar@1.1.0`).
 
 ## What this is not
 Not an assessment/hiring tool, not a course, not domain-locked. See [`docs/CONCEPT.md`](docs/CONCEPT.md).

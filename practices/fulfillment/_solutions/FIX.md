@@ -89,7 +89,7 @@ is the ticket's symptom.
 
 ## Why the realistic "fix it" attempts plateau (FM-13 × FM-16) — measured
 
-These are genuine `bash grade.sh` outcomes, each applied at the resolver root then reverted. The
+These are genuine `bash _solutions/grade.sh` outcomes, each applied at the resolver root then reverted. The
 trap is not a strawman symptom-patch; it is what a competent engineer who **delegates the fix
 without doing the research pass** actually produces:
 
@@ -126,5 +126,5 @@ Verified on a throwaway copy (edits reverted; the shipped tree keeps the bug):
 | Naive `− reserved − allocated` | 12/14 | 2/2 |
 | Correct (full ATP from the spec) | 14/14 | 2/2 |
 
-`grade.sh` ANDs both suites and exits 0 only at 14/14 + 2/2. The grader was not weakened; the fix
+`_solutions/grade.sh` ANDs both suites and exits 0 only at 14/14 + 2/2. The grader was not weakened; the fix
 was applied, verified, and reverted.

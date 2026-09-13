@@ -48,8 +48,12 @@ These come from [`harness/DESIGN.md`](harness/DESIGN.md §0–§2). Follow them 
    feature request at once — that is not how work arrives, and a clone containing both lets the
    assistant read ahead, plan around a brief nobody has given it yet, and blunt the phase it has
    not reached. Stage them: the clone starts with `TICKET.md` only; `FEATURE-REQUEST.md` is copied
-   in when phase 3 begins (a Cedar `reference/` is staged the same way, with the research phase).
-   Each phase's prompts are the learner's; the harness holds the rest back.
+   in when phase 3 begins. Each phase's prompts are the learner's; the harness holds the rest back.
+   **A Cedar `reference/` is the exception — it is in the clone from the start.** It is the
+   external documentation an engineer already has on day one, the packages usually read it at
+   runtime, and handing it over when the research pass is due would itself announce that the local
+   repo is not the whole story — the exact judgement FM-16 measures. The trap is that a
+   single-scope run never opens it, not that it is hidden.
 5. **Separate executor from examiner.** The agent that runs the learner's prompts must not be the
    one that grades them; grade in a fresh context (a sub-agent or a separate pass).
 6. **The examiner grades from three inputs, never one:** its golden context (Context +

@@ -9,7 +9,7 @@
 
 ## Overview
 - **id:** `credentials` · **title:** "Credentials — verifiable-credential issuance & presentation"
-- **Context:** `cedar@1.0.0` · **difficulty:** `XL`
+- **Context:** `cedar@1.1.0` · **difficulty:** `XL`
 - **Domain:** decentralized identity — a startup issues, holds, and verifies **Verifiable
   Credentials (VCs)**.
 - **Stack (multi-package, both graded):**
@@ -32,7 +32,8 @@ credentials/
   app/                # Flutter: lib/ (wallet, presentation builder) + test/ + integration_test/
   reference/          # READ-ONLY: did-web-method.md, infra/hosted-dids/*.json, trust-registry.md
   _solutions/         # hidden answer key (see plan below)
-  TICKET.md  FEATURE-REQUEST.md  README.md  practice.json  grade.sh
+  TICKET.md  FEATURE-REQUEST.md            # cloned (FEATURE-REQUEST staged in at phase 3)
+  README.md  practice.json                # exercise material — NOT cloned
 ```
 
 ---
@@ -211,7 +212,7 @@ out loud.
    iteration order, so signatures verify in-process but not cross-stack.
 
 ## Dual grade design (both stacks; combined worst-case)
-`commands.grade` = **`bash grade.sh`**, which runs and ANDs:
+`commands.grade` = **`bash _solutions/grade.sh`**, which runs and ANDs:
 - **(a) `cargo run --bin grade`** (in `backend/`) — the hidden acceptance suite calling the
   resolver/verify **root** directly, across ≥3 issuer states (never-rotated / rotated-key /
   rotated-endpoint) **plus** the `reference/`-derived conformance vectors. Reports worst-case.
@@ -241,7 +242,7 @@ cross-stack check to `test` level.
 {
   "id": "credentials",
   "title": "Credentials — verifiable-credential issuance & presentation",
-  "contextVersion": "cedar@1.0.0",
+  "contextVersion": "cedar@1.1.0",
   "domain": "decentralized identity / verifiable credentials",
   "stack": {
     "packages": [
@@ -257,7 +258,7 @@ cross-stack check to `test` level.
   "commands": {
     "install": "cd backend && cargo fetch; cd ../app && flutter pub get",
     "test": "cd backend && cargo test; cd ../app && flutter test",
-    "grade": "bash grade.sh"
+    "grade": "bash _solutions/grade.sh"
   },
   "grader": { "kind": "hidden-acceptance", "max": 12 },
   "trainingPoints": {
@@ -277,7 +278,8 @@ cross-stack check to `test` level.
 
 ## `_solutions/` plan (build session produces these)
 - `backend/…/acceptance.rs` + `app/integration_test/…` — hidden graders; start failing.
-- `grade.sh` — the wrapper; ≥3 issuer states + conformance vectors; combined worst-case.
+- `_solutions/grade.sh` — the wrapper (inside `_solutions/`, never at the practice root, so the
+  clone carries no sign of it); ≥3 issuer states + conformance vectors; combined worst-case.
 - `FIX.md` — real did:web fetch at the resolver root; why the re-pin fix plateaus; the caching aside.
 - `feature-qa.md` — the 6–8 held-back questions above, with answers + minimal correct behaviour.
 - `trap-manifest.md` — every planted item → FM id + location; **verified-to-bite** notes for the
@@ -293,9 +295,13 @@ cross-stack check to `test` level.
 1. Write `backend/` (issuer, verifier, did resolver with the stale did:web branch, status, store),
    `app/` (wallet + presentation stub), and `reference/` fixtures + the loopback resolver.
 2. Write the GREEN unit suites (bug invisible: fixtures never rotate).
-3. Wire the hidden graders + `grade.sh`; **verify the traps bite** (symptom-patch red; re-pin
+3. Wire the hidden graders + `_solutions/grade.sh`; **verify the traps bite** (symptom-patch red; re-pin
    plateaus; no-research run fails the conformance vectors).
 4. Fill the real `practice.json` (drop `status`), lift the primer into `README.md`, write
-   `TICKET.md` / `FEATURE-REQUEST.md`.
-5. Drive it once end-to-end (a `train` run) and record `_solutions/proof-train-<date>.html`.
-6. Fresh-context reviewer confirms it's solvable at XL altitude — not over-scoped.
+   `TICKET.md` / `FEATURE-REQUEST.md` — both held to invariant 12: symptom and ask only, no
+   method, no mechanism, no mention of a grader, no ⚠️ at the trap.
+5. **Record a control run** (cedar@1.1.0 validation): harness-shaped clone, a fresh assistant, one
+   casual uncoached prompt; grade it, note whether it opened `reference/` unprompted, and write
+   both into `practice.json` → `controlRun`.
+6. Drive it once end-to-end (a `train` run) and record `_solutions/proof-train-<date>.html`.
+7. Fresh-context reviewer confirms it's solvable at XL altitude — not over-scoped.
