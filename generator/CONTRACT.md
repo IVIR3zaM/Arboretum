@@ -6,7 +6,7 @@ agent follows — not a coded tool (a coded runner is Phase 3). It works with Cl
 Agent SDK, or any capable assistant.
 
 ## Inputs
-`context` (e.g. `alder@1.1.0`) · `domain` · `stack` · `difficulty` (S|M|L) · optional
+`context` (e.g. `alder@1.2.0`) · `domain` · `stack` · `difficulty` (S|M|L) · optional
 `time budget` and `coverage`. Read the whole Context first:
 [`goals.md`](../context/alder/goals.md), [`best-practices.md`](../context/alder/best-practices.md),
 [`failure-modes.md`](../context/alder/failure-modes.md),
@@ -30,22 +30,31 @@ Agent SDK, or any capable assistant.
 6. **Write the hidden grader** that fails pre-fix and passes only after the correct fix, scored
    across ≥3 ambient values (worst-case). Add `FIX.md` with the reference fix. Declare how it is
    invoked in `practice.json` → `commands.grade` (stack-appropriate — `cargo run --bin grade`,
-   `go test ./...`, `pytest`, `npm run grade`…; never assume npm). The harness reads this.
+   `go test ./...`, `pytest _solutions/`, `node _solutions/grade.mjs`…; never assume npm). The
+   harness reads this and runs it against a copy that still has `_solutions/`. Invoke it directly
+   rather than through a script entry in a manifest the clone keeps — a `"grade"` script in
+   `package.json` survives the strip and tells the assistant a hidden grader exists.
 7. **Write the feature** as a stub + a 2–3 sentence underspecified `FEATURE-REQUEST.md`, with a
    real trap (an invariant the naive implementation trips) and 6–8 held-back questions in
    `_solutions/feature-qa.md`.
-8. **Write `TICKET.md`** as a symptom, `README.md` with the five-phase flow, `rubric.md`, and
-   `practice.json` (fill the template — including `commands.{install,test,grade}` for the stack;
-   compute the time/token estimate per `generation-spec.md`).
+8. **Write `TICKET.md`** as a symptom with no method and no mention of the grader, `README.md`
+   (the learner's briefing, which the harness keeps out of the clone — this is where the coaching
+   goes), `rubric.md`, and `practice.json` (fill the template — including
+   `commands.{install,test,grade}` for the stack, invoked so that nothing inside the clone
+   advertises the grader; compute the time/token estimate per `generation-spec.md`).
 9. **Self-validate** against the invariants in `generation-spec.md`, then run the acceptance
-   checklist below. If anything fails, fix before shipping — never relax an invariant.
+   checklist below. If anything fails, fix before shipping — never relax an invariant. Finish with
+   the **control run**: a fresh assistant, the clone, one casual uncoached prompt. What it scores
+   is the practice's real difficulty; everything else is what you hoped it was.
 10. **Record a proof.** Drive the finished practice end-to-end through the harness at least once
     (a `train` run is ideal) and capture the run as **at least one proof file** placed inside the
     practice at `_solutions/proof-<mode>-<YYYY-MM-DD>.html` (it belongs in `_solutions/` because it
     necessarily reveals the fix, so the harness strips it from the learner's clone). The proof must
-    record the **harness/mode, date, and model used**, and for each phase: the learner prompt, how
-    the assistant behaved, the trap that fired *by design*, the trainer/examiner output, and the
-    **real** command outcome (baseline unit + grader, final unit + grader). Every terminal figure
+    record the **harness/mode, date, and model used**; the **control run** and what it scored —
+    the honest measure of the traps, reported whether or not it flatters them; and for
+    each phase: the learner prompt, how the assistant behaved, the trap that fired *by design*,
+    the trainer/examiner output, and the **real** command outcome (baseline unit + grader, final
+    unit + grader). Every terminal figure
     must be a genuine captured output — a proof that isn't reproducible from the practice is not a
     proof. Show only the designed traps; do not include defects you had to fix in the practice
     itself. Refresh the proof whenever the practice changes.
@@ -76,6 +85,13 @@ it punishes** and **the discipline that beats it**, then **verify it bites** (th
 validation check in `generation-spec.md`): a symptom-patch and a plausible first-suggestion fix
 must both leave the grader red.
 
+**Then check that nothing in the clone defuses it** (`generation-spec.md` invariant 10). A trap
+is only as strong as the prose around it: a ticket that says "reproduce it first, and it must hold
+on any server" hands over both the method and the mechanism, and a feature request that warns "the
+obvious implementation trips a constraint" hands over the trap. Hand-verifying the mechanism does
+not catch this — only the **control run** does: clone the practice as the harness would, give a
+fresh assistant one casual uncoached prompt, and grade what comes back.
+
 ## Acceptance checklist (gate — all must hold)
 - [ ] Unit suite green; primary bug invisible to it.
 - [ ] Grader fails pre-fix, passes post-fix, across all ambient values (worst-case scored).
@@ -85,6 +101,14 @@ must both leave the grader red.
       plausible first-suggestion fix both leave the grader red; only a root, understanding-based
       fix passes. Verified, not assumed.
 - [ ] Every required discipline is genuinely reachable; none requires reading `_solutions/`.
+- [ ] **Nothing in the clone coaches the assistant** (invariant 10): the ticket carries no method,
+      no mechanism and no reference to the grader; the feature request flags no trap; code and
+      test comments leave evidence but never narrate the defect or the suite's blind spot; no
+      manifest inside the clone exposes a grade command; `README.md` and `practice.json` are kept
+      out of the clone entirely.
+- [ ] **A control run is recorded** — a fresh assistant, the clone, one casual uncoached prompt —
+      and it does **not** clear the gate. If it does, the practice is not calibrated: cut the
+      coaching, or strengthen the graded case until only understanding reaches it.
 - [ ] `practice.json` validates, declares `commands.{install,test,grade}` for the stack, and its
       estimates use the spec's method; the grader is invoked via `commands.grade` (never npm-assumed).
 - [ ] A fresh-context reviewer agent confirms solvable at the stated altitude/time — not
@@ -95,7 +119,7 @@ must both leave the grader red.
       baseline→final unit and grader numbers captured, not asserted.
 
 ## Worked example — how Alder would have produced the seed
-> **Inputs:** `alder@1.1.0`, domain "subscription-box delivery scheduling", stack
+> **Inputs:** `alder@1.2.0`, domain "subscription-box delivery scheduling", stack
 > TypeScript/Node 22 zero-dep, tier M.
 > **Carrier:** cutoffs + cadence + at-least-once retries give a natural home for an ambient bug
 > and an idempotency defect.
@@ -106,13 +130,15 @@ must both leave the grader red.
 > **Latent defects:** idempotency on eventId (FM-06), state leaked by reference (FM-05),
 > unbounded processed set (FM-07), strict `<` boundary (FM-04), 30-day month (FM-03), silent
 > fall-through (FM-03), unvalidated timezone (FM-08).
-> **Assistant trap (FM-13):** the grader tests the root, so a symptom-patch stays red; and a
-> fixed-offset fix passes 7/8 but fails the per-instant/DST case — only comprehension reaches 8/8.
-> **Result:** 15/15 unit green, grader 0/8 → 8/8 after the per-instant fix. See
-> [`practices/deliveries/`](../practices/deliveries/).
-> **Proof:** a recorded Train-mode run ships at
-> [`practices/deliveries/_solutions/proof-train-2026-09-10.html`](../practices/deliveries/_solutions/proof-train-2026-09-10.html)
-> — every trap fires, driving well converges to 21/21 unit · 8/8 grader.
+> **Assistant trap (FM-13):** the grader tests the roots, so a call-site symptom-patch stays at
+> 0/13 with a green suite; a fixed-offset fix plateaus at 7/13 on the per-instant/DST case; and
+> both obvious skip implementations trip the store's invariant (9/13, 11/13).
+> **Result:** 15/15 unit green, grader 0/13 → 13/13 after the per-instant fix and the minimal
+> skip. See [`practices/deliveries/`](../practices/deliveries/).
+> **Proof:** [`practices/deliveries/_solutions/proof-train-2026-09-13.html`](../practices/deliveries/_solutions/proof-train-2026-09-13.html)
+> — the recorded control runs and what they scored, the verified trap mechanisms, and the
+> Train-mode session. Note what it records honestly: the control run clears the gate one-shot, so
+> the gate is the floor and the transcript is the verdict.
 
 To generate another, change only `domain` and `stack` and run the procedure — the training
 points, the shape, and the gate stay identical. (Generating a second practice is **Phase 2**,

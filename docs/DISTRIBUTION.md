@@ -6,7 +6,7 @@ principle throughout: **tool-agnostic core, optional Claude-first depth.**
 ## Today — self-serve, any assistant
 1. Clone the repo, open a practice (`practices/deliveries/`), read `README.md`.
 2. Work the five phases with **any** AI assistant — Claude Code, Cursor, Copilot, a web chat.
-3. The practice's declared grade command (`practice.json` → `commands.grade`; `npm run grade`
+3. The practice's declared grade command (`practice.json` → `commands.grade`; `node _solutions/grade.mjs`
    for the seed) is the portable self-grader — the hidden acceptance oracle. It needs no service
    and no account; it runs locally and scores worst-case across the ambient values.
 4. Read `_solutions/rubric.md` only after finishing, to self-assess how you drove.

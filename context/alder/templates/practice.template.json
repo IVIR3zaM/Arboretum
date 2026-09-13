@@ -1,7 +1,7 @@
 {
   "id": "<kebab-case-id>",
   "title": "<short human title>",
-  "contextVersion": "alder@1.1.0",
+  "contextVersion": "alder@1.2.0",
   "domain": "<business domain in a few words>",
   "stack": { "language": "<lang>", "runtime": "<runtime+version>", "dependencies": 0 },
   "difficulty": "S | M | L",
@@ -10,7 +10,7 @@
   "commands": {
     "install": "<install deps, or \"\" if none — e.g. \"\", \"cargo fetch\", \"go mod download\">",
     "test": "<run the unit suite — e.g. \"node --test test/*.test.ts\", \"cargo test\", \"go test ./...\">",
-    "grade": "<run the hidden acceptance grader — e.g. \"npm run grade\", \"cargo run --bin grade\", \"./grade.sh\">"
+    "grade": "<run the hidden acceptance grader directly, never via a script the clone keeps — e.g. \"node _solutions/grade.mjs\", \"cargo run --bin grade\", \"./grade.sh\">"
   },
   "grader": { "kind": "hidden-acceptance", "max": 0 },
   "trainingPoints": {
@@ -20,7 +20,14 @@
   "primaryBug": "<one line: the silent, subset-only bug>",
   "featureTrap": "<one line: the invariant the naive implementation trips>",
   "assistantTrap": "<one line: how an autopilot run provably loops — symptom-patch stays red; the obvious fix passes the visible suite but fails a case needing real understanding (FM-13, required)>",
+  "controlRun": {
+    "date": "<YYYY-MM-DD>",
+    "method": "fresh assistant, harness-shaped clone, one casual uncoached prompt, no follow-up",
+    "score": "<n>/<max> — what an uncoached one-shot actually scores",
+    "finding": "<what the control run did and did not expose; if it clears the gate, say so and say what still discriminates>"
+  },
   "latentDefects": 0,
   "answerKey": "_solutions/",
+  "proof": "_solutions/proof-<mode>-<YYYY-MM-DD>.html",
   "notes": "<anything a future maintainer needs>"
 }

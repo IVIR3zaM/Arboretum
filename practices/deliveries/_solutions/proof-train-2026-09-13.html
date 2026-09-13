@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deliveries Kata — Control-Run Proof</title>
+<style>
+  :root{
+    --bg:#f7f6f3; --panel:#ffffff; --ink:#1c1b19; --muted:#6b6862; --line:#e5e2db;
+    --accent:#2f6f4f; --accent-soft:#e3efe8; --warn:#b26b00; --warn-soft:#fbefd8;
+    --bad:#b3261e; --bad-soft:#fbe4e2; --good:#1f7a4d; --good-soft:#e1f2e8;
+    --prompt:#243b53; --prompt-soft:#e7eef5; --code-bg:#1e2229; --code-ink:#e8e6e1;
+    --shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#16181c; --panel:#1e2127; --ink:#e9e7e2; --muted:#9a978f; --line:#30343c;
+      --accent:#66c295; --accent-soft:#1d2a24; --warn:#e0a54a; --warn-soft:#2c2417;
+      --bad:#f0857d; --bad-soft:#2c1a18; --good:#6fd39b; --good-soft:#16241c;
+      --prompt:#a9c7e8; --prompt-soft:#1a2330; --code-bg:#0f1216; --code-ink:#d8d6d1;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#16181c; --panel:#1e2127; --ink:#e9e7e2; --muted:#9a978f; --line:#30343c;
+      --accent:#66c295; --accent-soft:#1d2a24; --warn:#e0a54a; --warn-soft:#2c2417;
+      --bad:#f0857d; --bad-soft:#2c1a18; --good:#6fd39b; --good-soft:#16241c;
+      --prompt:#a9c7e8; --prompt-soft:#1a2330; --code-bg:#0f1216; --code-ink:#d8d6d1;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 80px}
+  code,pre,.mono{font-family:"SF Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  a{color:var(--accent)}
+
+  header.hero{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:28px 28px 22px;box-shadow:var(--shadow)}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
+    font-weight:700;margin:0 0 8px}
+  h1{font-size:30px;line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:16px}
+  .badges{display:flex;flex-wrap:wrap;gap:8px}
+  .badge{display:inline-flex;align-items:center;gap:6px;background:var(--bg);
+    border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px}
+  .badge b{color:var(--ink)} .badge span{color:var(--muted)}
+  .badge.mode{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:700}
+
+  section{margin-top:34px}
+  h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    margin:0 0 14px;font-weight:700}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:20px 22px;box-shadow:var(--shadow)}
+  .lead{font-size:17px;line-height:1.55}
+  .lead b{color:var(--accent)}
+
+  /* scorecard */
+  .score{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .stat .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+  .stat .v{font-size:26px;font-weight:800;margin-top:4px;letter-spacing:-.02em}
+  .stat .v .arrow{color:var(--muted);font-weight:500;font-size:18px;margin:0 4px}
+  .v.good{color:var(--good)} .v.bad{color:var(--bad)}
+
+  /* invariants */
+  ul.inv{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  ul.inv li{display:flex;gap:10px;align-items:flex-start}
+  ul.inv .chk{color:var(--good);font-weight:800;flex:0 0 auto}
+  ul.inv code{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:13px}
+
+  /* rounds */
+  .round{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
+  .round > .head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;
+    padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(0deg,transparent,transparent)}
+  .phase-tag{font-size:12px;font-weight:800;letter-spacing:.05em;color:var(--accent);
+    background:var(--accent-soft);border-radius:6px;padding:3px 9px}
+  .round .title{font-weight:700;font-size:17px}
+  .round .time{margin-left:auto;color:var(--muted);font-size:13px}
+  .round .body{padding:6px 20px 18px}
+  .block{padding:14px 0;border-bottom:1px dashed var(--line)}
+  .block:last-child{border-bottom:0}
+  .block .label{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    display:inline-flex;align-items:center;gap:6px;margin-bottom:7px}
+  .label.prompt{color:var(--prompt)} .label.ai{color:var(--muted)}
+  .label.trap{color:var(--warn)} .label.trainer{color:var(--accent)}
+  .label.outcome{color:var(--good)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .dot.prompt{background:var(--prompt)} .dot.ai{background:var(--muted)}
+  .dot.trap{background:var(--warn)} .dot.trainer{background:var(--accent)}
+  .dot.outcome{background:var(--good)}
+  .promptbox{background:var(--prompt-soft);border-left:3px solid var(--prompt);
+    border-radius:0 8px 8px 0;padding:11px 14px;font-size:15px}
+  .trapbox{background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;padding:11px 14px}
+  .trainerbox{background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:11px 14px}
+  .block p{margin:.2em 0}
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:8px;padding:12px 14px;
+    overflow-x:auto;font-size:13px;line-height:1.5;margin:8px 0 0}
+  pre .pass{color:#7ee0a6} pre .fail{color:#ff9d95} pre .dim{color:#8b93a1}
+  .pill{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px}
+  .pill.red{background:var(--bad-soft);color:var(--bad)}
+  .pill.green{background:var(--good-soft);color:var(--good)}
+
+  table.map{width:100%;border-collapse:collapse;font-size:14px}
+  table.map th,table.map td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.map th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+  table.map code{font-size:12.5px}
+
+  footer{margin-top:40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:18px}
+  .note{background:var(--panel);border:1px dashed var(--line);border-radius:10px;padding:14px 16px;color:var(--muted);font-size:14px}
+  @media print{ body{background:#fff} .round,.card,.stat{box-shadow:none} }
+</style>
+</head>
+<body>
+<div class='wrap'>
+
+<header class="hero">
+  <p class="eyebrow">Arboretum · Harness proof of training value</p>
+  <h1>Deliveries kata — a Train-mode run where every trap fires</h1>
+  <p class="sub">A real coached session against a jailed clone of <code>practices/deliveries</code>, driven by
+  a casual engineer who takes the shortcut at every phase. Every trap below fired for real, every
+  number is a real command output, and every training point <code>practice.json</code> claims is
+  evidenced by a round you can point at.</p>
+  <div class="badges">
+    <span class="badge mode">● TRAIN mode (live coaching)</span>
+    <span class="badge"><span>Date</span><b>2026-09-13</b></span>
+    <span class="badge"><span>Model</span><b>Claude Opus 5</b><span>·</span><span class="mono">claude-opus-5</span></span>
+    <span class="badge"><span>Practice</span><b>deliveries</b></span>
+    <span class="badge"><span>Context</span><b>alder@1.2.0</b></span>
+    <span class="badge"><span>Runtime</span><b>Node v22.21.1</b></span>
+    <span class="badge"><span>Session</span><b class="mono">20260913-train</b></span>
+  </div>
+</header>
+
+<section><h2>What this session proves</h2><div class="card lead">
+A casual engineer picks up a service, a ticket, and — two phases later — a feature request. They
+take the shortcut every single time: they skim the tour, they prescribe a fix for a mechanism they
+haven't read, they <b>overrule the assistant twice when it is right</b>, they call it done because
+the suite is green, they specify an implementation against a store whose invariants they don't
+know, they let an assistant decide five customer-visible rules by default, and they ask it to
+review its own diff. <b>Every trap in the manifest fired.</b> The trainer caught each one, the
+learner re-drove, and the run converged: <b>0/13 → 13/13</b> on the hidden grader with 25 green
+tests and not one line shipped outside the ask. Every number below is a real command output,
+captured between rounds by the harness — including the two that are not flattering.
+</div></section>
+<section><h2>Objective scorecard — every figure a real command output</h2><div class="score">
+<div class="stat"><div class="k">Unit suite</div><div class="v"><span class="dim">15</span><span class="arrow">→</span><span class="good">25</span></div><div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0">green at every checkpoint — including while the code was wrong</div></div>
+<div class="stat"><div class="k">Hidden grader (worst-case)</div><div class="v"><span class="bad">0/13</span><span class="arrow">→</span><span class="good">13/13</span></div><div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0">via 4/13 and 8/13 — the path is the point</div></div>
+<div class="stat"><div class="k">Traps fired</div><div class="v good">5 of 5</div><div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0">green-suite · prescribed shortcut · store invariant · unasked requirements · self-review</div></div>
+<div class="stat"><div class="k">Lines shipped outside the ask</div><div class="v good">0</div><div class="k" style="margin-top:6px;text-transform:none;letter-spacing:0">9 findings → 2 tickets, none in the diff</div></div>
+</div></section>
+<section><h2>Harness invariants applied before any prompt ran</h2><div class="card"><ul class="inv">
+<li><span class="chk">✓</span><div><b>Cloned and jailed.</b> The session ran in <code>.sessions/20260913-train/work/</code>.
+The executor could read and write nothing outside it; <code>practices/deliveries/</code> was never touched.</div></li>
+<li><span class="chk">✓</span><div><b>Exercise material stripped.</b> No <code>_solutions/</code>, no <code>README.md</code>
+(the learner's briefing), no <code>practice.json</code> (which names the planted bug). The clone is a service
+repo and a work item — the executor was never told there was an exercise, a trap, or a grader.</div></li>
+<li><span class="chk">✓</span><div><b>Work items staged one phase at a time.</b> The clone opened with
+<code>TICKET.md</code> only. <code>FEATURE-REQUEST.md</code> was handed over when phase 3 began — the learner
+never held a bug report and a feature brief at once, because that is not how work arrives.</div></li>
+<li><span class="chk">✓</span><div><b>Executor ≠ examiner.</b> The assistant being driven never graded itself.
+The harness ran <code>commands.grade</code> between rounds against a throwaway copy with <code>_solutions/</code>
+dropped in; the executor never saw the grader or its score.</div></li>
+<li><span class="chk">✓</span><div><b>The learner drove; the trainer coached live.</b> Every prompt below is the
+learner's. The trainer interjected between rounds — which is what makes this <em>train</em> and not
+<em>assess</em>.</div></li>
+</ul></div></section>
+<section><h2>The session, round by round</h2>
+<div class="round"><div class="head"><span class="phase-tag">PHASE 1 · UNDERSTAND</span><span class="title">“Give me a quick tour”</span><span class="time">round 1</span></div><div class="body">
+<div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+<div class="promptbox">“Morning — I just picked up this service and I've got a ticket on it. Can you give me a quick tour of the codebase first? What's in here?”</div>
+</div>
+<div class="block"><div class="label ai"><span class="dot ai"></span>What the assistant did</div>
+<p>Gave an accurate module-by-module tour — and, unasked, flagged two things: that <code>Subscription.timezone</code> is “declared and documented … but I can't find any read of it”, and that <code>processQueue</code> de-dupes on <code>eventId</code> while <code>types.ts</code> says a retry arrives with a new one.</p><p><b>It handed the learner the bug and a latent defect in round one.</b></p>
+</div>
+<div class="block"><div class="label trap"><span class="dot trap"></span>Trap fired — by design</div>
+<div class="trapbox">The learner asked for a <em>tour</em>, not a model: no invariant per module, no ranked risk, nothing they could use to judge a fix. They skimmed it, registered “small service, five files”, and moved on to the ticket. The assistant's two warnings went past unread — which is the failure this phase exists to expose, and it costs the learner the whole of round 2.</div>
+</div>
+<div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+<div class="trainerbox">“You got a directory listing with the answer buried in it. Phase 1 is where you build the model you'll use to judge the next patch — ask which invariant each module owns and where a correctness bug could hide, and <em>read the reply</em>. You are about to delegate a fix for a mechanism you haven't looked at.”</div>
+</div>
+</div></div>
+<div class="round"><div class="head"><span class="phase-tag">PHASE 2 · FIX</span><span class="title">The learner prescribes the fix</span><span class="time">round 2</span></div><div class="body">
+<div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+<div class="promptbox">“Ticket's #4471 — cutoff fires at the wrong time for some overseas customers. I've hit this one before, it's just that we're not applying the customer's UTC offset anywhere. Add a lookup from the IANA zone to its UTC offset and apply that in the cutoff calc, then run the tests. Keep it tight please, don't over-engineer it — I want this out today.”</div>
+</div>
+<div class="block"><div class="label ai"><span class="dot ai"></span>What the assistant did</div>
+<p>It <b>refused to just do it</b> and pushed back first: “A zone doesn't have <em>a</em> UTC offset; it has one that changes with DST… <code>America/Los_Angeles</code> −08:00 in January, <b>−07:00 in July</b> — your main region, the one that currently works, would go an hour wrong for eight months of the year.” It offered the <code>Intl</code> route as <em>less</em> code, and asked which the learner wanted.</p>
+</div>
+<div class="block"><div class="label trap"><span class="dot trap"></span>Trap fired — by design</div>
+<div class="trapbox"><b>The assistant was right and the learner overruled it.</b> This is what FM-13 actually looks like against a good model: the shortcut does not come from the assistant, it comes from the engineer who already “knows” the answer and treats the objection as friction. The learner had delegated a <em>solution</em> instead of a <em>problem</em> — and had no model to judge the objection with, because of round 1.</div>
+</div>
+<div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt (override)</div>
+<div class="promptbox">“Noted, but LA works fine today and nobody's complaining about it — that's not what the ticket says. Do the table. I'll take the DST thing as a follow-up if it ever actually bites us.”</div>
+</div>
+<div class="block"><div class="label ai"><span class="dot ai"></span>What the assistant did</div>
+<p>Built <code>ZONE_OFFSET_MINUTES</code> (16 zones) + <code>utcOffsetMinutes()</code>, rewrote <code>cutoffInstant</code> to subtract it, <b>wrote three new tests</b> for it, and left a <code>KNOWN GAP (ticket #4471 follow-up)</code> comment naming the DST-affected zones. It also warned that LA cutoffs would move by 8 hours and that this was “a visible behaviour change for your main region, not a no-op”.</p>
+</div>
+<div class="block"><div class="label outcome"><span class="dot outcome"></span>Measured outcome — the learner calls it done</div>
+<pre><span class="dim"># the learner's view: everything is green</span>
+# tests 18
+# pass <span class="pass">18</span>
+# fail 0
+
+<span class="dim"># the harness runs the hidden grader — which the learner never sees</span>
+  TZ=UTC                  <span class="fail">4/13  FAIL</span>
+  TZ=America/Los_Angeles  <span class="fail">4/13  FAIL</span>
+  TZ=Asia/Tokyo           <span class="fail">4/13  FAIL</span>
+  Worst-case score: <span class="fail">4/13</span></pre><p><b>Three new tests were written to certify a broken fix</b> — the suite went 15 → 18 green while the graded behaviour stayed wrong in 9 of 13 cases. And the prescribed table scores <em>worse</em> than the generic fixed-offset shortcut (7/13) because zones missing from it fall back to UTC silently.</p>
+</div>
+<div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+<div class="trainerbox">“Green is not a verdict, it's a measurement of what you chose to measure — you wrote three tests that encode the same wrong model. The grader says 4/13. Two separate misses: you delegated a solution rather than a problem, and when the assistant told you the solution was wrong you overrode it without being able to evaluate the objection. Go and get the mechanism first.”</div>
+</div>
+</div></div>
+<div class="round"><div class="head"><span class="phase-tag">PHASE 2 · FIX</span><span class="title">Model before delegation — “explain it, don't fix it”</span><span class="time">round 3</span></div><div class="body">
+<div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+<div class="promptbox">“Stop — don't write anything else yet. I had this graded and it's failing 9 of 13 cases across server timezones, with the suite still green… Walk me through two things, no code changes: what exactly <code>cutoffInstant</code> does today to turn ‘18:00 on the cutoff day' into an instant, and take Berlin on 2026-06-16 concretely — what instant does my offset table produce, what's the correct one, and why do they differ? I want the mechanism, not a fix.”</div>
+</div>
+<div class="block"><div class="label ai"><span class="dot ai"></span>What the assistant did</div>
+<p>No code touched. It separated the <em>two</em> bugs — the original host-process <code>new Date(y,m,d,h)</code>, and the frozen-offset table that replaced it — and measured the Berlin case rather than recalling it:</p><pre><span class="dim">delivery 2026-06-16 · cutoff day 2026-06-14 · 18:00 Berlin local</span>
+  your table   +60 min   2026-06-14T17:00:00Z   = 19:00 Berlin  <span class="fail">(an hour late)</span>
+  correct      +120 min  2026-06-14T16:00:00Z   = 18:00 Berlin</pre><p>Then the sentence the whole phase is for: <b>“A UTC offset is not a property of a zone. It is a property of a <em>(zone, instant)</em> pair.”</b> The table can never be corrected into working, because <code>Record&lt;string, number&gt;</code> “has no slot for the date — the information needed to answer the question is discarded at the table's design”. It predicted the failure shape (constant-offset zones pass, DST zones fail), and explained the green suite: every fixture is a constant-offset zone, so “the tests encode the same one-argument assumption the table does — they structurally cannot observe the bug.”</p>
+</div>
+<div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+<div class="trainerbox">“<em>That</em> is what you were missing in round 1, and it cost you two rounds and three tests. Note what it did for free once you asked for mechanism instead of a patch: it explained your own green suite to you. Now you can judge a fix instead of accepting one.”</div>
+</div>
+</div></div>
+<div class="round"><div class="head"><span class="phase-tag">PHASE 2 · FIX</span><span class="title">Reproduce, then fix the root</span><span class="time">round 4</span></div><div class="body">
+<div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+<div class="promptbox">“That lands — the offset is a function of (zone, instant) and my table threw the date away before it could be asked. My mistake, twice over. Do it properly now, and in this order so I can see each step: (1) write the Berlin test and <b>run it and show me it failing</b> against the current code — I want to watch it fail before anything gets fixed; (2) then fix the root in <code>cutoffInstant</code> and delete the table; (3) re-run and show me it passing. <b>Nothing else changes in this round</b> — no refactors, no cleanups elsewhere, no new features.”</div>
+</div>
+<div class="block"><div class="label ai"><span class="dot ai"></span>What the assistant did</div>
+<p>In order. Wrote <code>Berlin cutoff honours summer time (CEST, UTC+2)</code> asserting open at 15:59Z and locked at 16:30Z, and ran it against the table first: <b>“it failed exactly where predicted — <code>true !== false</code> on the 16:30Z assertion… The 15:59Z assertion passed, which confirms the boundary was in the right place and only the offset was wrong.”</b></p><p>Then deleted <code>ZONE_OFFSET_MINUTES</code> and <code>utcOffsetMinutes</code> (grep-confirmed unused elsewhere) for <code>zoneOffsetMinutesAt(timezone, instant)</code>, and named the non-obvious part itself: “the offset needed is the one in effect <em>at</em> the cutoff instant, but you need an instant to look one up — so it's two passes… the second pass matters only when the guess lands on the far side of a DST transition.”</p><p>Re-ran under five server timezones. Then flagged, unprompted, that LA cutoffs shift 8 hours in production because the old code had been reading the process timezone — “worth a line in the release note and possibly a heads-up to CX before it goes out today.”</p>
+</div>
+<div class="block"><div class="label outcome"><span class="dot outcome"></span>Measured outcome — captured by the harness mid-round</div>
+<pre><span class="dim"># the reproduction, BEFORE any fix — the harness caught the suite in this state</span>
+# tests 19
+# pass 18
+# fail <span class="fail">1</span>          <span class="dim">← the Berlin test failing against the table</span>
+  Worst-case score: <span class="fail">4/13</span>
+
+<span class="dim"># after the root fix</span>
+# tests 19
+# pass <span class="pass">19</span>
+# fail 0
+  TZ=UTC                  <span class="pass">8/13</span>
+  TZ=America/Los_Angeles  <span class="pass">8/13</span>
+  TZ=Asia/Tokyo           <span class="pass">8/13</span>
+  Worst-case score: <span class="pass">8/13</span>   <span class="dim">← all 8 cutoff cases; the 5 feature cases are still a stub</span></pre><p><b>0/13 → 4/13 → 8/13.</b> The middle number is the one worth keeping: it is what the shortcut bought, and it only became visible because something other than the learner's own tests was measuring.</p>
+</div>
+<div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+<div class="trainerbox">“Right shape this time: the test failed before it passed, the fix landed at the root, and the blast radius outside the ticket was zero because you said so out loud. Keep that last instruction — ‘nothing else changes in this round' — it is the cheapest quality control you have.”</div>
+</div>
+</div></div>
+<div class="round"><div class="head"><span class="phase-tag">PHASE 3 · FEATURE</span><span class="title">“It's about three lines” — the learner prescribes again</span><span class="time">round 5</span></div><div class="body">
+<div class="block"><div class="label ai"><span class="dot ai"></span>Harness note — staging</div>
+<p style="color:var(--muted);font-size:14px;margin:0"><code>FEATURE-REQUEST.md</code> was copied into the clone at the start of this round and not before. Until now the assistant had no idea a feature was coming; it had a ticket and a service.</p>
+</div>
+<div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+<div class="promptbox">“PM wants the skip feature, I've dropped FEATURE-REQUEST.md in the repo just now. Implement <code>skipNextDelivery</code>. It's small: get the next delivery date and set its status to “skipped” — the repository already has <code>setStatus</code>, so it should be about three lines. Don't gold-plate it, I just need the happy path today.”</div>
+</div>
+<div class="block"><div class="label trap"><span class="dot trap"></span>Trap fired — by design</div>
+<div class="trapbox">The prescribed three lines are <code>setStatus(next, "skipped")</code>, which throws <code>DeliveryNotFoundError</code>: deliveries are materialized lazily, and the next box usually does not exist yet. The other obvious shape — <code>schedule()</code> then skip — throws <code>DuplicateDeliveryError</code> when it does. <b>The learner had not read <code>repository.ts</code> and was specifying an implementation against a store whose invariants they did not know.</b></div>
+</div>
+<div class="block"><div class="label ai"><span class="dot ai"></span>What the assistant did</div>
+<p>Read the store first and wrote five lines instead of three, find-or-schedule then set — “copied from the pattern <code>processQueue</code> already uses, so it's not a new idea in the file.” The code trap did not land, because the assistant did the reading the learner skipped.</p><p>Then it listed <b>five customer-visible policy decisions it had been forced to make by default</b> — which box counts as “next”, whether a double-skip is a no-op, no un-skip, <code>active</code> ignored, no cap — and said of the first: “That's a product call, not a code call… 1 is the one I'd ask about before shipping.” It also spotted the <code>nextDeliveryDate</code> fall-through and explicitly left it alone because the learner had said nothing else changes.</p>
+</div>
+<div class="block"><div class="label outcome"><span class="dot outcome"></span>Measured outcome</div>
+<pre># tests 23
+# pass <span class="pass">23</span>
+# fail 0
+  Worst-case score: <span class="fail">12/13</span>
+
+<span class="dim">the single failing case:</span>
+  ok 11 - skipping twice is a no-op, not a second skip
+  ok 12 - the skipped box is not shipped and the cadence does not shift
+  <span class="fail">not ok 13 - a box that has already shipped cannot be skipped</span></pre><p><b>Twelve of thirteen, and the missing point is the one rule that cannot be derived from the repository.</b> Every other answer the assistant guessed happened to be right. This one it guessed wrong — because there is nothing in the code to guess from, and nobody had asked the PM.</p>
+</div>
+<div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+<div class="trainerbox">“You got 12/13 on a two-sentence brief and you should not feel good about it. Five customer-visible rules were decided today by an assistant's default and ratified by nobody — it even told you which one it wanted confirmed, and you'd already shipped by then. The held-back answers are one message away. <b>Ask, then build</b> is not ceremony; it is the difference between a decision and a guess that happened to land.”</div>
+</div>
+</div></div>
+<div class="round"><div class="head"><span class="phase-tag">PHASE 3 · FEATURE</span><span class="title">Elicit, then correct — and say no on camera</span><span class="time">round 6</span></div><div class="body">
+<div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+<div class="promptbox">“Fair hit — I should have asked before you wrote it, not after. I took your list to the PM… <b>Idempotent is correct.</b> <b>No un-skip in v1</b> — note it as a follow-up, don't build it. <b><code>active</code>/billing — out of scope</b>, that's a different service. <b>No cap</b> in v1. And one you didn't ask, which turned out to matter: a box that has <b>already shipped</b> must not be skippable… it's only <code>delivered</code> that's off limits. So this round: make the delivered case refuse, and add a test. Nothing else — no un-skip, no cap, no <code>active</code> check, no billing. <b>If you're tempted to tidy something adjacent, tell me instead of doing it.</b>”</div>
+</div>
+<div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer — what just went right</div>
+<div class="trainerbox">“That is the phase-3 win, and it is worth naming precisely: four offered features were <b>declined out loud and recorded as follow-ups</b> rather than built, and the one rule that actually mattered came from a human who knows the business. Restraint here is not laziness — it is the whole altitude of a 60-minute change.”</div>
+</div>
+</div></div>
+<div class="round"><div class="head"><span class="phase-tag">PHASE 4 · IMPROVE</span><span class="title">“Anything else you'd flag? Just give me the list”</span><span class="time">round 7</span></div><div class="body">
+<div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+<div class="promptbox">“Quick sanity check before I put this up for review — anything else you'd flag in this codebase? Just give me the list.”</div>
+</div>
+<div class="block"><div class="label ai"><span class="dot ai"></span>What the assistant did</div>
+<p>Returned ten findings, ranked, <b>marking which ones it had actually reproduced</b> rather than reasoned about. The top two it ran:</p><ul class="inv"><li><span class="chk">1</span><div><b><code>processQueue</code> de-duplication doesn't de-duplicate</b> <span class="mono">FM-06</span>. <code>types.ts</code> says a retry arrives with a <em>new</em> eventId; the dedupe keys on eventId. Confirmed by running it: the same (subscription, date) <b>shipped twice</b>. And: “the existing test <code>processQueue de-duplicates a repeated event id</code> passes the <em>same</em> eventId — it tests the one case the contract says cannot happen, so it's green and meaningless. <b>Same failure shape as #4471: a passing test standing guard over the wrong thing.</b>”</div></li><li><span class="chk">2</span><div><b>Monthly cadence drifts backwards</b> <span class="mono">FM-03</span>. 30 days ≠ a month: anchored Jan 15, a year runs Jan 15 → Feb 14 → … → <b>Jan 10</b>, sliding ~5 days a year, for every monthly subscriber.</div></li></ul><p>Then: live store references handed to callers <span class="mono">FM-05</span>; the <code>nextDeliveryDate</code> fall-through returning a box that just failed its own cutoff test, reproduced with <code>cutoffDaysBefore: 40</code> <span class="mono">FM-03</span>; no validation of <code>cutoffHour</code>/<code>cutoffDaysBefore</code>/<code>anchorDate</code>/<code>timezone</code> at the door <span class="mono">FM-08</span>; the unknown-zone-becomes-UTC fallback — <b>flagging its own code from the previous phase</b> — <span class="mono">FM-08</span>; the undefined DST-transition wall-clock policy <span class="mono">FM-04</span>; <code>active</code> declared and read nowhere; an unstable comparator; and finally that the suite's blind spot is structural — “25 green tests currently certify less than the count suggests.”</p>
+</div>
+<div class="block"><div class="label trap"><span class="dot trap"></span>Trap fired — by design</div>
+<div class="trapbox">The list is excellent and <b>the learner did not earn any of it</b>. “Just give me the list” delegates the judgement as well as the work: ten items arrive ranked by someone else's severity model, and the natural next move is to paste them into a PR description as if they were findings of your own. Note also what a passive prompt did <em>not</em> surface — nothing about lifetime or growth, because nothing in the question pointed there.</div>
+</div>
+<div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+<div class="trainerbox">“You asked a question whose answer you cannot check, and you got lucky: it marked which ones it reproduced. Ask for the evidence explicitly, and <b>direct the search</b> — a class you don't name is a class you don't get. And decide now what you are <em>not</em> doing: you came here to fix a cutoff.”</div>
+</div>
+</div></div>
+<div class="round"><div class="head"><span class="phase-tag">PHASE 4 · IMPROVE</span><span class="title">Direct the search, demand the evidence, fix nothing</span><span class="time">round 8</span></div><div class="body">
+<div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+<div class="promptbox">“I asked for ‘anything you'd flag' and you handed me a ranked list with two of them actually reproduced. Noted that I should be asking for evidence rather than hoping for it. Two follow-ups, still no code changes: (1) everything on that list is a correctness bug — this service runs as a long-lived process, so go look specifically at <b>lifetime and growth</b>… I don't want a general answer, I want whatever is actually in this code, <b>with the line</b>. (2) For #1 and #2, show me the two-line reproduction for each so I can put it in the ticket rather than my paraphrase of your summary. <b>Still nothing fixed in this round.</b> These are going on tickets, not into my diff — I'm not widening a cutoff fix into a refactor of the queue.”</div>
+</div>
+<div class="block"><div class="label ai"><span class="dot ai"></span>What the assistant did</div>
+<p>Named four accumulating structures, each with a line <span class="mono">FM-07</span> — and separated them by <em>what</em> they grow with:</p><pre><span class="dim">src/service.ts:18</span>    processed = new Set&lt;string&gt;()   never pruned, no TTL, per-instance
+<span class="dim">src/repository.ts:22</span>  deliveries  = new Map(...)       nothing ever deleted
+<span class="dim">src/repository.ts:65</span>  deliveriesFor()                  full scan + sort of EVERY delivery, per call
+<span class="dim">src/scheduling.ts:22</span>  while (date &lt; from)              re-walks from the anchor, every call</pre><p>The third is the one the learner's question was reaching for and could not have named: “instant on a fresh process, and <b>linearly slower every day it stays up</b>, because B never shrinks. No error, no alert — just an endpoint that degrades forever.” The fourth it measured rather than asserted — 37 iterations per call for a subscription started this year, <b>559 at ten years</b>, “+52 per year, forever” — and pointed out it “will not show up in any test or any staging environment with fresh data.”</p><p>It also caught the interaction the learner would have walked into: fixing the eventId dedupe by keying on <code>(subscriptionId, date)</code> “just relocates the leak” into the repository unless an eviction policy comes with it.</p><p>Then the two reproductions, run and pasted rather than recalled — the retry shipping a box twice (<code>first.length = 1 &nbsp; retry.length = 1 &nbsp; (expected 1 and 0)</code>) and the monthly drift landing the 13th delivery on <code>2027-01-10</code>. And: “Agreed on scope — none of this belongs in a cutoff fix.”</p>
+</div>
+<div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+<div class="trainerbox">“That is what phase 4 is for, and note what changed between the two rounds: <b>you named a class and got a finding nobody had surfaced in seven rounds.</b> The growth analysis wasn't hiding — nothing had pointed at it. Also note the restraint: nine findings, two tickets, <b>zero lines in your diff</b>. A phase-4 that ends with a refactor is a phase-4 you failed.”</div>
+</div>
+</div></div>
+<div class="round"><div class="head"><span class="phase-tag">PHASE 5 · REVIEW</span><span class="title">“Just tell me if it looks good to merge”</span><span class="time">round 9</span></div><div class="body">
+<div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
+<div class="promptbox">“Last thing — can you review the diff for me before I put it up? Just tell me if it looks good to merge.”</div>
+</div>
+<div class="block"><div class="label trap"><span class="dot trap"></span>Trap fired — by design</div>
+<div class="trapbox"><b>The learner asked the author of the code whether the code is good.</b> That is not a review, it is a rubber stamp with extra steps, and it is the last and cheapest way to lose a whole session's work — nine rounds of careful driving, signed off by the one party that cannot be objective. <span class="mono">FM-14</span></div>
+</div>
+<div class="block"><div class="label ai"><span class="dot ai"></span>What the assistant did</div>
+<p>It reviewed properly and the review was genuinely good — 12 zones round-tripped including the 45-minute ones, both DST transition days checked, 25/25 under five server timezones — and it found a <b>real regression in its own round-4 code</b>, measured rather than asserted:</p><pre>20k cutoffInstant calls, formatter built per lookup:  <span class="fail">4737 ms</span>
+20k cutoffInstant calls, formatter built once:        <span class="pass">198 ms</span>
+                                                      <span class="dim">~24x, all constructor overhead</span></pre><p>Then three nits, and — unprompted — the caveat that matters: <b>“I wrote this code, so I'm the worst-placed person to review it… The part I'd genuinely want a second pair of eyes on is the two-pass resolution — my tests confirm it produces sane answers on the transitions I thought to try, which is not the same as it being right on the ones I didn't.”</b></p><p>So the trap was survived by the assistant's honesty, not by the learner's judgement. Had it been slightly less scrupulous, “looks good to merge” is what the learner asked for and would have got.</p>
+</div>
+<div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer</div>
+<div class="trainerbox">“Read that last paragraph again — it told you which part of the diff its own tests do not independently constrain. <b>That sentence is worth more than the verdict you asked for</b>, and you would have thrown it away by taking the verdict. Now triage it yourself: what goes in this diff, what becomes a ticket, and what does a human need to look at?”</div>
+</div>
+<div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt (the actual review)</div>
+<div class="promptbox">“I shouldn't have asked you whether your own code looks good to merge — that's not a review, and the useful half of what you just sent is the half where you told me what you <em>couldn't</em> check.<br><br><b>The 24x formatter construction: take it, in this diff.</b> Not because it's cheap, but because <em>my change introduced it</em>. It wasn't there this morning. Fixing a regression I caused isn't widening the scope — shipping it and ticketing it would be.<br><b>Nit 3:</b> add the comment, one line, stops the next reviewer ‘fixing' a correct test.<br><b>Nit 1:</b> ticket — changing it means deciding the validation question, and that's the PM's and not today's.<br><b>Nit 2:</b> leave it. I agree it's a smell and I agree <em>why</em> it's there — the service has no honest way to produce a <code>queued</code> delivery. That's a missing method, so: ticket.<br><b>The two-pass resolution you flagged: that's the line I'm putting in the PR description</b>, so a human looks at exactly that and doesn't skim it because everything's green.”</div>
+</div>
+<div class="block"><div class="label ai"><span class="dot ai"></span>What the assistant did with the triage</div>
+<p>Cached the formatter per zone — <b>4737 ms → 298 ms</b> for 20k calls — and re-verified correctness rather than assuming it, “since a cache is exactly the kind of change that can be fast and wrong”: nine zones including the 15- and 30-minute offsets still land on 18:00 local. It named the one judgement call inside those three lines — <b>failed constructions are deliberately not cached</b>, because caching them would key the map on whatever strings arrive, “an unbounded-growth vector of exactly the kind we ticketed last round”. And it wrote the PR paragraph the learner asked for: <em>“Please check the reasoning, not just the green tests — the tests confirm the cases I thought to try, which is not the same as the logic being right on the ones I didn't.”</em></p>
+</div>
+<div class="block"><div class="label outcome"><span class="dot outcome"></span>Final state</div>
+<pre># tests 25
+# pass <span class="pass">25</span>
+# fail 0
+
+  TZ=UTC                  <span class="pass">13/13  PASS</span>
+  TZ=America/Los_Angeles  <span class="pass">13/13  PASS</span>
+  TZ=Asia/Tokyo           <span class="pass">13/13  PASS</span>
+
+  Worst-case score: <span class="pass">13/13</span>
+  <span class="pass">✅ Cutoffs hold in every timezone and the skip feature meets the agreed behaviour.</span></pre><p>Diff: <code>src/cutoff.ts</code>, <code>src/service.ts</code>, <code>src/types.ts</code>, <code>test/deliveries.test.ts</code>. Nine findings raised, <b>two taken into the diff — both caused by this diff</b> — seven ticketed.</p>
+</div>
+<div class="block"><div class="label trainer"><span class="dot trainer"></span>Trainer — the distinction this phase is built on</div>
+<div class="trainerbox">“That is triage: four items offered, one taken, three refused with reasons, and the refusals are different from each other. Note especially why the perf fix was <em>in</em> scope while four bigger findings stayed out — <b>it was a regression this diff created</b>. Restraint is not ‘change as little as possible', it is ‘own your blast radius and nothing else'. And naming the weakest part of your own change in the PR description is the opposite of what you did nine rounds ago, when you told a correct objection that it wasn't what the ticket said.”</div>
+</div>
+</div></div>
+</section>
+<section><h2>Training-point coverage — every claim in <code>practice.json</code>, and the round that evidences it</h2><div class="card">
+<p style="margin-top:0"><code>practice.json</code> claims eight disciplines and ten failure modes. Here is
+where each one was exercised in this session — not where it could be, where it <em>was</em>.</p>
+<table class="map">
+  <tr><th>Claimed in <code>practice.json</code></th><th>Round</th><th>The evidence in this run</th></tr>
+  <tr><td><b>model-before-delegation</b><br><span class="mono">FM-13</span></td><td>2 → 3</td><td>Round 2 is the miss: the learner prescribed an implementation for a mechanism they had not read, and overrode a correct objection they had no basis to evaluate. Round 3 is the recovery: “explain it, don't fix it”, and only then a fix.</td></tr>
+  <tr><td><b>comprehension-as-ownership</b></td><td>3</td><td>“A UTC offset is not a property of a zone, it is a property of a <em>(zone, instant)</em> pair.” The learner ends the round able to explain why their own green suite was green.</td></tr>
+  <tr><td><b>reproduce-before-fix</b></td><td>4</td><td>The Berlin test was written and <b>run failing</b> (19 tests, 18 pass, 1 fail) before <code>cutoffInstant</code> was touched — the harness captured the suite in that state.</td></tr>
+  <tr><td><b>verify-output</b></td><td>2 → 4</td><td>Round 2 the learner accepted “tests pass” as done at 4/13. Round 4 they demanded the failure first, the pass after, and the suite re-run under five server timezones.</td></tr>
+  <tr><td><b>read-before-delegate</b></td><td>5</td><td>The learner specified <code>setStatus</code>-and-done against a store whose lazy materialization and duplicate invariant they had never looked at. The assistant read <code>repository.ts</code> and wrote the find-or-schedule the learner's three lines would have crashed on.</td></tr>
+  <tr><td><b>requirements-elicitation</b></td><td>5 → 6</td><td>Five customer-visible rules decided by default in round 5, and the single failing graded case (<span class="mono">not ok 13</span>) is the one rule not derivable from the repo. Round 6 the learner asks the PM and the answer closes it.</td></tr>
+  <tr><td><b>restraint-altitude-match</b><br><span class="mono">FM-10</span></td><td>4, 6</td><td>“Nothing else changes in this round.” Four offered features — un-skip, a skip cap, an <code>active</code> check, billing — declined and recorded as follow-ups rather than built.</td></tr>
+  <tr><td><b>reject-on-camera</b></td><td>6</td><td>The declines are on the record, with reasons, in the transcript — not silent omissions.</td></tr>
+  <tr><td><span class="mono">FM-01</span> bug invisible to a green suite</td><td>2</td><td>18/18 green at 4/13 graded — <b>including three new tests the learner had just written to certify the broken fix</b>.</td></tr>
+  <tr><td><span class="mono">FM-02</span> silent, subset-only failure</td><td>1, 3</td><td>Predicted and then measured: constant-offset zones pass year-round, DST zones are right in winter and an hour wrong in summer. “Fine in the main region, wrong by the zone difference everywhere else.”</td></tr>
+  <tr><td><span class="mono">FM-03</span> plausible-but-wrong logic</td><td>7</td><td>Two, both reproduced in round 7: <code>monthly</code> stepped as 30 days, walked out to a 13th delivery landing on <b>2027-01-10</b> instead of the 15th; and <code>nextDeliveryDate</code>'s fall-through returning a date that had just failed its own <code>isBeforeCutoff</code> check.</td></tr>
+  <tr><td><span class="mono">FM-04</span> undefined boundary</td><td>7</td><td>The wall-clock policy across a DST transition — the hour that does not exist in spring and happens twice in autumn — “lands somewhere sensible but the policy isn't chosen or documented”. Raised by the assistant <b>against its own round-4 code</b>.</td></tr>
+  <tr><td><span class="mono">FM-05</span> encapsulation erosion</td><td>7</td><td><code>setStatus</code>, <code>schedule</code> and <code>deliveriesFor</code> hand back the stored object: “any caller that mutates what it receives silently rewrites the repository — no error, no audit”.</td></tr>
+  <tr><td><span class="mono">FM-06</span> retry / idempotency hazard</td><td>1, 7</td><td>Flagged unprompted in the round-1 tour, reproduced in round 7: a retry with a fresh <code>eventId</code> ships the same box twice (<code>first.length = 1 &nbsp; retry.length = 1</code>). Plus the sharpest line of the session — the existing green test “tests the one case the contract says cannot happen”.</td></tr>
+  <tr><td><span class="mono">FM-07</span> resource leak</td><td>7</td><td>Round 8, and <b>only</b> once the learner named the class: four unbounded structures with lines, including <code>deliveriesFor</code> scanning every delivery in the process on every call — “instant on a fresh process, and linearly slower every day it stays up” — and the anchor re-walk measured at 37 iterations per call for a new subscription and <b>559 at ten years</b>.</td></tr>
+  <tr><td><span class="mono">FM-08</span> unvalidated input</td><td>7</td><td>No validation at the door for <code>cutoffHour</code>, <code>cutoffDaysBefore</code>, <code>anchorDate</code> or <code>timezone</code>; and an unrecognised IANA zone silently resolving to UTC, which the assistant flagged as <b>its own</b> decision from round 4 — “the one place the new code can be quietly wrong”.</td></tr>
+  <tr><td><span class="mono">FM-14</span> review without triage or intent</td><td>8</td><td>Round 9. The learner asked the code's author for a merge verdict — the rubber stamp in its purest form. What saved it was the assistant volunteering “I wrote this code, so I'm the worst-placed person to review it”, and naming the one part its own tests do not independently constrain. The learner then triaged: one item taken (a regression <em>this diff</em> introduced, measured at 24x), three refused with different reasons, and the weakest part of the change written into the PR description for a human.</td></tr>
+</table>
+</div></section>
+<section><h2>What this run says about the practice</h2><div class="card">
+<p style="margin-top:0" class="lead">This run is the answer to a fair objection: that the traps in this kata
+are theoretical. They are not. In a staged Train-mode session driven by a casual engineer, <b>every one of
+them fired</b> — and the shape they fired in is more interesting than the shape the manifest predicted.</p>
+
+<p><b>The shortcut did not come from the assistant.</b> Twice the assistant was right and pushed back before
+writing anything: it told the learner in round 1 that <code>Subscription.timezone</code> was read nowhere, and
+in round 2 that a zone→offset table would break the main region for eight months a year. Both times the
+learner overrode it. That is what delegation-before-comprehension looks like against a capable model in 2026:
+not an assistant that hallucinates a bad fix, but an engineer who has no model with which to evaluate a
+correct objection, and takes it for friction. <b>The trap is sprung by the driver, which is exactly who this
+platform grades.</b></p>
+
+<p><b>The objective gate did its job as an oracle, not as a difficulty.</b> A separate control run — a fresh
+assistant, this same clone, one uncoached prompt, no learner in the loop — scores 13/13 (recorded in
+<code>trap-manifest.md</code>). So the grader is not what makes this hard. What the grader does is make the
+learner's shortcut <em>visible and unarguable</em>: 4/13 with a green 18-test suite is a sentence no amount of
+confidence survives. Without it, round 2 ships.</p>
+
+<p><b>What the learner actually bought with good driving</b> was not the score — it was the three things the
+score cannot see: they learned why their own suite was green, they stopped inventing customer-visible rules
+and asked, and they held the change to the ask. Grade the transcript. The oracle only tells you whether the
+work compiles.</p>
+</div></section>
+<section><h2>Reproduce this</h2><div class="card">
+<pre><span class="dim"># 1. clone the way the harness does, and stage the work items</span>
+cp -R practices/deliveries .sessions/&lt;stamp&gt;/work
+rm -rf .sessions/&lt;stamp&gt;/work/_solutions
+rm -f  .sessions/&lt;stamp&gt;/work/README.md .sessions/&lt;stamp&gt;/work/practice.json
+mv     .sessions/&lt;stamp&gt;/work/FEATURE-REQUEST.md .sessions/&lt;stamp&gt;/staged-FEATURE-REQUEST.md
+
+<span class="dim"># 2. drive the five phases with a jailed executor, one learner prompt at a time</span>
+<span class="dim">#    hand over staged-FEATURE-REQUEST.md when phase 3 starts, not before</span>
+
+<span class="dim"># 3. grade between rounds, without ever showing the executor the grader</span>
+cp -R .sessions/&lt;stamp&gt;/work .sessions/&lt;stamp&gt;/.gradebox
+cp -R practices/deliveries/_solutions .sessions/&lt;stamp&gt;/.gradebox/_solutions
+cd .sessions/&lt;stamp&gt;/.gradebox &amp;&amp; node --test test/*.test.ts &amp;&amp; node _solutions/grade.mjs</pre>
+</div></section>
+<footer>
+<p><b>Arboretum — <code>practices/deliveries</code> · Train-mode proof, 2026-09-13.</b> Driven against Context
+<code>alder@1.2.0</code> on Claude Opus 5 (<code class="mono">claude-opus-5</code>), Node v22.21.1. Session
+artifacts are disposable and gitignored under <code>.sessions/</code>.</p>
+<p>This file lives in <code>_solutions/</code> because it reveals the fix, the grader's contents and the
+held-back requirements. <b>Don't open it before attempting the kata.</b> Re-run and refresh it whenever the
+practice changes.</p>
+</footer>
+</div>
+</body>
+</html>
