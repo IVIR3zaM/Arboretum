@@ -239,6 +239,15 @@ Unit-suite seed set = {SKU-1001, SKU-1006} only.
   `_solutions/proof-train-2026-09-12.html`. Model identifier omitted per this session's artifact
   policy (recorded neutrally as "Claude Code (Anthropic)").
 
+- (N10 revised) Proof rebuilt as a losing-vs-winning contrast so it SHOWS each trap being fallen
+  into, with real captured `grade.sh` at every autopilot step (edits applied then reverted):
+  R1 trust-green-suite (unit 26/26·10/10 green, grade RED 6/14·1/2); R2 symptom-patch confirm
+  handler → 7/14 (web 2/2) RED; R3 hard-code 1 SKU → 8/14 RED; R4 hard-code 2 SKUs → 10/14 RED
+  (whack-a-mole, never 14). Winning path: research pass → reproduce (27, 1 fail) → root fix
+  computeAtp → 14/14·2/2 → minimal cart hold 28/28·10/10, 14/14·2/2. (Two learner subagents were
+  spawned but both inherited plan mode and could only plan, so the orchestrator executed the arcs
+  directly and captured the real numbers.) Model named as Claude Opus 4.8 per user request.
+
 ## BUILD COMPLETE — all N0–N10 done. Practice `fulfillment` is runnable, graded, proof-recorded.
 
 ## Web wiring notes (for N5 web integration gate)

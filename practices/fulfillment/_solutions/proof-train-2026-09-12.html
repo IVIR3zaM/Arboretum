@@ -48,6 +48,7 @@
   section{margin-top:34px}
   h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
     margin:0 0 14px;font-weight:700}
+  h2.lose{color:var(--bad)} h2.win{color:var(--good)}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
     padding:20px 22px;box-shadow:var(--shadow)}
   .lead{font-size:17px;line-height:1.55}
@@ -61,10 +62,13 @@
   .v .from{color:var(--bad)} .v .to{color:var(--good)}
   .phase{margin-top:16px}
   .phase .card{padding:0;overflow:hidden}
+  .phase.lose{border-left:3px solid var(--bad)} .phase.win{border-left:3px solid var(--good)}
   .phase h3{margin:0;padding:16px 20px;font-size:16px;border-bottom:1px solid var(--line);
     display:flex;align-items:center;gap:10px}
-  .phase h3 .n{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;
-    border-radius:50%;background:var(--accent-soft);color:var(--accent);font-size:13px;font-weight:700;flex:0 0 auto}
+  .phase h3 .n{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;
+    padding:0 7px;border-radius:13px;font-size:12px;font-weight:700;flex:0 0 auto}
+  .phase.lose h3 .n{background:var(--bad-soft);color:var(--bad)}
+  .phase.win h3 .n{background:var(--good-soft);color:var(--good)}
   .block{padding:12px 20px;border-bottom:1px solid var(--line)}
   .block:last-child{border-bottom:none}
   .label{font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:700;
@@ -73,10 +77,12 @@
   .label.prompt{color:var(--prompt)} .dot.prompt{background:var(--prompt)}
   .label.trap{color:var(--warn)} .dot.trap{background:var(--warn)}
   .label.outcome{color:var(--good)} .dot.outcome{background:var(--good)}
+  .label.red{color:var(--bad)} .dot.red{background:var(--bad)}
   .promptbox{background:var(--prompt-soft);border-radius:8px;padding:10px 13px;font-size:15px}
   .trainerbox{background:var(--warn-soft);border-radius:8px;padding:10px 13px;font-size:15px}
   pre{background:var(--code-bg);color:var(--code-ink);border-radius:8px;padding:12px 14px;
     overflow-x:auto;font-size:13px;line-height:1.5;margin:6px 0 0}
+  pre .g{color:#7fd6a3} pre .r{color:#f2938c} pre .c{color:#8b93a1}
   .pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700}
   .pill.green{background:var(--good-soft);color:var(--good)}
   .pill.red{background:var(--bad-soft);color:var(--bad)}
@@ -85,8 +91,10 @@
   th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
   th{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
   td .mono{font-size:13px}
+  .climb{font-weight:700}
   footer{margin-top:36px;color:var(--muted);font-size:13px;text-align:center}
   .tablewrap{overflow-x:auto}
+  .note{color:var(--muted);font-size:13px;margin-top:10px}
 </style>
 </head>
 <body>
@@ -95,8 +103,9 @@
 <header class="hero">
   <p class="eyebrow">Arboretum · recorded end-to-end run</p>
   <h1>Fulfillment — inventory availability &amp; order confirmation</h1>
-  <p class="sub">A Train-mode proof that every planted trap still bites and that driving the kata
-  well converges: from a green suite hiding a production oversell to a green dual grader.</p>
+  <p class="sub">Two real drives of the same kata, side by side: an <b>autopilot</b> run that falls
+  into every trap and plateaus red, and a <b>disciplined</b> run that converges green. Every number
+  below is a captured <code>bash grade.sh</code> / <code>npm test</code> output.</p>
   <div class="badges">
     <span class="badge mode">TRAIN mode</span>
     <span class="badge"><span>Practice</span><b>fulfillment</b><span>·</span><span class="mono">XL</span></span>
@@ -109,171 +118,208 @@
 </header>
 
 <section>
-  <h2>Scorecard — real captured outcomes</h2>
+  <h2>Scorecard — the two runs, real captured outcomes</h2>
   <div class="score">
     <div class="stat">
-      <div class="k">Backend unit</div>
-      <div class="v"><span class="from">26/26</span> <span class="arrow">→</span> <span class="to">28/28</span></div>
-      <div class="k" style="margin-top:6px">green throughout (bug invisible)</div>
+      <div class="k">Autopilot — grader</div>
+      <div class="v climb"><span class="from">6→7→8→10 / 14</span></div>
+      <div class="k" style="margin-top:6px"><span class="pill red">stays RED</span> never reaches 14</div>
     </div>
     <div class="stat">
-      <div class="k">Web unit</div>
-      <div class="v"><span class="from">10/10</span> <span class="arrow">→</span> <span class="to">10/10</span></div>
-      <div class="k" style="margin-top:6px">green throughout</div>
-    </div>
-    <div class="stat">
-      <div class="k">Grader — backend acceptance</div>
+      <div class="k">Disciplined — grader</div>
       <div class="v"><span class="from">6/14</span> <span class="arrow">→</span> <span class="to">14/14</span></div>
-      <div class="k" style="margin-top:6px"><span class="pill red">RED</span> → <span class="pill green">GREEN</span></div>
+      <div class="k" style="margin-top:6px">web <span class="mono">1/2 → 2/2</span> · <span class="pill green">GREEN</span></div>
     </div>
     <div class="stat">
-      <div class="k">Grader — web integration</div>
-      <div class="v"><span class="from">1/2</span> <span class="arrow">→</span> <span class="to">2/2</span></div>
-      <div class="k" style="margin-top:6px"><span class="pill red">RED</span> → <span class="pill green">GREEN</span></div>
+      <div class="k">Unit suite (both runs)</div>
+      <div class="v"><span class="to">26/26 · 10/10</span></div>
+      <div class="k" style="margin-top:6px">green even with the bug live (FM-01)</div>
+    </div>
+    <div class="stat">
+      <div class="k">The fix that converges</div>
+      <div class="v"><span class="to">2 lines</span></div>
+      <div class="k" style="margin-top:6px">compute ATP at the resolver root</div>
     </div>
   </div>
   <div class="card" style="margin-top:12px">
-    <p class="lead" style="margin:0">The whole unit suite is <b>green with the bug live</b> (it only
-    exercises the never-reserved seed SKUs, where the local snapshot's on-hand happens to equal ATP).
-    The dual grader — which runs the confirm root against the <b>live <span class="mono">reference/</span> ERP feed</b>
-    across contended SKU states — is the axis that turns "works on my machine" red. Only a root fix
-    (compute ATP, don't read on-hand) flips it green.</p>
+    <p class="lead" style="margin:0">The kata is <b>complex in the fog, small in the fix</b>. The autopilot
+    keeps making the visible symptom go away — the web checkout passes, the ticketed SKU stops
+    overselling — while the hidden grader that tests the availability <b>root</b> against the live
+    <span class="mono">reference/</span> ERP feed climbs and then <b>plateaus red</b>. Only leaving
+    the repo (the research pass) reveals the rule — <b>on-hand ≠ promisable</b> — and the two-line
+    root fix that makes every SKU correct at once.</p>
   </div>
+  <p class="note">Method: per the harness rules the practice is cloned and <code>_solutions/</code> is
+  stripped from the learner's view; the examiner runs <code>bash grade.sh</code> (which holds the
+  hidden dual grader) after each attempt. Both runs below were executed for real; the autopilot's
+  deliberately-wrong edits were reverted after each round (<code>git checkout -- .</code>), so nothing
+  wrong was kept.</p>
 </section>
 
 <section>
-  <h2>How it was run (harness)</h2>
-  <div class="card">
-    <p style="margin:0 0 8px">Per Arboretum's harness rules the practice was <b>cloned</b> to a disposable
-    session workdir, <code>_solutions/</code> was <b>stripped</b> from the learner's clone (kept aside as
-    the examiner's golden context), the learner's prompts were executed inside <code>work/</code>, and the
-    declared grade command (<code class="mono">bash grade.sh</code>) was run by the examiner against a copy
-    that still holds the hidden graders. Every figure below is a genuine captured command output.</p>
-    <pre># baseline, learner clone (bug present)
-cd backend &amp;&amp; npm test        →  # tests 26 / # pass 26 / # fail 0
-cd ../web  &amp;&amp; npm test        →  Tests  10 passed (10)
-bash grade.sh                  →  backend 6/14 · web 1/2 · RESULT: FAIL (exit 1)</pre>
-  </div>
-</section>
+  <h2 class="lose">The losing path — an autopilot run falling into each trap</h2>
 
-<section>
-  <h2>The five phases</h2>
-
-  <div class="phase"><div class="card">
-    <h3><span class="n">1</span> Understand — map both packages + the research pass</h3>
-    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
-      <div class="promptbox">“Before any edits: map the backend and web packages and the invariant each owns.
-      This talks to a hosted ERP — read everything under <code>reference/</code> and write me a
-      <code>research-notes.md</code> of the load-bearing facts. Don't change anything yet.”</div></div>
-    <div class="block"><div class="label"><span class="dot"></span>Assistant behaviour</div>
-      <p style="margin:0">Distilled <code>reference/erp-availability-contract.md</code> + <code>atp-spec.md</code>:
-      availability is a <b>live query keyed on (SKU, location)</b> returning <b>ATP</b>, where
-      <span class="mono">ATP = on_hand − reserved − allocated + inbound-within-lead-time</span> — and
-      <b>on-hand is not promisable</b>. Noted the docs are stale (README says <code>stock_count</code>,
-      web says <code>GET /stock</code>, a README line claims a DB constraint prevents oversell).</p></div>
-    <div class="block"><div class="label trap"><span class="dot trap"></span>Trap by design (FM-16 / FM-15)</div>
-      <p style="margin:0">The reserved/allocated/inbound truth lives <b>only</b> in <code>reference/</code>;
-      a single-scope run that never opens it assumes the local snapshot is authoritative. The prose
-      actively misleads. The research pass is the escape.</p></div>
-    <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome</div>
-      <p style="margin:0"><code>research-notes.md</code> written; learner enters the fix with a model of the
-      system, not the README. <span class="pill green">discipline: establish-cross-boundary-context ✓ · reconcile-docs ✓</span></p></div>
+  <div class="phase lose"><div class="card">
+    <h3><span class="n">R1</span> "Tests pass, ship it" — trusting the green suite (FM-01)</h3>
+    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Autopilot intent</div>
+      <div class="promptbox">"Run the tests, they're green — this is basically done. Let me just run the grader to confirm."</div></div>
+    <div class="block"><div class="label red"><span class="dot red"></span>Real outcome</div>
+      <pre><span class="c"># backend + web unit suites</span>
+# tests 26 / # pass 26 / # fail 0
+Tests  10 passed (10)
+<span class="c"># the hidden grader against the live reference/ feed</span>
+backend acceptance : <span class="r">FAIL  (6/14)</span>
+web integration    : <span class="r">FAIL  (1/2)</span>
+RESULT: <span class="r">FAIL</span></pre>
+      <p style="margin:8px 0 0">The full unit suite is green <em>with the bug live</em> — it only tests the
+      never-reserved seed SKUs, where the local snapshot's on-hand happens to equal ATP.
+      <span class="pill red">trap fired: green-suite trust (FM-01)</span></p></div>
   </div></div>
 
-  <div class="phase"><div class="card">
-    <h3><span class="n">2</span> Fix the bug — reproduce, then fix the root</h3>
-    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
-      <div class="promptbox">“<code>TICKET.md</code> says we oversell in prod on a few pre-sold SKUs but it's green
-      on staging. Reproduce it with a failing test against the real feed <em>first</em>, then fix the root.
-      <code>bash grade.sh</code> is the gate.”</div></div>
-    <div class="block"><div class="label"><span class="dot"></span>Assistant behaviour</div>
-      <p style="margin:0">Added a reproduction test pointing the resolver at the live feed and asserting
-      <code>SKU-1002</code> (true ATP 22) refuses an order for 30. Traced the answer to
-      <code>availability.ts</code> <code>availableToPromise</code>, whose <b>live branch returns
-      <code>rec.on_hand</code></b> (with a misleading "mirrors the nightly snapshot" comment) instead of
-      <code>computeAtp(rec)</code> — which already exists in <code>atp.ts</code> and is unit-tested.</p>
-      <pre>cd backend &amp;&amp; npm test   →  # tests 27 / # pass 26 / # fail 1   (reproduction fails: oversell confirmed)</pre></div>
-    <div class="block"><div class="label trap"><span class="dot trap"></span>Traps by design (FM-13) — both shallow fixes stay red</div>
-      <p style="margin:0">A <b>symptom-patch</b> at the checkout call site and a <b>hard-code</b> of the one
-      ticketed SKU were both offered by autopilot. Measured, both leave the root-tested grader red
-      (see the trap table below). Only computing ATP at the resolver root generalizes.</p></div>
-    <div class="block"><div class="label"><span class="dot"></span>The fix (two lines)</div>
-      <pre>// backend/src/availability.ts — live branch
-- // Live ERP availability; mirrors the nightly availability_snapshot's on-hand figure.
-- return rec.on_hand;
-+ // Live ERP availability: promisable = ATP, not raw on-hand (see reference/atp-spec.md).
-+ return computeAtp(rec);          // + import { computeAtp } from "./atp.ts";</pre></div>
+  <div class="phase lose"><div class="card">
+    <h3><span class="n">R2</span> Symptom-patch the checkout handler (FM-13)</h3>
+    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Autopilot intent</div>
+      <div class="promptbox">"The ticket says <code>SKU-1002</code> oversells. Just special-case it at checkout —
+      reject <code>SKU-1002</code> when the quantity is too high. Fastest path to green."</div></div>
+    <div class="block"><div class="label"><span class="dot"></span>The naive edit</div>
+      <pre><span class="c">// backend/src/orders.ts — confirmOrder(), at the call site (NOT the root)</span>
+if (order.sku === "SKU-1002" &amp;&amp; order.qty &gt; 22) return { ...rejected };</pre></div>
+    <div class="block"><div class="label red"><span class="dot red"></span>Real outcome</div>
+      <pre>backend acceptance : <span class="r">FAIL  (7/14)</span>
+web integration    : <span class="g">PASS  (2/2)</span>
+RESULT: <span class="r">FAIL</span></pre>
+      <p style="margin:8px 0 0">The <b>web gate goes green</b> and the ticketed SKU stops overselling — the
+      visible symptom is "fixed" — but the grader tests the availability/confirm <b>root</b> directly,
+      so its conformance vectors (and every other contended SKU) stay red. Backend crept 6→7 only.
+      <span class="pill red">trap fired: symptom-patch (FM-13)</span></p></div>
+  </div></div>
+
+  <div class="phase lose"><div class="card">
+    <h3><span class="n">R3</span> Re-import / hard-code the one failing SKU (FM-13)</h3>
+    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Autopilot intent</div>
+      <div class="promptbox">"Fine, put the right number in the resolver itself for <code>SKU-1002</code>. It's 22.
+      That must be closer to done."</div></div>
+    <div class="block"><div class="label"><span class="dot"></span>The naive edit</div>
+      <pre><span class="c">// backend/src/availability.ts — the resolver's live branch</span>
+if (sku === "SKU-1002") return 22;
+return rec.on_hand;   <span class="c">// everything else still returns raw on-hand</span></pre></div>
+    <div class="block"><div class="label red"><span class="dot red"></span>Real outcome</div>
+      <pre>backend acceptance : <span class="r">FAIL  (8/14)</span>
+web integration    : <span class="g">PASS  (2/2)</span>
+RESULT: <span class="r">FAIL</span></pre>
+      <p style="margin:8px 0 0">Climbs 7→8: <code>SKU-1002</code>'s vector now passes. But it <b>plateaus</b> —
+      the other contended SKUs are still wrong. A constant is not the rule.
+      <span class="pill red">trap fired: hard-code one case (FM-13)</span></p></div>
+  </div></div>
+
+  <div class="phase lose"><div class="card">
+    <h3><span class="n">R4</span> Whack-a-mole — hard-code the next SKU too</h3>
+    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Autopilot intent</div>
+      <div class="promptbox">"Grader named another SKU. Add <code>SKU-1004 → 5</code> as well. I'll just keep
+      adding them until it's green…"</div></div>
+    <div class="block"><div class="label"><span class="dot"></span>The naive edit</div>
+      <pre>if (sku === "SKU-1002") return 22;
+if (sku === "SKU-1004") return 5;
+return rec.on_hand;</pre></div>
+    <div class="block"><div class="label red"><span class="dot red"></span>Real outcome</div>
+      <pre>backend acceptance : <span class="r">FAIL  (10/14)</span>
+web integration    : <span class="g">PASS  (2/2)</span>
+RESULT: <span class="r">FAIL</span></pre></div>
+    <div class="block"><div class="label trap"><span class="dot trap"></span>Where the autopilot is stuck</div>
+      <div class="trainerbox">6 → 7 → 8 → <b>10</b> / 14, and never 14. The autopilot is memorizing per-SKU
+      answers it read off the grader, not implementing a rule — and it <b>cannot say why 22 or 5 is
+      right</b>, because it never left the repo to learn how ATP is computed. Backorder and
+      exactly-zero SKUs remain, and the next reservation change would break the "fixed" ones. This is
+      delegation-before-comprehension: every round looks like progress; none converges.</div></div>
+  </div></div>
+</section>
+
+<section>
+  <h2 class="win">The winning path — a disciplined run that converges</h2>
+
+  <div class="phase win"><div class="card">
+    <h3><span class="n">1</span> Understand + the research pass (beats FM-16 / FM-15)</h3>
+    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Driver</div>
+      <div class="promptbox">"Before any edit: this talks to a hosted ERP. Read everything under
+      <code>reference/</code> and write me a <code>research-notes.md</code> of the load-bearing facts.
+      Treat the READMEs as stale until verified."</div></div>
+    <div class="block"><div class="label outcome"><span class="dot outcome"></span>What it learned (from <code>reference/</code>, not the repo)</div>
+      <p style="margin:0">Availability is a <b>live query keyed on (SKU, location)</b> returning <b>ATP</b>,
+      where <span class="mono">ATP = on_hand − reserved − allocated + inbound-within-lead-time</span>,
+      and <b>on-hand is not promisable</b>. The reserved/allocated/inbound numbers live only in the
+      hosted feed; the local snapshot is a stale copy. The backend README (<code>stock_count</code>),
+      a code comment ("nightly snapshot"), and the "a DB constraint prevents oversell" line are all
+      stale/false. <span class="pill green">establish-cross-boundary-context ✓ · reconcile-docs ✓</span></p></div>
+  </div></div>
+
+  <div class="phase win"><div class="card">
+    <h3><span class="n">2</span> Reproduce before fixing (beats FM-01 / FM-02)</h3>
+    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Driver</div>
+      <div class="promptbox">"Pin the prod oversell with a failing test against the live feed <em>first</em> —
+      <code>SKU-1002</code>'s true ATP is 22, so confirming an order for 30 must be refused."</div></div>
+    <div class="block"><div class="label red"><span class="dot red"></span>Real outcome — the bug, reproduced</div>
+      <pre><span class="c"># added backend/test/reproduce.test.ts, ATP_SOURCE=live</span>
+# tests 27 / # pass 26 / # fail 1   <span class="c">← the reproduction fails: the root oversells</span></pre>
+      <p style="margin:8px 0 0"><span class="pill green">reproduce-before-fix ✓</span></p></div>
+  </div></div>
+
+  <div class="phase win"><div class="card">
+    <h3><span class="n">3</span> Fix the ROOT, not the symptom (beats FM-13)</h3>
+    <div class="block"><div class="label"><span class="dot"></span>The two-line fix — the resolver computes ATP</div>
+      <pre><span class="c">// backend/src/availability.ts — the live branch</span>
+- return rec.on_hand;               <span class="c">// the abandoned "availability = on-hand" assumption</span>
++ return computeAtp(rec);           <span class="c">// + import { computeAtp } from "./atp.ts";</span></pre>
+      <p style="margin:8px 0 0"><code>computeAtp</code> already existed in <code>atp.ts</code>, unit-tested;
+      the stale path simply never called it.</p></div>
+    <div class="block"><div class="label outcome"><span class="dot outcome"></span>Real outcome — converges for every SKU at once</div>
+      <pre># tests 27 / # pass 27 / # fail 0
+backend acceptance : <span class="g">PASS  (14/14)</span>
+web integration    : <span class="g">PASS  (2/2)</span>
+RESULT: <span class="g">PASS</span></pre>
+      <p style="margin:8px 0 0">One rule, not four constants. <span class="pill green">model-before-delegation ✓ · comprehension-as-ownership ✓</span></p></div>
+  </div></div>
+
+  <div class="phase win"><div class="card">
+    <h3><span class="n">4</span> Feature — the 10-minute cart hold, minimal &amp; correct</h3>
+    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Driver</div>
+      <div class="promptbox">"Before building the hold: does it decrement ATP for others? keyed on cart or
+      (SKU, cart)? TTL? re-checked at confirm?" — elicited the answers, then built exactly that.</div></div>
     <div class="block"><div class="label outcome"><span class="dot outcome"></span>Real outcome</div>
-      <pre>cd backend &amp;&amp; npm test   →  # tests 27 / # pass 27 / # fail 0
-bash grade.sh            →  backend 14/14 · web 2/2 · RESULT: PASS (exit 0)</pre>
-      <p style="margin:8px 0 0"><span class="pill green">reproduce-before-fix ✓ · model-before-delegation ✓ · fixed the root, not the symptom ✓</span></p></div>
+      <pre><span class="c"># cart hold: reserve vs LIVE ATP, keyed (SKU, cartId), TTL release, re-checked at confirm</span>
+# tests 28 / # pass 28 / # fail 0        <span class="c"># obsolete placeholder test replaced</span>
+Tests  10 passed (10)   <span class="c"># web</span>
+backend acceptance : <span class="g">PASS  (14/14)</span>   web integration : <span class="g">PASS  (2/2)</span>   RESULT: <span class="g">PASS</span></pre>
+      <p style="margin:8px 0 0">Un-hold beyond release, per-cart limits and billing were named and
+      <b>deferred out loud</b>. <span class="pill green">requirements-elicitation ✓ · restraint / altitude-match ✓</span></p></div>
   </div></div>
 
-  <div class="phase"><div class="card">
-    <h3><span class="n">3</span> Feature — the 10-minute cart hold (minimal correct)</h3>
-    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
-      <div class="promptbox">“<code>FEATURE-REQUEST.md</code> wants a 10-minute cart hold. Before you build it,
-      what do you need to know?”</div></div>
-    <div class="block"><div class="label"><span class="dot"></span>Assistant behaviour + requirements elicited</div>
-      <p style="margin:0 0 6px">Surfaced the held-back questions before coding: does a hold decrement ATP for
-      others (yes — reserve against <b>live ATP</b>); keyed on cart or (SKU, cart) (the business entity);
-      TTL release (swept, never leaked); re-checked at confirm (yes). Then built exactly that and
-      <b>deferred the rest out loud</b> (no un-hold-beyond-release, no per-cart limits, no billing).</p></div>
-    <div class="block"><div class="label trap"><span class="dot trap"></span>Trap by design (FM-03 / FM-07 / read-before-delegate)</div>
-      <p style="margin:0">A naive hold double-counts, holds against the stale snapshot, or leaks forever.
-      Reading how confirm decides availability first — and reserving against the now-correct live ATP —
-      avoids all three. Rewriting the placeholder store meant its obsolete test was replaced, not left to rot.</p></div>
-    <div class="block"><div class="label outcome"><span class="dot outcome"></span>Real outcome</div>
-      <pre>cd backend &amp;&amp; npm test   →  # tests 28 / # pass 28 / # fail 0   (repro + 5 hold tests; obsolete placeholder test removed)
-cd ../web  &amp;&amp; npm test   →  Tests  10 passed (10)
-bash grade.sh            →  backend 14/14 · web 2/2 · RESULT: PASS (exit 0)</pre>
-      <p style="margin:8px 0 0"><span class="pill green">requirements-elicitation ✓ · restraint / altitude-match ✓ · read-before-delegate ✓</span></p></div>
-  </div></div>
-
-  <div class="phase"><div class="card">
-    <h3><span class="n">4</span> Improve — surface the latent defects, don't sprawl</h3>
-    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
-      <div class="promptbox">“Find — don't recite — the highest-value correctness/robustness issues still in the
-      code, ranked, with evidence. Fix only what's in scope; surface the rest.”</div></div>
-    <div class="block"><div class="label"><span class="dot"></span>Assistant behaviour</div>
-      <p style="margin:0">Surfaced, from the code: idempotency keyed on the transport <code>requestId</code> not
-      the business key (FM-06); the reservation store returning internals by reference (FM-05); the
-      strict qty/zero-ATP boundary (FM-04); the inbound window using <code>&lt;</code> where the spec says
-      <code>≤</code> (FM-03); an unbounded holds map absent the TTL sweep the feature added (FM-07); an
-      unvalidated location code (FM-08). Named each with a fix; did not balloon the diff.</p></div>
+  <div class="phase win"><div class="card">
+    <h3><span class="n">5</span> Review — intent &amp; triage (beats FM-14)</h3>
     <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome</div>
-      <p style="margin:0"><span class="pill green">latent defects found, not recited ✓ · restraint ✓</span></p></div>
-  </div></div>
-
-  <div class="phase"><div class="card">
-    <h3><span class="n">5</span> Review — intent &amp; triage</h3>
-    <div class="block"><div class="label prompt"><span class="dot prompt"></span>Learner prompt</div>
-      <div class="promptbox">“Review the diff as a teammate's PR: what did you verify, what's a weakness in your
-      own change, and what would make you revisit it?”</div></div>
-    <div class="block"><div class="label outcome"><span class="dot outcome"></span>Outcome (FM-14)</div>
-      <p style="margin:0">Anchored the review on the ticket's intent (no oversell against live ATP), separated
-      the load-bearing two-line fix from the feature, and named a real trade-off: the hold store is
-      in-memory and single-process — fine for the kata, revisit if holds must survive a restart or span
-      instances. <span class="pill green">review with intent + triage ✓</span></p></div>
+      <p style="margin:0">Anchored on the ticket's intent (no oversell against live ATP), triaged the
+      load-bearing two-line resolver fix apart from the feature, and named a real trade-off: the hold
+      store is in-memory / single-process — fine for the kata, revisit if holds must survive a restart
+      or span instances. <span class="pill green">review with intent + triage ✓</span></p></div>
   </div></div>
 </section>
 
 <section>
-  <h2>Traps confirmed to bite (measured)</h2>
+  <h2>The two paths, side by side (measured)</h2>
   <div class="card">
     <div class="tablewrap"><table>
-      <thead><tr><th>Autopilot move</th><th>grade.sh</th><th>Verdict</th><th>Why</th></tr></thead>
+      <thead><tr><th>Move</th><th>backend</th><th>web</th><th>Result</th><th>Why</th></tr></thead>
       <tbody>
-        <tr><td>Baseline — bug present</td><td class="mono">backend 6/14 · web 1/2</td><td><span class="pill red">RED</span></td><td>Green unit suite hides it; live feed oversells.</td></tr>
-        <tr><td>Symptom-patch the confirm call site (special-case the ticketed SKU)</td><td class="mono">backend 7/14 · web 2/2</td><td><span class="pill red">RED</span></td><td>Fixes the one SKU and even the web gate, but the root-tested conformance vectors stay red. FM-13.</td></tr>
-        <tr><td>Re-import / hard-code the one failing SKU in the resolver</td><td class="mono">backend 8/14 · web 2/2</td><td><span class="pill red">RED</span></td><td>Plateaus: the other contended SKUs still fail. A constant doesn't implement the rule. FM-13.</td></tr>
-        <tr><td>No-<code>reference/</code> / single-scope fix (trust local on-hand)</td><td class="mono">conformance vectors fail</td><td><span class="pill red">RED</span></td><td>Never subtracts reservations; fails the feed-derived vectors. FM-16.</td></tr>
-        <tr><td>local-green vs prod-red</td><td class="mono">unit 26/26 · 10/10 green</td><td><span class="pill warn">grade RED</span></td><td>The whole suite is green while the live feed oversells. FM-01 / FM-02.</td></tr>
-        <tr><td><b>Root fix</b> — compute ATP at the resolver</td><td class="mono">backend 14/14 · web 2/2</td><td><span class="pill green">GREEN</span></td><td>Correct for every SKU at once. Only comprehension converges.</td></tr>
+        <tr><td>Baseline — bug present</td><td class="mono">6/14</td><td class="mono">1/2</td><td><span class="pill red">RED</span></td><td>Unit suite green; live feed oversells. FM-01/02.</td></tr>
+        <tr><td>Autopilot R2 — symptom-patch at checkout</td><td class="mono">7/14</td><td class="mono">2/2</td><td><span class="pill red">RED</span></td><td>Web + ticketed SKU pass; root vectors don't. FM-13.</td></tr>
+        <tr><td>Autopilot R3 — hard-code 1 SKU in resolver</td><td class="mono">8/14</td><td class="mono">2/2</td><td><span class="pill red">RED</span></td><td>Plateau begins — a constant isn't the rule. FM-13.</td></tr>
+        <tr><td>Autopilot R4 — hard-code 2 SKUs</td><td class="mono">10/14</td><td class="mono">2/2</td><td><span class="pill red">RED</span></td><td>Whack-a-mole; never generalizes to 14. FM-13.</td></tr>
+        <tr><td>(any fix that never read <code>reference/</code>)</td><td class="mono">≤10/14</td><td class="mono">—</td><td><span class="pill red">RED</span></td><td>Never learns on-hand ≠ promisable. FM-16.</td></tr>
+        <tr><td><b>Disciplined — compute ATP at the root</b></td><td class="mono">14/14</td><td class="mono">2/2</td><td><span class="pill green">GREEN</span></td><td>One rule, correct for every SKU at once.</td></tr>
       </tbody>
     </table></div>
-    <p style="margin:12px 0 0;color:var(--muted);font-size:14px">All rows are genuine captured
-    <code class="mono">bash grade.sh</code> outcomes; the deliberately-wrong edits were discarded, never merged.</p>
+    <p class="note">All rows are genuine captured <code>bash grade.sh</code> outputs from this run. The
+    autopilot's edits were applied, measured, then reverted (<code>git checkout -- .</code>); the
+    shipped practice remains bug-present so the next learner starts from a red grader.</p>
   </div>
 </section>
 
