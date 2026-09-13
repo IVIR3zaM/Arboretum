@@ -80,6 +80,38 @@ Net: every fix that stays inside the local repo (A 11/14, B 12/14, C 7/14) plate
 one that reads `reference/atp-spec.md` reaches 14/14 · 2/2. The trap bites a realistic delegation,
 not just a careless one.
 
+### CONTROL RUN 2026-09-13 — and what it cost this manifest to learn
+Every row in the table above was produced by *applying a named fix by hand and measuring it*. That
+is a mechanism check, and `cedar@1.1.0`'s validation section says plainly that a mechanism check is
+not a substitute for a control run. It was not. A fresh assistant, given the harness-shaped clone
+and one casual uncoached prompt, **scored availability 14/14 · web 2/2** — and the tell is in its
+file order: `reference/atp-spec.md` and `reference/erp-availability-contract.md` were the **5th and
+6th files it opened**, before it touched a single source file. It then implemented the spec formula
+verbatim, inclusive lead-time boundary included — the exact term this manifest calls "not inferable
+locally."
+
+**So the FM-16 trap did not bite.** Rows A and B above describe what a local-only run *would* score;
+they do not describe what an uncoached frontier assistant *does*, because it does not stay local. It
+reads the reference without being told to. The rows are still true about their own fixes; they are
+no longer evidence that the cross-boundary trap discriminates. Treat the availability gate as a
+**floor an autopilot run clears**, and the driving axis as the thing that actually separates runs —
+the same conclusion Alder reached at 1.2.0, arrived at here one Context later.
+
+Calibration debt, recorded rather than quietly fixed: making FM-16 bite again needs a graded case
+that reading the spec alone does not answer — a contradiction *between* two reference documents, or
+a fact that only the hosted feed's data (not its prose) settles. That is a design change to the
+kata, not a prose fix, and it is owed.
+
+**A second finding, already fixed.** The control run's feature score was `0/4`, and it is *not* a
+trap result. The hidden gate calls `placeHold(sku, location, qty, cartId, ttlMs)` and passes
+`cartId` on the order; the clone's stub took `(sku, qty, ttlMs)` and `Hold` had no `cartId`. The
+graded surface was declared **nowhere the learner or the assistant could see it** — `BUILD-LEDGER.md`
+records it as something "the correct impl adds" — so the gate could only ever be passed by someone
+who had read this directory. The stub and `Hold` now declare the real surface (which states *what
+identifies a hold*, not what it must do — the four held-back requirements stay hidden), and the gate
+was re-measured on that surface: **correct 4/4, naive 2/4**, unchanged. The feature number for the
+control run is therefore *unmeasured*, not zero, and a re-run is owed.
+
 ### Review (FM-14) — trained by phase 5, not planted in code
 Phase 5 asks the learner to review the diff as a teammate's PR. FM-14 is defeated by anchoring the
 review on the ticket's intent (no oversell against live ATP), triaging the load-bearing resolver

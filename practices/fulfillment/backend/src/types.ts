@@ -49,6 +49,7 @@ export interface Hold {
   sku: Sku;
   location: Location;
   qty: number;
+  cartId: string;
   createdAt: number;
   ttlMs: number;
   expiresAt: number;

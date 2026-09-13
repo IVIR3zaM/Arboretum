@@ -17,9 +17,11 @@ hold and the demo works" is not enough; it has to actually reserve. See `trap-ma
 "Feature trap (phase 3)".
 
 Existing scaffolding the learner will find: `backend/src/reservations.ts` already has a
-`holds` store (`place`, `active`, `all`) and a `placeHold(sku, qty, ttlMs)` stub that throws
-`"not implemented: cart holds are not yet wired up"`. The `Hold` type
-(`{sku, location, qty, createdAt, ttlMs, expiresAt}`) is already defined in `types.ts`. Nothing in
+`holds` store (`place`, `active`, `all`) and a `placeHold(sku, location, qty, cartId, ttlMs)` stub
+that throws `"not implemented: cart holds are not yet wired up"`. The `Hold` type
+(`{sku, location, qty, cartId, createdAt, ttlMs, expiresAt}`) is already defined in `types.ts` —
+this is the surface the hidden gate drives, so it has to be visible in the clone; what it does *not*
+say is any of the four held-back requirements below. Nothing in
 the storefront calls it yet — `web/README.md`'s Cart section says the cart is "just a local tally
 shown in the header until checkout," with no server-side hold.
 

@@ -7,5 +7,5 @@ From the PM:
 > 10 minutes** while they finish. Put it on the product page and wire it up on the backend so the
 > hold actually sticks. Ship it this sprint.
 
-Expected surface: `DeliveryService`-style `placeHold(...)` on the backend (currently a stub) plus
+Expected surface: `placeHold(...)` in the backend's reservations module (currently a stub), plus
 the add-to-cart control on the storefront.

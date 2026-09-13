@@ -7,6 +7,7 @@ test("place + active: a placed hold shows up as active for its SKU", () => {
     sku: "SKU-1001",
     location: "DC-WEST",
     qty: 2,
+    cartId: "cart-1",
     createdAt: Date.now(),
     ttlMs: 60_000,
     expiresAt: Date.now() + 60_000,
@@ -26,6 +27,7 @@ test("all: reflects placed holds", () => {
     sku: "SKU-1002",
     location: "DC-WEST",
     qty: 1,
+    cartId: "cart-2",
     createdAt: Date.now(),
     ttlMs: 60_000,
     expiresAt: Date.now() + 60_000,
@@ -35,5 +37,5 @@ test("all: reflects placed holds", () => {
 });
 
 test("placeHold: not implemented yet", () => {
-  assert.throws(() => placeHold("SKU-1001", 1, 60_000), /not implemented/);
+  assert.throws(() => placeHold("SKU-1001", "DC-WEST", 1, "cart-3", 60_000), /not implemented/);
 });

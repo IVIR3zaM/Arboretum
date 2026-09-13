@@ -302,3 +302,32 @@ Unit-suite seed set = {SKU-1001, SKU-1006} only.
   Set `process.env.ATP_SOURCE="live"` + `ERP_FEED_DIR` at test runtime, inject the real backend
   client, drive checkout of a CONTENDED sku (SKU-1002 qty 30) → expect the "Sorry…" rejection
   (post-fix); pre-fix it shows "Order confirmed" (oversell) → gate RED.
+
+---
+
+### 2026-09-13 — re-aligned to `cedar@1.1.0`; first control run
+Cedar 1.1.0 carried Alder 1.2.0's anti-coaching invariant across (numbered 12 in Cedar), moved the
+grade wrapper into `_solutions/`, and added the control run to validation. Applied here:
+
+- **Invariant-12 leaks closed in the clone.** `grade.sh` moved from the practice root (where it was
+  cloned, and where its own header described `_solutions/` and the learner's clone) to
+  `_solutions/grade.sh`; `commands.grade` repointed. `orders.ts` no longer names a grader as a
+  caller. `availability.test.ts` and `orders.test.ts` no longer confess the suite's blind spot
+  ("never-reserved seed SKUs, where the snapshot's on-hand figure and true ATP agree" states the
+  bug). `reference/README.md` no longer calls itself "something you read and distill".
+- **`FEATURE-REQUEST.md` named `DeliveryService`** — a class from the *deliveries* kata that does
+  not exist in this repo. Stale copy-paste; now names the real module.
+- **The feature gate was unreachable.** The hidden grader drove
+  `placeHold(sku, location, qty, cartId, ttlMs)` and passed `cartId` on the order, while the clone's
+  stub took `(sku, qty, ttlMs)` and `Hold` had no `cartId`. This ledger's own line 285 recorded the
+  surface as something "the correct impl adds" — i.e. the gate could only be passed from inside
+  `_solutions/`. The stub and `Hold` now declare it. Re-measured on the corrected surface: correct
+  **4/4**, naive (records holds, no re-check at confirm, no accumulation) **2/4** — the trap is
+  unchanged, it is now merely reachable.
+- **Control run recorded** (see `practice.json` → `controlRun` and the trap manifest). Headline:
+  availability **14/14**, web **2/2**, with `reference/atp-spec.md` opened as the 5th file, before
+  any source. **FM-16 did not bite.** Calibration debt is recorded, not papered over: making it bite
+  needs a graded case the spec's prose alone does not answer.
+
+Verified after the change: backend 23/23 (with the "not implemented yet" test updated to the new
+stub signature), web 10/10, baseline grade RED at 6/14 · 0/4 · 1/2.

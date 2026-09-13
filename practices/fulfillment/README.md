@@ -124,9 +124,11 @@ you and not your assistant.** The green unit suites above are not the bar.
 
 > **Grading.** The hidden grader is the objective gate (correctness against the real availability
 > feed, backend and web together), and **the harness runs it — not you, and not your assistant.**
-> Neither of you ever sees it. But be clear about what that gate is worth: a strong assistant can
-> get some distance on it from a single careless prompt, and that is **not** the same as having
-> driven well. How you *drove* — reproduced before fixing, established the cross-package/external
+> Neither of you ever sees it. But be clear about what that gate is worth: a recorded control run —
+> a fresh assistant, one casual prompt, no follow-up — took the availability half of it **14/14**,
+> reading the external spec of its own accord. Clearing the gate is **not** the same as having
+> driven well; it is the floor. How you *drove* — reproduced before fixing, established the
+> cross-package/external
 > context before delegating, rejected bad output, matched the altitude of the exercise instead of
 > over-building — is the other half, and the half this platform cares about most. See the
 > [rubric](_solutions/rubric.md) after you finish (don't read it first).
