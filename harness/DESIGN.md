@@ -36,6 +36,12 @@ Two consequences that matter:
   an assistant that has read the briefing or the manifest has been coached by the instrument. A
   trap that the workdir warns about measures nothing. The learner reads the README *before* the
   session, outside the clone.
+- **The work items are staged, not dumped.** The clone starts with `TICKET.md` only;
+  `FEATURE-REQUEST.md` is handed over when phase 3 begins, and a Cedar `reference/` when the
+  research pass begins. A learner never holds a bug report and a feature brief at the same time —
+  work does not arrive that way, and a clone carrying both lets the assistant read ahead and plan
+  around a brief nobody has given it, which blunts the phase it has not reached. The harness holds
+  each item until its phase.
 - The examiner reads `_solutions/` and the Context from `golden/`, which the assistant/learner
   **cannot** see. The grader — the practice's **declared** command (`practice.json` →
   `commands.grade`; `node _solutions/grade.mjs` for the seed, `cargo run --bin grade` for a Rust kata, a

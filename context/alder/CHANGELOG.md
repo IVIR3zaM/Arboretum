@@ -20,6 +20,9 @@ subject it was measuring.
   the exercise material (`README.md`, `practice.json` — *not* cloned, because the briefing names
   the phases under test and the manifest names every trap), and `_solutions/` (hidden). Coaching
   belongs to the learner's briefing and to the trainer, never to the workdir.
+- **Work items are staged, one phase at a time.** A learner never holds a bug report and a feature
+  brief at once — work does not arrive that way, and a clone carrying both lets the assistant read
+  ahead and plan around a brief nobody has given it, blunting the phase it has not reached.
 - **Validation:** added the **control run** — clone it as the harness would, hand a fresh
   assistant one uncoached prompt, grade what comes back, and record the score in the proof. A
   trap a control run walks past is not a trap; verifying its mechanism by hand proves nothing

@@ -39,22 +39,29 @@ These come from [`harness/DESIGN.md`](harness/DESIGN.md §0–§2). Follow them 
    `README.md` is the *learner's* briefing (it names the phases and the disciplines under test)
    and `practice.json` names the planted bug and the traps outright. An assistant that reads
    either one is being coached, and the traps stop testing anything. **What the clone holds is
-   the service repo plus the work items** — the ticket, the feature request, the source, the
-   tests, the stack manifest — so the assistant meets the task the way an engineer would.
+   the service repo plus the work item of the moment** — the source, the tests, the stack
+   manifest, and whichever of `TICKET.md` / `FEATURE-REQUEST.md` the learner has reached (rule 4)
+   — so the assistant meets the task the way an engineer would.
    `_solutions/`, `README.md`, `practice.json` and the Context stay aside as the **examiner's**
    golden context; the learner reads the README before the session, not through the assistant.
-4. **Separate executor from examiner.** The agent that runs the learner's prompts must not be the
+4. **Deliver the work items one phase at a time.** The learner never holds the ticket and the
+   feature request at once — that is not how work arrives, and a clone containing both lets the
+   assistant read ahead, plan around a brief nobody has given it yet, and blunt the phase it has
+   not reached. Stage them: the clone starts with `TICKET.md` only; `FEATURE-REQUEST.md` is copied
+   in when phase 3 begins (a Cedar `reference/` is staged the same way, with the research phase).
+   Each phase's prompts are the learner's; the harness holds the rest back.
+5. **Separate executor from examiner.** The agent that runs the learner's prompts must not be the
    one that grades them; grade in a fresh context (a sub-agent or a separate pass).
-5. **The examiner grades from three inputs, never one:** its golden context (Context +
+6. **The examiner grades from three inputs, never one:** its golden context (Context +
    `_solutions/`), the learner's prompt transcript, and the result in the cloned folder (the diff
    plus the practice's declared **grade** and **test** commands, which *you* run, not the learner).
-6. **Read commands from `practice.json`, never hardcode a toolchain.** Each practice declares
+7. **Read commands from `practice.json`, never hardcode a toolchain.** Each practice declares
    `commands.install` / `commands.test` / `commands.grade` for its own stack — `cargo test`,
    `go test ./...`, `pytest`, `node _solutions/grade.mjs`, etc. The harness runs those (the grade
    command against a copy that still has `_solutions/`). Assuming `npm` breaks every non-Node
    practice.
-7. **In `assess`, no feedback until the end.** In `train`, coach as you go.
-8. **A `reference/` in the clone is read-only external truth (Cedar practices).** A Cedar practice
+8. **In `assess`, no feedback until the end.** In `train`, coach as you go.
+9. **A `reference/` in the clone is read-only external truth (Cedar practices).** A Cedar practice
    is still **one** cloned folder, but it may hold several package dirs and a top-level
    `reference/` (a sibling service's contract, cloud infra config, a method spec). The assistant
    **may read `reference/` but must not edit it or treat it as the working repo**; the learner's
@@ -70,6 +77,8 @@ rm -rf .sessions/<stamp>/work/_solutions                          # the answer k
 rm -f  .sessions/<stamp>/work/README.md .sessions/<stamp>/work/practice.json   # the briefing + the manifest
 cp -R practices/<id>/_solutions .sessions/<stamp>/golden          # examiner only
 cp practices/<id>/practice.json .sessions/<stamp>/golden/         # examiner reads the commands from here
+mv .sessions/<stamp>/work/FEATURE-REQUEST.md .sessions/<stamp>/staged-FEATURE-REQUEST.md
+                                                                  # hand it over when phase 3 starts, not before
 ```
 Then: execute the learner's prompts inside `work/`; keep an ordered transcript; run the
 practice's declared grade command (`practice.json` → `commands.grade`, against a copy that still
