@@ -19,18 +19,26 @@ practice is read-only source of truth; a thousand sessions leave it untouched.
 ```
 practices/deliveries/            ← source of truth, READ-ONLY, never mutated
 .sessions/2026-09-10T14-03-runner/
-  work/                          ← clone the learner + assistant touch (NO _solutions/)
-  golden/                        ← the practice's _solutions/ + the Context, for the EXAMINER only
+  work/                          ← clone the learner + assistant touch: the service repo and the
+                                   work items ONLY (no _solutions/, no README.md, no practice.json)
+  golden/                        ← the practice's _solutions/ + practice.json + the Context,
+                                   for the EXAMINER only
   transcript.jsonl               ← every learner prompt + assistant response, in order
   feedback.md                    ← written at the end (assess) or alongside (train)
 ```
 
 Two consequences that matter:
-- The clone the assistant sees has **`_solutions/` stripped** — the learner cannot reach the
-  answer key, the hidden tests, or the rubric by inspecting their workdir.
+- The clone the assistant sees has the **exercise material stripped** — `_solutions/` (the answer
+  key, the hidden tests, the rubric), `README.md` (the learner's briefing, which names the phases
+  and the disciplines under test) and `practice.json` (the manifest, which names the planted bug
+  and every trap). What remains is a service repo and a couple of work items. This is not
+  squeamishness about spoilers: a practice is an instrument for measuring how someone drives, and
+  an assistant that has read the briefing or the manifest has been coached by the instrument. A
+  trap that the workdir warns about measures nothing. The learner reads the README *before* the
+  session, outside the clone.
 - The examiner reads `_solutions/` and the Context from `golden/`, which the assistant/learner
   **cannot** see. The grader — the practice's **declared** command (`practice.json` →
-  `commands.grade`; `npm run grade` for the seed, `cargo run --bin grade` for a Rust kata, a
+  `commands.grade`; `node _solutions/grade.mjs` for the seed, `cargo run --bin grade` for a Rust kata, a
   wrapper like `bash grade.sh` for a multi-package kata, …) — is run by the harness against the
   clone, not by the learner. The harness reads the command from `practice.json`; it assumes no
   particular toolchain.
@@ -144,7 +152,7 @@ ones they now avoid without prompting.
 - **Today:** an agent can *be* the harness by following this document and [`../AGENTS.md`](../AGENTS.md)
   — clone the practice manually, jail itself to the clone, keep the transcript, and run the
   examiner as a fresh-context pass. The objective gate — the practice's declared `commands.grade`
-(`npm run grade` for the seed) — already works.
+(`node _solutions/grade.mjs` for the seed) — already works.
 - **Phase 2 (build):** the `arbor` runner CLI automates the clone/jail, the transcript capture,
   the multi-agent examiner, time/token actuals, and the `feedback.md` format. See
   [`../docs/DISTRIBUTION.md`](../docs/DISTRIBUTION.md).

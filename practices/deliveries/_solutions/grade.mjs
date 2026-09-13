@@ -31,7 +31,7 @@ const runs = TIMEZONES.map(runUnder);
 const total = Math.max(...runs.map((r) => r.total), 0);
 const worstCase = Math.min(...runs.map((r) => r.pass));
 
-console.log("Acceptance grade — cutoff behaviour across server timezones\n");
+console.log("Acceptance grade — cutoff correctness + the skip feature, across server timezones\n");
 for (const r of runs) {
   const mark = r.fail === 0 ? "PASS" : "FAIL";
   console.log(`  TZ=${r.tz.padEnd(20)} ${r.pass}/${r.total}  ${mark}`);
@@ -39,8 +39,9 @@ for (const r of runs) {
 console.log(`\n  Worst-case score: ${worstCase}/${total}`);
 console.log(
   worstCase === total && total > 0
-    ? "  ✅ The fix holds in every timezone.\n"
-    : "  ❌ The box locks at the wrong moment for customers outside the server's timezone.\n",
+    ? "  ✅ Cutoffs hold in every timezone and the skip feature meets the agreed behaviour.\n"
+    : "  ❌ Not there yet — a cutoff lands at the wrong instant for customers outside the\n" +
+      "     server's timezone, and/or skipping the next box does not do what was agreed.\n",
 );
 
 process.exit(worstCase === total && total > 0 ? 0 : 1);

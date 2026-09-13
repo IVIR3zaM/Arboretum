@@ -1,7 +1,7 @@
 // Cutoff logic.
 //
 // The cutoff for a delivery is `cutoffHour` local time, `cutoffDaysBefore` days
-// before the delivery date, expressed IN THE SUBSCRIPTION'S TIMEZONE. After
+// before the delivery date, expressed in the subscription's timezone. After
 // that instant the box is locked.
 
 import type { Subscription } from "./types.ts";
@@ -31,8 +31,7 @@ export function toIsoDate(d: Date): string {
 export function cutoffInstant(deliveryDate: string, sub: Subscription): Date {
   const cutoffDay = shiftDate(deliveryDate, -sub.cutoffDaysBefore);
   const [y, m, d] = cutoffDay.split("-").map(Number);
-  // Construct the wall-clock cutoff time. `new Date(y, m, d, h)` interprets the
-  // fields in the *host process* timezone and returns the matching instant.
+  // Construct the wall-clock cutoff time and return it as an instant.
   return new Date(y, m - 1, d, sub.cutoffHour, 0, 0, 0);
 }
 

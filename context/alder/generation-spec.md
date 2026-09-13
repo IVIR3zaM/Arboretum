@@ -22,11 +22,15 @@ stack that trains the **same points** as the Context. The agent reads this file 
   src/            # 5–8 small source files, the size of the tier (see below)
   test/           # a GREEN unit suite; the primary bug is invisible to it
   _solutions/     # hidden: acceptance grader, trap-manifest, feature Q&A, rubric, FIX
-  TICKET.md       # the bug as a SYMPTOM — never a file+line
+  TICKET.md       # the bug as a SYMPTOM — never a file+line, never a method
   FEATURE-REQUEST.md  # 2–3 sentences, underspecified; 6–8 held-back questions in _solutions
-  README.md       # the 5-phase flow + the time & token estimate
+  README.md       # the learner's briefing: the 5-phase flow + the time & token estimate
   practice.json   # metadata + trainingPoints coverage (validates against templates/)
 ```
+The first four go into the assistant's clone; the last three do **not**. `_solutions/` is the
+answer key, `README.md` is the *learner's* briefing and `practice.json` names every planted
+trap — an assistant that reads them has been coached by the instrument measuring it (invariant
+10, and `AGENTS.md` rule 3).
 
 ## Invariants every generated practice MUST satisfy
 1. **The unit suite is green and the primary bug is invisible to it** (FM-01). The hidden
@@ -56,6 +60,20 @@ stack that trains the **same points** as the Context. The agent reads this file 
    but fails a case that needs genuine understanding. Only *model-before-delegation* and
    *comprehension-as-ownership* converge. Distinct from the feature trap (#3, which targets
    reading the code): this one targets *delegating before understanding the goal*.
+10. **Nothing the assistant can read coaches it.** Everything in the clone reads as the working
+    repo of a team that does not yet know it has a bug. Concretely: the **ticket** reports a
+    symptom and states the rule the customer was promised, then stops — it does not prescribe
+    method ("reproduce first", "fix the root cause"), does not hint at the mechanism, and never
+    mentions that a grader exists or how it is invoked. The **feature request** is the PM's ask
+    plus the expected surface — it does not warn that the obvious implementation trips an
+    invariant, or that there is a trap at all. **Source and test comments** state intent and
+    contract, and may leave the *evidence* a careful reader needs; they never narrate the planted
+    defect or confess the suite's own blind spot. The **grade command** is not runnable from
+    inside the clone and nothing in the clone refers to it. The learner's briefing and the
+    manifest stay outside the clone (see the practice shape above). The discipline under test is
+    the *learner's* to bring: a workdir that tells the assistant to reproduce before fixing has
+    already spent the thing it was measuring. **Coaching belongs to the learner's briefing and to
+    the trainer — never to the workdir.**
 
 ## Difficulty tiers
 | Tier | Source files | ~LOC | Phases | Time |
@@ -81,5 +99,15 @@ stack that trains the **same points** as the Context. The agent reads this file 
 - **Autopilot check (FM-13):** a symptom-patch and a plausible first-suggestion fix are both
   verified to leave the grader red; only the root, understanding-based fix reaches full marks.
   The trap must bite an autopilot run, not just a careless one.
+- **Control run (invariant 10) — the one that actually settles it.** Clone the practice exactly
+  as the harness would, hand a *fresh* assistant nothing but that clone and one casual, uncoached
+  prompt ("here's a ticket and a feature request — fix the bug and implement the feature"), let it
+  finish, and grade the result. Record the score in the proof. A trap that a control run walks
+  past unharmed is not a trap, and the two ways that happens have different fixes: if the material
+  told it what to do, that is an invariant-10 leak, so cut the coaching; if the material said
+  nothing and the trap still failed to bite, the trap is too weak for the assistants of the day,
+  so make the graded case one that only genuine understanding reaches. Verifying the trap's
+  mechanism by hand is not a substitute — mechanisms hold while the prose quietly gives the
+  answer away.
 - A reviewer agent (fresh context) confirms each required discipline is genuinely reachable and
   the exercise is solvable at the stated altitude/time — not over-scoped.

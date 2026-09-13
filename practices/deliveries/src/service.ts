@@ -68,8 +68,8 @@ export class DeliveryService {
   }
 
   // ---------------------------------------------------------------------------
-  // FEATURE (phase 3): let a customer skip their next delivery.
-  // Not implemented. See FEATURE-REQUEST.md.
+  // Let a customer skip their next delivery. Not implemented yet — see
+  // FEATURE-REQUEST.md.
   // ---------------------------------------------------------------------------
   skipNextDelivery(_subscriptionId: string): Delivery {
     throw new Error("skipNextDelivery is not implemented yet");

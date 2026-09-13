@@ -7,9 +7,9 @@
 
 - **Just want to see it work?** Run the seed kata:
   ```bash
-  cd practices/deliveries && node --test test/*.test.ts && npm run grade
+  cd practices/deliveries && node --test test/*.test.ts && node _solutions/grade.mjs
   ```
-  15 unit tests pass — but the grader reports **0/8**. There's a real bug the tests can't see.
+  15 unit tests pass — but the grader reports **0/13**. There's a real bug the tests can't see.
   Fixing it (for every timezone, not just yours) is the exercise.
 - **Want to actually train, not just look?** Pick a Context and follow the path
   **read → assess → train** (the [three modes](#how-you-use-it--the-harness-and-its-three-modes)).
@@ -62,7 +62,7 @@ practice, never the original. Three modes, and a path through them:
 cd practices/deliveries
 node --test test/*.test.ts   # 15 tests, all green
 npm start                    # tiny end-to-end run
-npm run grade                # hidden oracle — 0/8 until you fix the (invisible) bug
+node _solutions/grade.mjs    # hidden oracle — 0/13 until you fix the (invisible) bug
 ```
 Then work the five phases in [`practices/deliveries/README.md`](practices/deliveries/README.md):
 **understand → fix → feature → improve → review**, with any AI assistant.
@@ -77,7 +77,7 @@ Then work the five phases in [`practices/deliveries/README.md`](practices/delive
 - [`context/alder/`](context/alder/) — **Context v1**: goals, best-practices, failure-modes,
   generation-spec, templates.
 - [`generator/CONTRACT.md`](generator/CONTRACT.md) — how any agent generates a new practice.
-- [`practices/deliveries/`](practices/deliveries/) — the seed kata (aligned to `alder@1.1.0`).
+- [`practices/deliveries/`](practices/deliveries/) — the seed kata (aligned to `alder@1.2.0`).
 - [`practices/fulfillment/`](practices/fulfillment/) — an XL Cedar kata: inventory availability &
   order confirmation, React + TS/Node full stack (aligned to `cedar@1.0.0`).
 

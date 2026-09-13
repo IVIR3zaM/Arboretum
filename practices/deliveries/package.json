@@ -1,16 +1,15 @@
 {
-  "name": "deliveries-kata",
+  "name": "deliveries-service",
   "version": "1.0.0",
   "private": true,
   "type": "module",
   "license": "Apache-2.0",
-  "description": "A subscription-box delivery-scheduling service — training kata for AI-assisted development.",
+  "description": "Subscription-box delivery scheduling: cadences, cutoffs, and the delivery queue.",
   "engines": {
     "node": ">=22.18"
   },
   "scripts": {
     "start": "node demo.ts",
-    "test": "node --test test/*.test.ts",
-    "grade": "node _solutions/grade.mjs"
+    "test": "node --test test/*.test.ts"
   }
 }

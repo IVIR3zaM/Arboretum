@@ -26,3 +26,10 @@ them unasked is the requirements-gathering miss the feature is designed to catch
 materialize it if needed, set its status to `skipped`, and return it; a second call is a no-op.
 Anything beyond that (limits, billing, un-skip, pause) is correctly **deferred out loud**, not
 built.
+
+**Five of these answers are graded** (`acceptance.test.ts`, phase-3 section): materialize-if-absent
+and materialize-if-present (Q-none — that's the code trap), the cadence carrying on unshifted (Q1),
+idempotency (Q7), and the refusal of an already-shipped box (Q5). Q1 is answered by the brief;
+**Q5 and Q7 are not deducible from the repo** — a learner who never asks is guessing at two of the
+thirteen points. The rest (Q3, Q4, Q6, Q8) are scope questions: the right move is to name them and
+*not* build them, which the transcript axis scores, not the oracle.

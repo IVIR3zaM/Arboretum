@@ -1,14 +1,14 @@
 {
   "id": "deliveries",
   "title": "Deliveries — subscription-box scheduling",
-  "contextVersion": "alder@1.1.0",
+  "contextVersion": "alder@1.2.0",
   "domain": "subscription-box delivery scheduling",
   "stack": { "language": "typescript", "runtime": "node>=22.18", "dependencies": 0 },
   "difficulty": "M",
   "estimate": { "minutes": 60, "tokens": 25000 },
   "phases": ["understand", "fix", "feature", "improve", "review"],
-  "commands": { "install": "", "test": "node --test test/*.test.ts", "grade": "npm run grade" },
-  "grader": { "kind": "hidden-acceptance", "max": 8 },
+  "commands": { "install": "", "test": "node --test test/*.test.ts", "grade": "node _solutions/grade.mjs" },
+  "grader": { "kind": "hidden-acceptance", "max": 13 },
   "trainingPoints": {
     "disciplines": [
       "reproduce-before-fix",
@@ -23,9 +23,15 @@
     "failureModes": ["FM-01", "FM-02", "FM-03", "FM-04", "FM-05", "FM-06", "FM-07", "FM-08", "FM-13", "FM-14"]
   },
   "primaryBug": "timezone ignored when computing the cutoff instant",
-  "featureTrap": "duplicate-delivery invariant + lazily-materialized next delivery",
-  "assistantTrap": "autopilot 'just fix it' loops: a symptom-patch leaves the root-tested grader red, and a plausible fixed-offset fix passes 7/8 but fails the per-instant/DST case",
+  "featureTrap": "duplicate-delivery invariant + lazily-materialized next delivery — measured: 'mark the next one skipped' scores 9/13, 'create it then skip it' 11/13",
+  "assistantTrap": "the grader tests the roots, so the shortcuts stall at a number: a call-site symptom-patch keeps the unit suite green at 0/13, and a fixed-offset fix plateaus at 7/13 on the per-instant/DST case",
+  "controlRun": {
+    "date": "2026-09-13",
+    "method": "fresh assistant, harness-shaped clone, one casual uncoached prompt ('fix the bug and implement the feature'), no follow-up",
+    "score": "13/13",
+    "finding": "a frontier assistant clears the objective gate one-shot, before and after the coaching was cut out of the material. The gate is the floor; what the control run does NOT do — ask about the non-deducible rules, hold scope to the ask — is what the driving axis grades. See _solutions/trap-manifest.md."
+  },
   "latentDefects": 7,
   "answerKey": "_solutions/",
-  "notes": "Seed kata; the M tier calibrates the 60-minute estimate for Context alder@1.1.0."
+  "notes": "Seed kata; the M tier calibrates the 60-minute estimate for Context alder@1.2.0. This manifest is exercise material: it names the traps, so the harness keeps it (with README.md and _solutions/) out of the assistant's clone."
 }

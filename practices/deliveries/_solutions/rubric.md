@@ -5,9 +5,14 @@ platform is actually teaching.
 
 ## A. Objective gate (the oracle)
 - [ ] `node --test test/*.test.ts` still green after the fix (no regressions).
-- [ ] `npm run grade` → **8/8 worst-case** across all three server timezones (incl. the DST case).
-- [ ] Feature: `skipNextDelivery` implements the minimal agreed behaviour, is idempotent, and
-      refuses to skip after cutoff / for a delivered box.
+- [ ] `node _solutions/grade.mjs` → **13/13 worst-case** across all three server timezones: 8
+      cutoff cases (incl. the DST case) + 5 for the skip feature.
+- [ ] Feature: `skipNextDelivery` implements the minimal agreed behaviour — materializes the next
+      box if needed, is idempotent, and refuses a box that has already shipped.
+
+**This gate is a floor, not a verdict.** A frontier assistant clears all 13 from one uncoached
+prompt (measured — see [`trap-manifest.md`](trap-manifest.md)). A clean score with a bad
+transcript is a bad run; score axis B honestly and let it decide.
 
 ## B. How you drove (scored from the transcript)
 Each worth noting; a strong run shows most of them.
@@ -31,15 +36,20 @@ Each worth noting; a strong run shows most of them.
    trade-off and the condition that would make them revisit it.
 9. **Model before delegation (FM-13).** Built an understanding of the cutoff/timezone logic
    before delegating the fix — fixed the *root*, didn't thrash-loop on symptom patches, and
-   didn't settle for a fixed-offset shortcut that stalls at 7/8.
+   didn't settle for a fixed-offset shortcut that stalls at 7/13.
 10. **Review with intent and triage (FM-14).** In phase 5, reviewed the diff against the task's
     *intent* and triaged what actually needed human judgment — not a rubber-stamp.
 
 ## Anti-signals (the failure classes this kata exists to catch)
+- **A full score with nothing on axis B.** No question asked about the two rules the brief does
+  not state (is skip idempotent? can a shipped box be skipped?), modules touched that nobody
+  asked about, and a review that rubber-stamps the assistant's own summary. This is what an
+  uncoached one-shot looks like, and it is the run this kata exists to distinguish from a good
+  one.
 - Over-engineering a 60-minute exercise to production altitude (building for cases the spec
   didn't ask for). **This is the headline failure.**
 - Accepting a green `npm test` as "done" without the timezone reproduction.
 - Pasting AI output unread; never rejecting anything.
 - A feature that throws on the duplicate invariant because the store wasn't read first.
 - Cycling prompts without a model — a "just fix it" loop that patches symptoms or hardcodes an
-  offset and never reaches 8/8 (delegation before comprehension).
+  offset and never reaches 13/13 (delegation before comprehension).

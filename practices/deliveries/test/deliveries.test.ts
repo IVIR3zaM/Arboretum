@@ -1,8 +1,4 @@
-// Unit suite for the delivery-scheduling service. All green.
-//
-// Note: the cutoff tests here check points that are *days* from the cutoff, so
-// they pass on any machine. Behaviour right at the cutoff boundary is not
-// exercised by this suite.
+// Unit suite for the delivery-scheduling service.
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -68,7 +64,7 @@ test("upcomingDeliveries skips dates before the window start", () => {
   assert.deepEqual(upcomingDeliveries(sub, "2026-03-15", 2), ["2026-03-20", "2026-03-27"]);
 });
 
-// --- cutoff (far from the boundary) -----------------------------------------
+// --- cutoff -----------------------------------------------------------------
 
 test("before cutoff when now is several days early", () => {
   // Delivery 2026-03-20, cutoff day 2026-03-18. Three days before: open.
@@ -76,7 +72,7 @@ test("before cutoff when now is several days early", () => {
 });
 
 test("after cutoff when now is a day past it", () => {
-  // Cutoff day 2026-03-18; noon on the 19th UTC is past it under any timezone.
+  // Cutoff day 2026-03-18; by noon on the 19th the box is closed.
   assert.equal(isBeforeCutoff(new Date("2026-03-19T12:00:00Z"), "2026-03-20", sub), false);
 });
 
