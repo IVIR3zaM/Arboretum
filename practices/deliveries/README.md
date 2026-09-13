@@ -62,16 +62,14 @@ the assistant well.
 
 ## Proof that it works (maintainers)
 
-[`_solutions/proof-control-2026-09-13.html`](_solutions/proof-control-2026-09-13.html) is the
-recorded evidence of what this kata actually does — open it in a browser. It documents the
-**control run** (a fresh assistant, a harness-shaped clone, one casual uncoached prompt) and what
-it scored; the leak inventory that control run exposed and how each leak was closed; and every
-trap mechanism re-measured from real command output (symptom-patch 0/13, fixed-offset 7/13, the
-two naive skip shapes 9/13 and 11/13, the reference shape 13/13). It is candid about the part that
-does not flatter the kata: for an assistant of this class the objective gate is a floor, and the
-transcript is the verdict. It lives in `_solutions/` because it necessarily reveals the fix —
-**don't open it before attempting the kata.** Re-run and refresh it whenever the practice changes.
-
-A fresh **Train-mode** proof against `alder@1.2.0` is still owed; the previous one
-(`proof-train-2026-09-10.html`) was retired in this change because its numbers no longer
-reproduce.
+[`_solutions/proof-train-2026-09-13.html`](_solutions/proof-train-2026-09-13.html) is a recorded
+end-to-end **Train-mode** run of this kata — open it in a browser. A casual engineer drives all
+five phases in order, taking the shortcut every time; the work items are staged one phase at a
+time, the trainer coaches between rounds, and every trap fires. It records, per round: the
+learner's prompt, what the assistant did, the trap that fired *by design*, the trainer's
+interjection, and the real command output (baseline 15/15 unit · **0/13** grader → **4/13** on the
+prescribed shortcut with a green 18-test suite → **8/13** after the root fix → **13/13** once the
+PM was finally asked). It closes with a coverage table mapping every discipline and failure mode
+`practice.json` claims to the round that evidences it. It lives in `_solutions/` because it
+necessarily reveals the fix — **don't open it before attempting the kata.** Re-run and refresh it
+whenever the practice changes.

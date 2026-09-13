@@ -29,9 +29,10 @@
     "date": "2026-09-13",
     "method": "fresh assistant, harness-shaped clone, one casual uncoached prompt ('fix the bug and implement the feature'), no follow-up",
     "score": "13/13",
-    "finding": "a frontier assistant clears the objective gate one-shot, before and after the coaching was cut out of the material. The gate is the floor; what the control run does NOT do — ask about the non-deducible rules, hold scope to the ask — is what the driving axis grades. See _solutions/trap-manifest.md."
+    "finding": "a frontier assistant clears the objective gate one-shot, before and after the coaching was cut out of the material. The gate is the floor; what the control run does NOT do — ask about the non-deducible rules, hold scope to the ask, review with triage — is what the driving axis grades, and what the Train-mode proof records firing. See _solutions/trap-manifest.md and the proof."
   },
   "latentDefects": 7,
   "answerKey": "_solutions/",
+  "proof": "_solutions/proof-train-2026-09-13.html",
   "notes": "Seed kata; the M tier calibrates the 60-minute estimate for Context alder@1.2.0. This manifest is exercise material: it names the traps, so the harness keeps it (with README.md and _solutions/) out of the assistant's clone."
 }

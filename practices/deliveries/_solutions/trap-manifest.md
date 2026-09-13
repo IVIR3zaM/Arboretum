@@ -60,6 +60,12 @@ loop, so the learner only wins via **model-before-delegation** and **comprehensi
 
 ## What the control run actually showed (2026-09-13) — read this before trusting the traps
 
+> The complementary evidence is [`proof-train-2026-09-13.html`](proof-train-2026-09-13.html): a
+> staged Train-mode run where a casual engineer takes the shortcut in all five phases and **every
+> trap below fires**. Read the two together — the control run is the ceiling (what an assistant
+> reaches with no learner at all), the Train run is the thing being measured (how a learner
+> drives).
+
 The mechanisms above are real, and every number in them is measured. They are still not what
 decides a run. On 2026-09-13 this kata was given to a **fresh frontier assistant with one casual,
 uncoached prompt** — *"here's a ticket and a feature request, fix the bug and implement the

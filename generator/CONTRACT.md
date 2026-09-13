@@ -135,7 +135,7 @@ fresh assistant one casual uncoached prompt, and grade what comes back.
 > both obvious skip implementations trip the store's invariant (9/13, 11/13).
 > **Result:** 15/15 unit green, grader 0/13 → 13/13 after the per-instant fix and the minimal
 > skip. See [`practices/deliveries/`](../practices/deliveries/).
-> **Proof:** [`practices/deliveries/_solutions/proof-control-2026-09-13.html`](../practices/deliveries/_solutions/proof-control-2026-09-13.html)
+> **Proof:** [`practices/deliveries/_solutions/proof-train-2026-09-13.html`](../practices/deliveries/_solutions/proof-train-2026-09-13.html)
 > — the recorded control runs and what they scored, the verified trap mechanisms, and the
 > Train-mode session. Note what it records honestly: the control run clears the gate one-shot, so
 > the gate is the floor and the transcript is the verdict.

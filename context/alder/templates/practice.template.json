@@ -28,5 +28,6 @@
   },
   "latentDefects": 0,
   "answerKey": "_solutions/",
+  "proof": "_solutions/proof-<mode>-<YYYY-MM-DD>.html",
   "notes": "<anything a future maintainer needs>"
 }
