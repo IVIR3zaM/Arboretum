@@ -184,6 +184,11 @@ passed every mechanism check, and its control run still cleared FM-16 on the fir
 - On failure: one strengthening pass is allowed. The graded case must then need knowledge that only
   understanding plus `reference/` supplies. Cutting hints is not enough, because P2 already carries the
   method. Then both prompts are re-run. A second failure goes to H2.
+- Isolation, cloud single-session runner: the assistant under test is a fresh subagent working in a service
+  tree outside the repository, with fresh git history. The Arboretum checkout is pushed and then emptied
+  (`cold-seal.sh`) before it starts, and restored from GitHub afterwards. Residual exposure is recorded in
+  `controlRun.method`: the orchestrator's transcript under `~/.claude`, and the public repo if the assistant
+  looks for it by name.
 
 ### V14 — Intended path converges (inverse of V13)
 - Kind: K1 + K3 · Tier: none / reasoning_high

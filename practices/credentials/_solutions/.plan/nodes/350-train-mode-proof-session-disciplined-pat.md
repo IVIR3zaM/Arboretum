@@ -3,7 +3,7 @@
 Role: worker · Tier: reasoning_high · Phase: P7 · Deps: 320, 340
 
 ## Goal
-Drive the finished practice end-to-end as a disciplined learner would, to prove the intended path converges. In the cloud this is a human-driven session on IVIR3zaM/ClaudeTemp: follow `practices/credentials/_solutions/.plan/CLOUD-RUNNER.md` §5 (stage Ticket 1 with temp-stage.sh, hand over to the learner as awaiting_approval, stage the later items onto the session's claude/ branch, then collect and grade as the examiner).
+Drive the finished practice end-to-end as a disciplined learner would, to prove the intended path converges. In the cloud this is relayed: the user types learner prompts into the orchestrator chat, and the orchestrator forwards them verbatim to one cold subagent working outside the sealed repo. Follow `practices/credentials/_solutions/.plan/CLOUD-RUNNER.md` §5.
 
 ## You may read
 - `AGENTS.md`

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Cloud environment setup script for the credentials build. Paste the body into
-# claude.ai/code → environment settings → "Setup script". Runs as root on Ubuntu 24.04 x86_64 before
-# Claude Code starts, and the result is cached (re-runs only when this script changes or after ~7 days).
+# Toolchain install for the credentials build on an Ubuntu 24.04 x86_64 cloud VM. bootstrap.sh runs it
+# whenever the VM lacks the pinned Flutter. Optionally paste it into an environment's "Setup script" field
+# to cache it across sessions.
 #
 # Needs network access "Trusted" (storage.googleapis.com, static.rust-lang.org, crates.io, pub.dev are on
 # the default list). Keep it under ~5 minutes.
@@ -15,6 +15,7 @@ RUST_TOOLCHAIN=1.95.0
 
 install_flutter() {
   cd /opt
+  rm -rf /opt/flutter
   curl -fsSL -o flutter.tar.xz \
     "https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-stable.tar.xz"
   echo "${FLUTTER_SHA256}  flutter.tar.xz" | sha256sum -c -

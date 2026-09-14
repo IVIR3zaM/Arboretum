@@ -33,7 +33,8 @@ Read `README.md` (the resume protocol) first. This file covers what is specific 
   (router 320/336 decides). Options: strengthen again (add nodes), accept and record honestly, or cut scope.
 - **390 (H3):** approve merging `claude/credentials-build` into `main`, after the final regression 380.
   Node 395 merges, pushes `main`, and deletes the build branch.
-- Approve from any machine on the build branch: `bash .../scripts/sync.sh approve <id> --by <name>`.
+- In the cloud runner the orchestrator asks in chat, and only the user's explicit answer approves
+  (CLOUD-RUNNER.md §3). From a local checkout of the build branch: `bash .../scripts/sync.sh approve <id> --by <name>`.
 
 ## Routers (deterministic, operator runs them)
 - **320:** reads `handoffs/300.json` and `handoffs/310.json`. If both have `succeeded: false` (the attack

@@ -35,7 +35,8 @@ git pull -q --rebase origin "$BRANCH" || {
 }
 
 if [ "$1" != "checkpoint" ]; then
-  python3 "$P/scripts/plan.py" --root "$P" "$@"
+  # --root must come AFTER the subcommand: the subparser's default would otherwise override it.
+  python3 "$P/scripts/plan.py" "$1" --root "$P" "${@:2}"
 fi
 
 printf '{"runner": "%s", "at": "%s", "last": "%s"}\n' \
