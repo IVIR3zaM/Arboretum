@@ -26,4 +26,4 @@ Judges: node 100 — see OPERATOR-NOTES.md §How verifier nodes run. Complete no
 max_rounds: 2. On exhaustion complete as `blocked` with the last failing output path. Do not expand scope to make progress feel like it is happening.
 
 ## Handoff
-`python3 practices/credentials/_solutions/.plan/scripts/plan.py --root practices/credentials/_solutions/.plan complete 101 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`
+`bash practices/credentials/_solutions/.plan/scripts/sync.sh complete 101 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`

@@ -24,4 +24,4 @@ Command: `(cd practices/credentials/app && flutter test --offline) && python3 pr
 Judges: node 160 — see OPERATOR-NOTES.md §How verifier nodes run. Complete node 160 as done or revision_needed, then this node done.
 
 ## Handoff
-`python3 practices/credentials/_solutions/.plan/scripts/plan.py --root practices/credentials/_solutions/.plan complete 161 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`
+`bash practices/credentials/_solutions/.plan/scripts/sync.sh complete 161 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`

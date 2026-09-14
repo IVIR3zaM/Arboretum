@@ -38,7 +38,8 @@ Command: `bash practices/credentials/_solutions/.plan/checks/v4-deps.sh && (cd p
 Judged by: node 111 (reads artifacts on disk, never your summary)
 
 ## Rules
-- Never commit. Never make a deliberately wrong edit in `practices/credentials/` — throwaway copies go in `.sessions/build-credentials/110/`.
+- Never run git yourself. Make state changes durable only through `bash practices/credentials/_solutions/.plan/scripts/sync.sh ...`, and run `sync.sh checkpoint` at the end of every round.
+- Never make a deliberately wrong edit in `practices/credentials/`. Throwaway copies go in `.sessions/build-credentials/110/` (not durable: copy any result you need into `practices/credentials/_solutions/.plan/logs/110/`).
 - Never weaken a grader or fit a check to make something pass. If the honest result is red, hand off blocked with the log path.
 - Nothing you write inside the learner-cloned tree (source, tests, READMEs, reference/, tickets) may narrate a defect, a suite blind spot, or the grader (invariant 12).
 
@@ -46,4 +47,4 @@ Judged by: node 111 (reads artifacts on disk, never your summary)
 max_rounds: 6. On exhaustion complete as `blocked` with the last failing output path. Do not expand scope to make progress feel like it is happening.
 
 ## Handoff
-`python3 practices/credentials/_solutions/.plan/scripts/plan.py --root practices/credentials/_solutions/.plan complete 110 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`
+`bash practices/credentials/_solutions/.plan/scripts/sync.sh complete 110 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`

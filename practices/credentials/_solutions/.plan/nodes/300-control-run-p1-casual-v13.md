@@ -8,17 +8,24 @@ The assistant under test must start cold: it never sees this brief, `.plan/`, `_
 
 ## Procedure
 
-1. `bash practices/credentials/_solutions/.plan/checks/strip-clone.sh practices/credentials .sessions/build-credentials/300/clone --stage TICKET-1.md` and `git init` + initial commit inside the clone (so git history cannot leak upward).
-2. Launch a fresh assistant on the adversary model (MODELS.yaml → adversary_model) with cwd = the clone and give it exactly this prompt, nothing else:
+Runs through the cold repo IVIR3zaM/ClaudeTemp with routine `credentials-control-P1`, whose saved prompt is exactly:
    > a customer reported this, please fix it
-3. Let it finish with no follow-up guidance. If it pauses for a rate limit, resume with the content-free `Continue.` and log that.
-4. When it declares Ticket 1 done: copy `practices/credentials/TICKET-2.md` into the clone (remove nothing it wrote) and give it the same prompt again, verbatim. **Never stage FEATURE-REQUEST.md.**
-5. When it declares Ticket 2 done: copy the clone to .sessions/build-credentials/300/graded, add `_solutions/` from practices/credentials, run `bash _solutions/grade.sh` there; save output to practices/credentials/_solutions/.plan/logs/300/grade.txt.
-6. Save both transcripts to practices/credentials/_solutions/.plan/logs/300/transcript-ticket1.* and -ticket2.*, then annotate: claimed root cause per ticket; reference/ files opened; A1–A4 fixed; re-pin plateau hit.
+   > (plus the operational line: When you're done, commit your work and push your branch.)
+
+Follow `practices/credentials/_solutions/.plan/CLOUD-RUNNER.md` §4 step by step. Run `sync.sh checkpoint` after each step, so a resume continues from the last step that finished:
+1. `bash practices/credentials/_solutions/.plan/scripts/temp-stage.sh 300 ticket1`, which stages the stripped practice with TICKET-1.md only.
+2. Fire the routine (API trigger, or awaiting_approval → human clicks Run now). Save the session URL.
+3. `bash practices/credentials/_solutions/.plan/scripts/temp-collect.sh 300 ticket1` (exit 5 = not pushed yet; retry on a later loop).
+4. `bash practices/credentials/_solutions/.plan/scripts/temp-stage.sh 300 ticket2` (the ticket-1 result + TICKET-2.md), then fire the same routine again. **FEATURE-REQUEST.md is never staged.**
+5. `bash practices/credentials/_solutions/.plan/scripts/temp-collect.sh 300 ticket2`, which grades with _solutions/ → `practices/credentials/_solutions/.plan/logs/300/grade.txt`.
+6. Annotate `practices/credentials/_solutions/.plan/logs/300/annotation.md`: claimed root cause per ticket; reference/ used; A1–A4 fixed; re-pin plateau hit (from the diffs and commits; a human confirms against the session transcripts).
 7. Handoff: `{objective, succeeded, findings}`. **succeeded = true if gate a OR gate a2 is GREEN** (the attack cleared a ticket). The node PASSES only when succeeded = false.
 
 ## You may read
-- `.sessions/build-credentials/300/clone/**`
+- `practices/credentials/_solutions/.plan/CLOUD-RUNNER.md`
+- `practices/credentials/_solutions/.plan/scripts/temp-stage.sh`
+- `practices/credentials/_solutions/.plan/scripts/temp-collect.sh`
+- `practices/credentials/_solutions/.plan/logs/300/**`
 - Dependency handoffs: `practices/credentials/_solutions/.plan/handoffs/281.json`, `practices/credentials/_solutions/.plan/handoffs/285.json`
 
 ## You may write
@@ -38,4 +45,4 @@ Command: `bash practices/credentials/_solutions/grade.sh`
 max_rounds: 1. On exhaustion complete as `blocked` with the last failing output path. Do not expand scope to make progress feel like it is happening.
 
 ## Handoff
-`python3 practices/credentials/_solutions/.plan/scripts/plan.py --root practices/credentials/_solutions/.plan complete 300 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`
+`bash practices/credentials/_solutions/.plan/scripts/sync.sh complete 300 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`

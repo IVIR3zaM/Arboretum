@@ -39,6 +39,8 @@ Its 60k covers only the orchestrator. If it runs hot, move examiner grading into
   each is one verifier's unit of work across both stacks.
 - **280 → 100**: real. `practice.json` → `workItems.staged` uses the format 100 defines.
 - **110 → 015**: real. No network install before H1.
+- **310 → 300, 334 → 332**: real. The control runs share the single cold repo IVIR3zaM/ClaudeTemp, so they
+  have to run one after another (added for the cloud runner).
 Everything else is a genuine data dependency.
 
 ## Parallel width

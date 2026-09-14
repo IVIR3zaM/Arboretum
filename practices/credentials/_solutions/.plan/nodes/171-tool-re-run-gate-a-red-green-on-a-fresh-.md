@@ -23,4 +23,4 @@ Command: `bash practices/credentials/_solutions/.plan/checks/flip.sh a`
 Judges: node 170 — see OPERATOR-NOTES.md §How verifier nodes run. Complete node 170 as done or revision_needed, then this node done.
 
 ## Handoff
-`python3 practices/credentials/_solutions/.plan/scripts/plan.py --root practices/credentials/_solutions/.plan complete 171 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`
+`bash practices/credentials/_solutions/.plan/scripts/sync.sh complete 171 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`

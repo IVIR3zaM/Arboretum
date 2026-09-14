@@ -23,4 +23,4 @@ Command: `python3 practices/credentials/_solutions/.plan/checks/v16-proof-number
 Judges: node 360 — see OPERATOR-NOTES.md §How verifier nodes run. Complete node 360 as done or revision_needed, then this node done.
 
 ## Handoff
-`python3 practices/credentials/_solutions/.plan/scripts/plan.py --root practices/credentials/_solutions/.plan complete 361 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`
+`bash practices/credentials/_solutions/.plan/scripts/sync.sh complete 361 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`

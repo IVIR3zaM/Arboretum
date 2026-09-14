@@ -18,17 +18,22 @@ Read `README.md` (the resume protocol) first. This file covers what is specific 
   by whoever operates. Paste the output path into the log.
 - Standalone verifiers (285, 370) have real deps and gate what follows them.
 
-## Commits
-- Workers never commit. When a worker node turns `done`, the operator commits exactly its
-  `context.write` paths on `main` locally: `credentials N<id>: <title>`, with the attribution trailer.
-- **Nothing is pushed before human gate 390 (H3).** Node 395 pushes.
+## Commits and branch (decision 2026-09-14: build branch, merge at H3)
+- All build work lives on **`claude/credentials-build`**. `main` is untouched until node 395 merges.
+- Workers and verifiers never run `git` themselves. **Every** state transition goes through
+  `scripts/sync.sh <plan.py args>`, which pulls, applies the change, commits everything in scope, and pushes.
+  Long nodes call `sync.sh checkpoint` at least every round so a reclaimed VM loses at most one round.
+- Claim with `--lease-min 180`, so a session killed by a rate limit frees its node before the next resume.
+- See `CLOUD-RUNNER.md` for the cloud loop and rate-limit resume.
 
 ## Human gates
 - **015 (H1):** approve `digests/deps-pins.md` (exact Rust toolchain, crates, Flutter SDK, pub packages,
   deny-list). `plan.py approve 015 --by <name>`.
 - **340 (H2):** only reached if the control runs still clear the gate after one strengthening pass
   (router 320/336 decides). Options: strengthen again (add nodes), accept and record honestly, or cut scope.
-- **390 (H3):** before the push to `main`, after the final regression 380.
+- **390 (H3):** approve merging `claude/credentials-build` into `main`, after the final regression 380.
+  Node 395 merges, pushes `main`, and deletes the build branch.
+- Approve from any machine on the build branch: `bash .../scripts/sync.sh approve <id> --by <name>`.
 
 ## Routers (deterministic, operator runs them)
 - **320:** reads `handoffs/300.json` and `handoffs/310.json`. If both have `succeeded: false` (the attack

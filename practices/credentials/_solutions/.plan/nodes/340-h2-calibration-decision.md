@@ -10,4 +10,4 @@ A control run still clears a gate after one strengthening pass. Decide: strength
 - `practices/credentials/_solutions/.plan/logs/340/**` (raw output)
 
 ## Handoff
-`python3 practices/credentials/_solutions/.plan/scripts/plan.py --root practices/credentials/_solutions/.plan complete 340 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`
+`bash practices/credentials/_solutions/.plan/scripts/sync.sh complete 340 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`

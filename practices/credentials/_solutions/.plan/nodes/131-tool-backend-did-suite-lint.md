@@ -23,4 +23,4 @@ Command: `(cd practices/credentials/backend && cargo test --offline --locked) &&
 Judges: node 130 — see OPERATOR-NOTES.md §How verifier nodes run. Complete node 130 as done or revision_needed, then this node done.
 
 ## Handoff
-`python3 practices/credentials/_solutions/.plan/scripts/plan.py --root practices/credentials/_solutions/.plan complete 131 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`
+`bash practices/credentials/_solutions/.plan/scripts/sync.sh complete 131 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`

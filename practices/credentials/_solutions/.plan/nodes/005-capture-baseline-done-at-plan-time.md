@@ -10,4 +10,4 @@ Record baseline ref credentials-v0-baseline and toolchain versions.
 - `practices/credentials/_solutions/.plan/logs/005/**` (raw output)
 
 ## Handoff
-`python3 practices/credentials/_solutions/.plan/scripts/plan.py --root practices/credentials/_solutions/.plan complete 005 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`
+`bash practices/credentials/_solutions/.plan/scripts/sync.sh complete 005 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`

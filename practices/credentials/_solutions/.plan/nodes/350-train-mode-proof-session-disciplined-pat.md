@@ -3,7 +3,7 @@
 Role: worker · Tier: reasoning_high · Phase: P7 · Deps: 320, 340
 
 ## Goal
-Drive the finished practice end-to-end as a disciplined learner would, to prove the intended path converges.
+Drive the finished practice end-to-end as a disciplined learner would, to prove the intended path converges. In the cloud this is a human-driven session on IVIR3zaM/ClaudeTemp: follow `practices/credentials/_solutions/.plan/CLOUD-RUNNER.md` §5 (stage Ticket 1 with temp-stage.sh, hand over to the learner as awaiting_approval, stage the later items onto the session's claude/ branch, then collect and grade as the examiner).
 
 ## You may read
 - `AGENTS.md`
@@ -29,7 +29,8 @@ Command: `test -s practices/credentials/_solutions/.plan/logs/350/final-grade.tx
 Judged by: node 351 (reads artifacts on disk, never your summary)
 
 ## Rules
-- Never commit. Never make a deliberately wrong edit in `practices/credentials/` — throwaway copies go in `.sessions/build-credentials/350/`.
+- Never run git yourself. Make state changes durable only through `bash practices/credentials/_solutions/.plan/scripts/sync.sh ...`, and run `sync.sh checkpoint` at the end of every round.
+- Never make a deliberately wrong edit in `practices/credentials/`. Throwaway copies go in `.sessions/build-credentials/350/` (not durable: copy any result you need into `practices/credentials/_solutions/.plan/logs/350/`).
 - Never weaken a grader or fit a check to make something pass. If the honest result is red, hand off blocked with the log path.
 - Nothing you write inside the learner-cloned tree (source, tests, READMEs, reference/, tickets) may narrate a defect, a suite blind spot, or the grader (invariant 12).
 
@@ -37,4 +38,4 @@ Judged by: node 351 (reads artifacts on disk, never your summary)
 max_rounds: 3. On exhaustion complete as `blocked` with the last failing output path. Do not expand scope to make progress feel like it is happening.
 
 ## Handoff
-`python3 practices/credentials/_solutions/.plan/scripts/plan.py --root practices/credentials/_solutions/.plan complete 350 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`
+`bash practices/credentials/_solutions/.plan/scripts/sync.sh complete 350 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`

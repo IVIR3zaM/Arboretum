@@ -10,4 +10,4 @@ A human reads digests/deps-pins.md and approves the exact Flutter/Rust/crate/pub
 - `practices/credentials/_solutions/.plan/logs/015/**` (raw output)
 
 ## Handoff
-`python3 practices/credentials/_solutions/.plan/scripts/plan.py --root practices/credentials/_solutions/.plan complete 015 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`
+`bash practices/credentials/_solutions/.plan/scripts/sync.sh complete 015 --status <status> --summary "<=200 tokens" --artifacts "..." --logs "..."`
