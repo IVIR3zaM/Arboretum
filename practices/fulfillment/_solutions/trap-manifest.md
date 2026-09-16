@@ -37,6 +37,9 @@ directly with `ATP_SOURCE=live` against the full `reference/` feed. Verified fli
   ambient variable — the varying condition is which SKU/location record you query).
 - **FM-16** (cross-boundary) — the true reserved/allocated/inbound numbers *and the formula that
   uses them* live only in `reference/`; a fix reasoned from the local repo alone plateaus (below).
+- **FM-03** (a plausible rule that encodes the *wrong* one) — carried by `atp.ts`'s
+  `promisableStock` (`on_hand − reserved`). See the FM-03 section below; it currently rides on the
+  primary bug rather than standing on its own.
 
 ## Assistant-targeted trap (FM-13, required) — the plausible fix plateaus
 
@@ -194,6 +197,33 @@ and the stale `promisableStock`, so it guesses a formula that misses `allocated`
 window — and the grader's conformance vectors, derived directly from the feed, catch it (attempts A
 and B above). This is why the research pass (`research-notes.md`) is the load-bearing discipline.
 
+## FM-03 — a plausible rule that encodes the wrong one (declared carrier: `promisableStock`)
+
+`practice.json` lists `FM-03` in `trainingPoints.failureModes`, and the blueprint
+(`DESIGN-blueprint.md:230`) had planned it as a *separate* latent defect — an "inbound counts if
+within 30 days" (month ≈ 30 days) approximation, or an unknown-SKU fall-through to "available."
+**Neither was ever built:** the shipped `atp.ts` has no inbound logic at all before the fix, and
+`erpFeed.getRecord` throws `UnknownSkuError` rather than falling through. So the mode as blueprinted
+is **not present** — recorded honestly rather than quietly (see `misbehaviors.md` #2).
+
+**What actually carries FM-03 is `backend/src/atp.ts`'s `promisableStock(rec) = on_hand − reserved`.**
+That is FM-03 in its purest form: a rule that is idiomatic, statistically typical, green on the seed
+SKUs, and *wrong* — it encodes the abandoned snapshot-era notion of availability and silently omits
+`allocated` and inbound. Measured against the live feed:
+
+| SKU | feed record | `promisableStock` (`on_hand − reserved`) | true ATP (`− allocated + inbound-in-window`) |
+|---|---|---|---|
+| SKU-1002 | on_hand 40, reserved 12, allocated 6, inbound none | **28** | **22** (over-promises by 6) |
+| SKU-1003 | on_hand 8, reserved 15, allocated 0, inbound +20 within lead window | **−7** | **13** (a nonsense negative vs the real answer) |
+
+**Caveat, stated plainly:** because `promisableStock` is the same stale helper the primary bug's
+plateau (rows A/B above) reaches for, FM-03 here **overlaps the primary bug** rather than being
+independently findable in phase 4. The Train-run proof (`proof-train-2026-09-13.html`) maps FM-03
+onto `promisableStock` and that reading holds up, but it was not the design intent. Making FM-03
+stand on its own would mean building the blueprint's original defect as a 6th latent defect — noted
+as deferred in `misbehaviors.md` #2 (option b), and fragile: a hardcoded window inside the *new* ATP
+code would be overwritten by anyone implementing the spec.
+
 ## Ranked latent defects (≥5, each idiomatic, each traceable to an FM)
 
 Ranked by production impact. None is exercised by the shipped suites or required to reach 14/14 +
@@ -201,16 +231,32 @@ Ranked by production impact. None is exercised by the shipped suites or required
 primary fix alone reaches full marks. They exist for the learner's honest-review pass (FM-14) to
 *find and name*.
 
+**Count.** `practice.json.latentDefects` is **8**, counting planted *instances*, not FM families:
+the by-reference FM-05 leak alone is **four** distinct instances (below), on top of FM-06, FM-07,
+FM-04 and FM-08. The earlier count of 5 under-credited a learner who found the other three
+by-reference leaks — an examiner grading "latent defects found, not recited" against a list of 5
+would miss them. Emergent findings the run surfaced but that were never *planted* are inventoried
+in their own section below and are deliberately **not** in the count of 8.
+
 1. **FM-06 — idempotency keyed on transport id, not the business entity.**
    `backend/src/orders.ts`, `confirmOrder`: `processed.get/set(order.requestId, ...)`. `requestId`
    is the per-attempt client transport id; the business entity is the order (`orderId`). A retry
    carrying a fresh `requestId` for the same logical order is not recognized as a duplicate and can
    confirm twice / oversell.
 
-2. **FM-05 — reservations store returns internal state by reference.**
-   `backend/src/reservations.ts`: `active(sku)` returns the live array inside the module's `Map`
-   (not a copy) and `all()` returns the `Map` itself; a caller that mutates what it got back
-   corrupts the store's internal state.
+2. **FM-05 — internal state returned by reference (four instances, one family).**
+   The run measured **four** by-reference leaks in the shipped tree, each independently reproducible;
+   the FM-05 row previously named only the first two. A learner who finds any of them is on this mode.
+   - `backend/src/reservations.ts`: `active(sku)` returns the live array inside the module's `Map`
+     (not a copy) and `all()` returns the `Map` itself; a caller that mutates what it got back
+     corrupts the store's internal state.
+   - `backend/src/catalog.ts` `listCatalog()`: `return CATALOG.slice()` — a *shallow* copy over the
+     exported mutable `CATALOG` array, so each returned `CatalogEntry` is still the shared object; a
+     caller mutating an entry rewrites the catalog for everyone.
+   - `backend/src/orders.ts` `confirmOrder`: returns the same `OrderResult` object it stored in the
+     `processed` cache (`return cached;`), so a caller can rewrite order history after the fact.
+   All three (four call sites) are the same defect shape — hand out a reference to state you keep —
+   and each should be credited if the learner's review names it.
 
 3. **FM-07 — unbounded holds map, no TTL eviction.**
    `backend/src/reservations.ts`: `place` only appends; nothing sweeps expired holds by
@@ -229,3 +275,30 @@ primary fix alone reaches full marks. They exist for the learner's honest-review
    authoritative set (`{DC-WEST, DC-EAST}`). `UnknownLocationError` is defined in `types.ts` but
    never thrown; a typo'd/unprovisioned location doesn't fail as the ERP contract specifies — the
    feed lookup proceeds keyed by SKU id alone and can silently serve the wrong location context.
+
+## Emergent findings — real, but NOT planted (do not count toward `latentDefects`)
+
+The Train run surfaced real issues that were never planted and are not in the count of 8. They are
+inventoried here so an examiner **credits** a learner who finds one (it is a genuine finding) without
+mistaking it for a designed trap. If a future revision decides to plant any of these deliberately,
+promote it into the ranked list above and bump the count.
+
+- **Relative `ERP_FEED_DIR` resolves from the process CWD**, so the feed lookup fails as
+  `UnknownSkuError` (a misleading error) rather than a path error when run from an unexpected
+  directory. A path/config robustness bug wearing an availability error's clothing.
+- **`backend/src/snapshot.ts`'s process-lifetime `cache`** (`let cache … JSON.parse(readFileSync(...))`)
+  holds availability for the life of the process — arguably the ERP contract's "do not persist
+  availability across requests" prohibition (§84–86) at process scope, in the non-live path.
+- **The `web` `node:fs` shim** makes a real `npm run dev` availability check throw: the storefront's
+  availability path depends on a test-time shim and is not exercised by a genuine dev server.
+
+## The feature gate is blind to defects the feature itself introduces (ties to `misbehaviors.md` #10)
+
+Worth recording alongside the ranked list: the phase-3 feature gate (b) scores **4/4 with a
+self-introduced oversell vector present**. In the Train run `placeHold` shipped with no quantity
+validation, so `placeHold(sku, location, -100, cartId, ttlMs)` on SKU-1003 drove ATP to **113** — a
+negative hold subtracts a negative and manufactures stock from nothing. The gate passed anyway
+because it drives valid quantities. This is the same shape as the structural gap in
+`misbehaviors.md` #1 (the objective gate is silent on phase 4), now inside the feature itself: the
+improve pass (phase 4) is where it must be *found and named*, and the rubric's Axis B credits that —
+the gate will not.

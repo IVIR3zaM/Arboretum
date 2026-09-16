@@ -10,7 +10,15 @@
     ]
   },
   "difficulty": "XL",
-  "estimate": { "minutes": 135, "tokens": 60000 },
+  "estimate": {
+    "minutes": 240,
+    "tokens": 400000,
+    "note": "Provisional, RE-BASELINED from the two recorded 2026-09-13 runs (the original 135 min / 60k was low by ~5×: the Train run alone burned ~300k executor tokens by round 10, before the examiner's grading passes and the trainer's turns, and the control run needed a resume after a mid-run rate limit). Top-level figures are the coached `train` worst case, so a learner budgeting from the headline number does not run out mid-phase; `assess` (uncoached) is several× cheaper — see byMode.",
+    "byMode": {
+      "assess": { "minutes": 90, "tokens": 150000 },
+      "train":  { "minutes": 240, "tokens": 400000 }
+    }
+  },
   "phases": ["understand", "fix", "feature", "improve", "review"],
   "reference": "reference/",
   "researchArtifact": "research-notes.md",
@@ -49,8 +57,8 @@
     "harnessGaps": "(1) the clone is not its own git repo, so `git log` inside work/ resolves to the repo above it - the executor hit this, stopped, and reported it; (2) the executor wrote scratch probe files to its own scratch area outside the clone. Reads/writes into the practice tree stayed inside work/ (verified clean), but 'no writes outside the workdir' is a convention the executor honours, not something the harness enforces.",
     "proof": "_solutions/proof-train-2026-09-13.html"
   },
-  "latentDefects": 5,
+  "latentDefects": 8,
   "answerKey": "_solutions/",
   "proof": "_solutions/proof-train-2026-09-13.html",
-  "notes": "XL tier; provisional estimate. Grading is pass/fail on the `bash _solutions/grade.sh` exit code; grader.max 20 = availability acceptance (14, phase-2 bug) + feature acceptance (4, phase-3 cart hold) + web integration (2), scored worst-case (all three gates must be fully green — the whole ticket: fix AND deliver the feature). Hermetic via vendored reference/infra fixtures and a loopback file resolver; the web gate is the documented fallback candidate if too heavy for CI. The grade wrapper lives in `_solutions/` (cedar@1.1.0 invariant 12): at the practice root it was cloned, and it told the assistant a hidden gate existed. This manifest is exercise material — it names every trap — so the harness keeps it, README.md and _solutions/ out of the assistant's clone."
+  "notes": "XL tier; provisional estimate. Grading is pass/fail on the `bash _solutions/grade.sh` exit code; grader.max 20 = availability acceptance (14, phase-2 bug) + feature acceptance (4, phase-3 cart hold) + web integration (2), scored worst-case (all three gates must be fully green — the whole ticket: fix AND deliver the feature). THE 20 IS THE OBJECTIVE FLOOR, NOT THE WHOLE GRADE: it covers phases 2 and 3 only. Phases 1 (understand/research), 4 (improve) and 5 (review) are graded on rubric.md's Axis B from the transcript, not by the 20-point number — so a run can score 20/20 and still be weak on four of the ten declared disciplines (see _solutions/misbehaviors.md #1). latentDefects (8) counts planted instances, not FM families: the by-reference FM-05 leak alone is four (reservations active/all, catalog.slice, orders cached object), plus FM-06, FM-07, FM-04, FM-08; emergent-but-unplanted findings are listed separately in trap-manifest.md and are not in this count. Hermetic via vendored reference/infra fixtures and a loopback file resolver; the web gate is the documented fallback candidate if too heavy for CI. The grade wrapper lives in `_solutions/` (cedar@1.1.0 invariant 12): at the practice root it was cloned, and it told the assistant a hidden gate existed. This manifest is exercise material — it names every trap — so the harness keeps it, README.md and _solutions/ out of the assistant's clone."
 }

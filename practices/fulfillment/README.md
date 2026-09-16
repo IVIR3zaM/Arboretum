@@ -12,8 +12,8 @@ axis on top of the basics: the system spans two packages plus a **read-only exte
 
 | | |
 |---|---|
-| **Estimated time** | ~135 min (XL tier) |
-| **Estimated tokens** | ~60,000 (one assistant, five phases) |
+| **Estimated time** | ~90 min uncoached (`assess`) · ~240 min coached (`train`) — XL tier, provisional |
+| **Estimated tokens** | ~150k (`assess`) · ~400k (`train`) — re-baselined from recorded runs; budget for the coached case |
 | **Stack / domain** | TypeScript/Node backend + React (Vite + TS) storefront · commerce fulfillment / inventory ATP |
 | **Context version** | [`cedar`](../../context/cedar/) @1.1.0 |
 
@@ -130,8 +130,12 @@ you and not your assistant.** The green unit suites above are not the bar.
 > driven well; it is the floor. How you *drove* — reproduced before fixing, established the
 > cross-package/external
 > context before delegating, rejected bad output, matched the altitude of the exercise instead of
-> over-building — is the other half, and the half this platform cares about most. See the
-> [rubric](_solutions/rubric.md) after you finish (don't read it first).
+> over-building — is the other half, and the half this platform cares about most. Concretely: the
+> hidden gate's 20 points cover **phases 2 and 3 only** (the fix and the feature). Phases 1
+> (understand/research), 4 (improve) and 5 (review) are not in that number at all — they are judged
+> from your transcript against the rubric's driving axis, so a green 20/20 is silent on more than
+> half of what the kata trains. See the [rubric](_solutions/rubric.md) after you finish (don't read
+> it first).
 
 `_solutions/` holds the answer key (hidden tests, held-back requirements, trap manifest, rubric).
 **Opening it defeats the kata** — the whole point is to reach the answers by driving the assistant

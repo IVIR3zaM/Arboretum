@@ -15,6 +15,13 @@
 **Legend.** `[P]` = the practice's own material is wrong or incomplete · `[A]` = assistant behaviour
 the kata should expose but currently doesn't grade · `[H]` = harness-level, affects every practice.
 
+> **Decisions taken 2026-09-15.** Entries #1–#11 (the practice's own material) have been resolved;
+> each now carries a `**Resolution.**` line naming the option applied and where. The objective gate
+> (`grade.sh` + the three acceptance suites) was frozen for this pass, so every fix landed in the
+> judged/documentary layer (`rubric.md`, `trap-manifest.md`, `feature-qa.md`, `practice.json`,
+> `README.md`). The harness-level `[H]` entries #12–#15 are **out of scope** here — they belong in
+> `AGENTS.md` / `harness/DESIGN.md` and are left for a separate harness change.
+
 ---
 
 ## A. Structural — the biggest lever
@@ -45,6 +52,12 @@ ten declared disciplines.
 - (d) Leave phases 4–5 to the rubric but make the examiner's report *print* the Axis-B criteria as
   an explicit checklist, so a skipped phase shows up as a row of blanks rather than as silence.
 
+**Resolution (2026-09-15): (d) + (a)'s framing.** `rubric.md`'s Axis B is now an explicit per-phase
+checklist the examiner fills in for every phase (a skipped phase reads as `absent` rows, not
+silence). `README.md` and `practice.json.notes` now state that the 20-point gate is the objective
+*floor* covering phases 2–3 only, and phases 1/4/5 are judged on Axis B. Options (b)/(c) (new
+grade.sh gates / a phase-4 scorer) were dropped by the frozen-gate decision.
+
 ### 2. `[P]` FM-03 is claimed in `practice.json` but was never planted.
 **Evidence.** `practice.json` lists `FM-03` in `trainingPoints.failureModes`.
 `_solutions/DESIGN-blueprint.md:230` planned it as ranked latent defect #5 — *"an 'inbound counts if
@@ -72,6 +85,11 @@ and it means FM-03 currently rides on the primary bug rather than standing on it
 
 Option (a) is the minimum needed for the manifest to be truthful; (b) is what the blueprint intended.
 
+**Resolution (2026-09-15): (a).** `trap-manifest.md` now has an FM-03 section declaring
+`atp.ts`'s `promisableStock` as the carrier, with the measured evidence (SKU-1002 → 28 vs 22;
+SKU-1003 → −7 vs 13) and an explicit caveat that FM-03 overlaps the primary bug rather than standing
+alone. Option (b) (build the blueprint's 6th defect) is recorded as deferred and fragile.
+
 ### 3. `[P]` The reference contract contradicts the feature the kata requires — and nothing anticipates it.
 **Evidence.** `reference/erp-availability-contract.md:89–90`: *"Do not attempt to derive ATP from any
 other feed or cache your storefront maintains separately. This service is the single source of truth
@@ -96,6 +114,12 @@ should be in `feature-qa.md` as an expected elicitation point with a model answe
 Strong lean to (a). Note it also needs a line in `rubric.md` so an examiner *credits* a learner
 whose assistant raises it, rather than reading the pause as a failure to deliver.
 
+**Resolution (2026-09-15): (a).** Added held-back question #9 to `feature-qa.md` (local hold vs
+contract §89–90, query-only) with the ERP-lead model resolution — query live every time, never
+persist, only ever subtract, so the storefront is strictly more conservative. `rubric.md`'s phase-3
+checklist now has a "Cross-boundary contradiction raised" row that credits the pause and marks
+resolving it unilaterally (either direction) as the miss.
+
 ---
 
 ## B. Calibration — numbers in the material that the runs contradict
@@ -107,6 +131,9 @@ today" produces a hold that never checks quantity against ATP *at all*, so gate 
 well as 1 and 3. Already recorded in the manifest and `practice.json`. Worth re-measuring on the
 next run — the point is that the manifest's predicted numbers are hand-applied mechanism checks and
 drift from what a real delegation produces.
+
+**Resolution (2026-09-15): no change — watch.** Already patched and recorded in `trap-manifest.md`
+and `practice.json`. Re-measure on the next recorded run.
 
 ### 5. `[P]` The XL estimate is low by roughly 5×.
 **Evidence.** `practice.json`: `estimate: { minutes: 135, tokens: 60000 }`. The Train run consumed
@@ -121,6 +148,11 @@ to mis-set expectations at the point of choosing a practice.
 **Options.** Re-baseline from the two recorded runs (a coached Train run is the expensive case;
 an uncoached assess run is cheaper), and consider splitting `estimate` into per-mode figures, since
 `train` costs several times what `assess` does.
+
+**Resolution (2026-09-15): re-baselined and split per-mode.** `practice.json.estimate` now carries
+top-level `train` worst-case figures (240 min / 400k tokens) plus a `byMode` split
+(`assess` 90 min / 150k, `train` 240 min / 400k) and a `note` explaining the ~5× correction.
+`README.md`'s estimate rows show both modes.
 
 ### 6. `[P]` `latentDefects: 5` undercounts, and the FM-05 entry inventories one of four instances.
 **Evidence.** `trap-manifest.md`'s FM-05 row names only `reservations.ts` (`active()` returning the
@@ -139,6 +171,13 @@ finds the other ones, and `latentDefects: 5` is wrong as a count.
 
 **Options.** Extend the FM-05 row to all four instances; add the unplanted-but-real findings as a
 clearly-labelled "emergent, not planted" section so examiners credit them; correct the count.
+
+**Resolution (2026-09-15): all three.** `trap-manifest.md`'s FM-05 row now lists all four
+by-reference instances (`reservations.active`/`all`, `catalog.slice`, `orders` cached object); a new
+"Emergent findings — real, but NOT planted" section inventories the relative-`ERP_FEED_DIR`,
+`snapshot.ts` process-cache, and `web` `node:fs` shim findings (excluded from the count so examiners
+credit them without treating them as planted); and `practice.json.latentDefects` is corrected to
+**8** (planted instances), with a "Count" note in the manifest explaining what the number counts.
 
 ---
 
@@ -163,12 +202,19 @@ surfaced only because the learner said "paste the real runs, not a description o
 add an Axis-B criterion to `rubric.md` — "did the learner ever require a claim to be re-run rather
 than summarised, and did that produce a correction?" — and name this as the worked example.
 
+**Resolution (2026-09-15): graded.** Added the "Verify-output: claims re-run, not summarised"
+cross-phase row to `rubric.md` Axis B, with the 6→10 failures exchange named as the worked example,
+plus a matching anti-signal.
+
 ### 8. `[A]` A safety argument built on tests that couldn't have failed.
 **Evidence.** The assistant justified changing `promisableStock`'s semantics under a kept name by
 noting the existing tests still passed. Retracted two rounds later, unprompted: "A test that passes
 under both the old and the new behaviour has no discriminating power; it isn't evidence of
 compatibility, it's evidence the test was weak. I leaned on a green result that couldn't have gone
 red." Same shape as the primary bug, one level up.
+
+**Resolution (2026-09-15): graded.** Added the "No leaning on non-discriminating green tests"
+cross-phase row (and anti-signal) to `rubric.md` Axis B, using this retraction as the example.
 
 ### 9. `[A]` It shipped order-dependent tests as the evidence for its own diff, for three rounds.
 **Evidence.** `holds.test.ts` tests depended on holds placed by earlier tests (the store is a module
@@ -185,6 +231,10 @@ codebase — and the hidden gate is blind to it, because the gate runs its own t
 new code is broken, and pass in isolation?"), or — stronger — have the examiner run the learner's
 new tests individually and report any that fail alone.
 
+**Resolution (2026-09-15): both.** Added a phase-5 "New tests actually discriminate
+(order-independence)" row to `rubric.md`, which also instructs the examiner to run the learner's new
+tests individually (`--test-name-pattern`) and report any that pass only positionally.
+
 ### 10. `[A]` It introduced a fresh oversell vector inside the feature, in a PR whose purpose was fixing an oversell.
 **Evidence.** `placeHold` shipped without quantity validation:
 `placeHold(..., -100, ...)` on SKU-1003 → ATP **113**. "A negative hold subtracts a negative and
@@ -192,6 +242,12 @@ manufactures stock out of nothing." Found by the assistant in round 8, one round
 
 **Why it matters.** Good news for the kata — the improve phase earned its place. Worth noting that
 the feature gate (4/4) passed *with this defect present*, which is another instance of entry 1.
+
+**Resolution (2026-09-15): recorded + graded (no gate change).** `trap-manifest.md` now has a
+section noting the feature gate scores 4/4 with the negative-hold present (with the
+`placeHold(...,-100,...)` → ATP 113 evidence), and `rubric.md`'s phase-4 checklist has a "Caught
+defects the change itself introduced" row. The gate itself stays frozen — no negative-qty check
+added to gate (b).
 
 ### 11. `[A]` Decide-then-disclose, rather than ask, on two structural choices.
 **Evidence.** Round 6: changed `active()`'s signature to be expiry-aware without asking (flagged
@@ -202,9 +258,17 @@ and only because a standing "tell me instead of doing it" instruction was in pla
 **Why it matters.** It's the mild end of FM-10 / restraint, and it is invisible to the gate. The
 learner's standing instruction is what surfaced it — which is itself the teachable point.
 
+**Resolution (2026-09-15): graded.** Added the "Structural choices surfaced as questions, not
+disclosed after the fact" cross-phase row to `rubric.md` Axis B, tied to FM-10, with the
+`active()` signature change and the import-cycle module as the examples.
+
 ---
 
 ## D. Harness-level `[H]` — found here, applies to every practice
+
+> **Out of scope for the 2026-09-15 pass.** #12–#15 are harness-wide (they affect every practice,
+> not just `fulfillment`) and are fixed in `AGENTS.md` / `harness/DESIGN.md`, not in this practice's
+> material. Left open here for a separate harness change; recommended directions retained below.
 
 ### 12. The clone is not its own git repository, so git history leaks upward.
 **Evidence.** The executor ran `git log` inside `work/` and it resolved to the Arboretum repo

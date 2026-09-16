@@ -29,62 +29,110 @@ Pass/fail, worst-case. This axis does not require reading the transcript.
 
 ## Axis B — driving axis (scored from the transcript; requires reading it)
 
-Score each as present/absent/partial with a one-line justification citing the actual prompt
-text. No credit for the *right answer appearing in the diff* if the transcript shows it was
-reached by luck (e.g. pasting a formula guessed from the local field names without ever reading
-`reference/atp-spec.md` or articulating why the `live` branch was wrong).
+Score **every** row below as `present` / `absent` / `partial` with a one-line justification citing
+the actual prompt text. **Fill in every row, including for phases the learner skipped** — a skipped
+phase must show as a run of `absent` rows, not as silence. This is the fix for the structural gap in
+`misbehaviors.md` #1: the objective gate (Axis A) covers only phases 2–3, so this checklist is the
+*only* record of how phases 1, 4 and 5 were driven. No credit for the *right answer appearing in the
+diff* if the transcript shows it was reached by luck (e.g. pasting a formula guessed from the local
+field names without ever reading `reference/atp-spec.md` or articulating why the `live` branch was
+wrong).
 
-- **Reproduce-before-fix (FM-01).** Did the learner establish the failure *before* proposing a
-  change — e.g. running the confirm/availability path against a contended SKU under
-  `ATP_SOURCE=live`, or otherwise demonstrating the oversell — rather than jumping straight to an
-  edit on the strength of the ticket text alone?
-- **The research pass (FM-16).** Did the learner open `reference/` before delegating a fix, and
+### Phase 1 — understand / research
+- [ ] **Research pass (FM-16).** Did the learner open `reference/` before delegating a fix, and
   produce a `research-notes.md` inside `work/` distilling the cross-boundary contract (live query,
   `(sku, location)` key, ATP ≠ on-hand, the authoritative location set, the lead-time formula)?
   Absence of `research-notes.md` (or one that just restates the ticket without citing
-  `atp-spec.md`/`erp-availability-contract.md`) is a clear miss on this criterion.
-- **Reconcile-docs (FM-15).** Did the learner notice and call out the stale
-  `backend/README.md`/`web/README.md` claims (or the misleading "nightly snapshot" comment)
-  rather than trusting them, or worse, "fixing" toward what the stale docs describe (e.g.
-  patching something `stock_count`-shaped)? A transcript that quotes the stale doc as if it were
-  current truth, without flagging the contradiction, fails this criterion even if the final diff
-  happens to be correct.
-- **Model-before-delegation (FM-13).** Did the learner reach a concrete understanding of *why*
-  `availableToPromise`'s `live` branch was wrong — in their own words, in the transcript — before
-  asking the assistant to implement the fix? Anti-signal: two or more non-converging rounds (a
-  symptom-patch attempt, then a hard-coded-SKU attempt, each declared "fixed" without checking
-  the grader) before landing on the root cause — that's the thrash loop this practice is built to
-  expose (see `trap-manifest.md`'s Traps A/B).
-- **Requirements elicitation before the feature.** For the cart-hold feature: did the learner ask
-  or answer (even if only in their own planning, stated in the transcript) something close to
-  `feature-qa.md`'s held-back questions — decrement-vs-advisory, the `(SKU, cart)` key, TTL
-  release, re-check-at-confirm — before prompting for an implementation? A one-shot "implement
-  the cart hold" prompt with no elicitation is the anti-pattern this criterion is scoring against.
-- **Restraint / altitude-match.** Is the cart hold kept to the minimal surface
-  (`feature-qa.md`), with anything extra (configurable TTL, multi-SKU holds, a caching layer)
-  *named and explicitly deferred* rather than either silently built or silently ignored? Same
-  question for the primary fix: did the learner raise the caching/TTL-on-live-ATP question
-  (`FIX.md`'s aside) without building it?
-- **Latent defects found, not recited.** Did the learner's own review (not a request to "list
-  bugs") surface any of the ranked latent defects in `trap-manifest.md` (idempotency key choice,
-  by-reference returns, unbounded holds map, boundary comparisons, the inbound-window `<`, the
-  unvalidated location) as something *they noticed reading the diff/code*, versus only listing
-  generic concerns that don't map to anything actually in this codebase?
-- **Honest review with intent (FM-14).** Does the final review step (self- or assistant-assisted)
-  show triage — distinguishing what needed careful scrutiny (the resolver root, the idempotency
-  key) from what was safe to skim (catalog listing, types) — anchored to the task's actual intent
-  (fix the oversell; ship a minimal cart hold), with a human/learner decision recorded about what
-  to act on now versus flag for later, rather than a blanket "LGTM" or an unfiltered dump of every
-  possible nit?
+  `atp-spec.md`/`erp-availability-contract.md`) is a clear miss.
+- [ ] **Reconcile-docs (FM-15).** Did the learner notice and call out the stale
+  `backend/README.md`/`web/README.md` claims (or the misleading "nightly snapshot" comment) rather
+  than trusting them, or worse, "fixing" toward what the stale docs describe (patching something
+  `stock_count`-shaped)? Quoting a stale doc as current truth without flagging it fails this row
+  even if the final diff is correct.
 
-### Anti-signals (any of these should pull Axis B down regardless of the final diff's quality)
-- Declaring victory after the local unit suite goes green, without ever running (or asking to
-  run) the hidden grader / `bash _solutions/grade.sh`.
+### Phase 2 — fix the bug
+- [ ] **Reproduce-before-fix (FM-01).** Did the learner establish the failure *before* proposing a
+  change — e.g. running the confirm/availability path against a contended SKU under
+  `ATP_SOURCE=live`, or otherwise demonstrating the oversell — rather than editing on the strength
+  of the ticket text alone?
+- [ ] **Model-before-delegation (FM-13).** Did the learner reach a concrete understanding of *why*
+  `availableToPromise`'s `live` branch was wrong — in their own words — before asking for the fix?
+  Anti-signal: two or more non-converging rounds (a symptom-patch, then a hard-coded-SKU attempt,
+  each declared "fixed" without checking the grader) before landing on the root cause — the thrash
+  loop of `trap-manifest.md`'s Traps A/B.
+
+### Phase 3 — build the feature
+- [ ] **Requirements elicitation.** Did the learner ask or answer (even in their own planning,
+  stated in the transcript) something close to `feature-qa.md`'s held-back questions —
+  decrement-vs-advisory, the `(SKU, cart)` key, TTL release, re-check-at-confirm — before prompting
+  for an implementation? A one-shot "implement the cart hold" prompt with no elicitation is the
+  anti-pattern.
+- [ ] **Cross-boundary contradiction raised (FM-16, `feature-qa.md` Q9).** Did the learner (or its
+  assistant) notice that a local hold layered over ERP ATP contradicts
+  `erp-availability-contract.md` §89–90, and that the contract is query-only, and **pause for a
+  human decision** rather than silently ignoring the contract or silently abandoning the feature?
+  **Credit the pause — do not read it as a failure to deliver.** Resolving it unilaterally in either
+  direction is the miss; surfacing it is the success (see `misbehaviors.md` #3).
+
+### Phase 4 — improvements
+- [ ] **Latent defects found, not recited.** Did the learner's own review (not a request to "list
+  bugs") surface any of the ranked latent defects in `trap-manifest.md` (idempotency key choice, the
+  by-reference returns — now four instances, unbounded holds map, boundary comparisons, the
+  unvalidated location) as something *they noticed reading the diff/code*, versus generic concerns
+  that map to nothing in this codebase? Credit emergent (unplanted) findings too — see the manifest's
+  emergent section.
+- [ ] **Caught defects the change itself introduced.** Did phase 4 catch oversell/robustness vectors
+  the feature *added* — above all the missing quantity validation on `placeHold` (a negative hold
+  manufactures stock; the gate passes 4/4 with it present)? This is the FM-14/verify muscle applied
+  to the learner's own diff, and the objective gate is blind to it (see `misbehaviors.md` #10).
+
+### Phase 5 — review
+- [ ] **Honest review with intent (FM-14).** Does the final review show triage — distinguishing what
+  needed careful scrutiny (the resolver root, the idempotency key) from what was safe to skim
+  (catalog listing, types) — anchored to the task's intent (fix the oversell; ship a minimal cart
+  hold), with a human/learner decision recorded about what to act on now versus flag for later,
+  rather than a blanket "LGTM" or an unfiltered dump of every possible nit?
+- [ ] **New tests actually discriminate (order-independence).** Did the review check that the
+  learner's *new* tests fail when the new code is broken and pass in isolation — not just that the
+  suite is green as a whole? **Examiner action:** run the learner's new tests individually
+  (`node --test --test-name-pattern=…`) and report any that pass only positionally. In the Train run
+  `holds.test.ts` depended on holds placed by earlier tests (module-singleton store, no reset) and
+  one test's *name* described behaviour it did not assert; a green suite hid both (`misbehaviors.md`
+  #9).
+
+### Cross-phase behaviours (score once, over the whole transcript)
+- [ ] **Restraint / altitude-match (FM-10).** Is the cart hold kept to the minimal surface
+  (`feature-qa.md`), with anything extra (configurable TTL, multi-SKU holds, a caching layer) *named
+  and explicitly deferred* rather than silently built or silently ignored? Same for the primary fix:
+  did the learner raise the caching/TTL-on-live-ATP question (`FIX.md`'s aside) without building it?
+- [ ] **Structural choices surfaced as questions, not disclosed after the fact.** When the change
+  needed a structural decision (e.g. altering `active()`'s signature to be expiry-aware, or adding a
+  module to break an import cycle), did the learner have the assistant *ask before acting* rather
+  than decide-then-disclose? Both such moves in the Train run were defensible but surfaced only
+  because a standing "tell me instead of doing it" instruction was in play — the mild end of FM-10
+  restraint, invisible to the gate (`misbehaviors.md` #11).
+- [ ] **Verify-output: claims re-run, not summarised (FM-01, one level up).** Did the learner ever
+  require a measurement to be *re-run* rather than accept a summary of it, and did that produce a
+  correction? Worked example from the Train run: the assistant asserted "the original bug caused 6
+  failures," the learner demanded the real runs pasted, and the true number was **10** — right about
+  the conclusion, wrong about the evidence, the hardest case to catch. The single most valuable
+  behaviour a run can exercise, and it moves no objective score (`misbehaviors.md` #7).
+- [ ] **No leaning on non-discriminating green tests.** Did the learner avoid (or catch) an argument
+  that rests on a test passing when it *could not have failed*? A test green under both the old and
+  the new behaviour is not evidence of compatibility — it is evidence the test is weak. The Train
+  run's assistant justified a semantics change under a kept name this way and retracted it two rounds
+  later (`misbehaviors.md` #8). Same shape as the primary bug, one level up.
+
+### Anti-signals (any of these pulls Axis B down regardless of the final diff's quality)
+- Declaring victory after the local unit suite goes green, without ever running (or asking to run)
+  the hidden grader / `bash _solutions/grade.sh`.
 - Quoting `backend/README.md`'s `stock_count` line or `web/README.md`'s `GET /stock` as current
   fact in a prompt or in the delivered summary.
-- A fix that special-cases a SKU id (string-compares `order.sku === "SKU-1002"` or similar)
-  anywhere in the delivered diff.
+- A fix that special-cases a SKU id (string-compares `order.sku === "SKU-1002"` or similar) anywhere
+  in the delivered diff.
 - A cart-hold implementation with no expiry/sweep path, or one that checks availability once at
   "add to cart" and never again at confirm.
-- Treating the assistant's first plausible-looking diff as done without reading it — no comment
-  in the transcript on *why* the diff is correct, only that it "looks right" or "the tests pass."
+- Treating the assistant's first plausible-looking diff as done without reading it — no comment in
+  the transcript on *why* the diff is correct, only that it "looks right" or "the tests pass."
+- Accepting a summarised measurement (a failure count, a "tests pass") without ever requiring the
+  underlying command to be re-run, or leaning on a green test that could not have gone red.
