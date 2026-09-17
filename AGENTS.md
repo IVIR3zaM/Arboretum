@@ -83,6 +83,10 @@ cp -R practices/<id>/_solutions .sessions/<stamp>/golden          # examiner onl
 cp practices/<id>/practice.json .sessions/<stamp>/golden/         # examiner reads the commands from here
 mv .sessions/<stamp>/work/FEATURE-REQUEST.md .sessions/<stamp>/staged-FEATURE-REQUEST.md
                                                                   # hand it over when phase 3 starts, not before
+# make work/ its own git repo, so git inside the clone can't reach Arboretum's history (or _solutions/):
+git -C .sessions/<stamp>/work init -q
+git -C .sessions/<stamp>/work add -A
+git -C .sessions/<stamp>/work -c user.name=arboretum-harness -c user.email=harness@arboretum.invalid -c commit.gpgsign=false commit -q -m "baseline (stripped clone)"
 ```
 Then: execute the learner's prompts inside `work/`; keep an ordered transcript; run the
 practice's declared grade command (`practice.json` → `commands.grade`, against a copy that still

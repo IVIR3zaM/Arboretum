@@ -43,6 +43,11 @@ Two consequences that matter:
   has not reached. The harness holds each item until its phase. **A Cedar `reference/` is not a
   work item and is not staged** — it is in the clone from the start, for the reasons in the next
   paragraph.
+- **The clone is its own git repository.** After stripping and staging, setup runs `git init` in
+  `work/` and commits the stripped tree as `baseline (stripped clone)`. Without it, `git log` inside
+  `work/` resolves to the Arboretum repo above the clone — its whole history, `_solutions/` included;
+  with it, the learner's changes have a real diff surface against that baseline. The nested repo
+  lives under the gitignored `.sessions/`, so Arboretum never tracks it.
 - The examiner reads `_solutions/` and the Context from `golden/`, which the assistant/learner
   **cannot** see. The grader — the practice's **declared** command (`practice.json` →
   `commands.grade`; `node _solutions/grade.mjs` for the seed, `cargo run --bin grade` for a Rust kata, a
