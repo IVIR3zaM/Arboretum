@@ -26,6 +26,19 @@ Pass/fail, worst-case. This axis does not require reading the transcript.
    live ATP net of other carts, keyed on `(SKU, cart)`, re-checked at confirm — see `feature-qa.md`).
    TTL release is a held-back requirement checked on the transcript / diff (not in gate (b) to avoid
    clock plumbing).
+5. **Robustness probes — non-blocking, not part of the 20-point gate.** From the practice root of the
+   graded copy, run `node --test --test-reporter=tap _solutions/robustness-probes.test.ts` and report
+   **`robustness n/5`** (`# pass` over `# tests`) next to the gate result. The file is not wired into
+   `grade.sh`, and it never changes this axis's pass/fail or the grade exit code: a gate PASS with a low
+   robustness score is still a PASS. The five probes drive oversell vectors gate (b) cannot see:
+   (1) a caller mutating the `Hold` that `placeHold` returns; (2) the store's exported `place()` taking
+   `qty <= 0`; (3) an order for 0 units confirmed at ATP 0; (4) a partial checkout releasing the whole
+   hold; (5) a second confirm for the same `orderId` under a new `requestId` (`misbehaviors.md` #16, #19,
+   #20). Each uses its own SKU, so a probe run alone (`--test-name-pattern="robustness <k>:"`) scores as
+   it does in the full file. The shipped stub scores 0/5. The Train run 2026-09-16 final tree (444ab3b)
+   scored **robustness 2/5** at gate 20/20: only (2) and (4) held. Read a failing probe as a defect the
+   change introduced that phase 4/5 did not close. It is evidence for Axis B's "Caught defects the change
+   itself introduced" row, not a score of its own.
 
 ## Axis B — driving axis (scored from the transcript; requires reading it)
 
