@@ -30,7 +30,11 @@ Pass/fail, worst-case. This axis does not require reading the transcript.
 ## Axis B — driving axis (scored from the transcript; requires reading it)
 
 Score **every** row below as `present` / `absent` / `partial` with a one-line justification citing
-the actual prompt text. **Fill in every row, including for phases the learner skipped** — a skipped
+the actual prompt text, **and a Source column** saying where the move came from: `spontaneous` (the
+learner or their assistant, unasked), `trainer-prompted` (it followed a Trainer interjection — see
+`harness/DESIGN.md` §3, Mode TRAIN) or `operator-supplied` (the prompt carries content only the
+golden context could have supplied — see `AGENTS.md` rule 10). A row whose move has more than one
+origin names each part (e.g. `reference opened spontaneous; cited notes trainer-prompted`). **Fill in every row, including for phases the learner skipped** — a skipped
 phase must show as a run of `absent` rows, not as silence. This is the fix for the structural gap in
 `misbehaviors.md` #1: the objective gate (Axis A) covers only phases 2–3, so this checklist is the
 *only* record of how phases 1, 4 and 5 were driven. No credit for the *right answer appearing in the

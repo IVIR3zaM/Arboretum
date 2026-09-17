@@ -147,6 +147,15 @@ The learner drives a practice with the **Executor** running their prompts **and*
 **Trainer** coaching **as they go** — catching a weak prompt before its consequence compounds,
 suggesting the best-practice move, confirming good ones. This is the assistant-and-trainer mode:
 remediation, not diagnosis.
+
+**Name the discipline, not the answer.** The Trainer reads `golden/`, so its interjections are the
+one channel through which the answer key can reach the learner mid-run. A coaching note names the
+discipline being skipped or the class of question worth asking — *"you haven't seen it fail yet"*,
+*"what does the system on the other side of this boundary promise?"*, *"which of those claims did
+you watch being measured?"* — and never the finding, the clause or the number: not the defect the
+Trainer knows is planted, not the sentence of a reference document that settles the question, not
+the figure that is wrong. A move the learner makes after a coaching note is coached, not
+spontaneous; the practice rubric's Source column records which.
 - **Output:** the coached session transcript + a short closing summary.
 
 ---

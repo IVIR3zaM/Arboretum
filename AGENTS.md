@@ -72,6 +72,14 @@ These come from [`harness/DESIGN.md`](harness/DESIGN.md §0–§2). Follow them 
    research pass distills it into a **`research-notes.md`** written inside `work/`. The jail is
    unchanged — `reference/` and `research-notes.md` are inside the clone; nothing outside it is
    ever read or written.
+10. **An agent with golden access is not a learner.** If the learner's prompts are written by an
+    agent that can read `golden/` — typically the operator role-playing the learner to record a
+    proof — the run, its grade and any proof recorded from it are labelled a **calibration run**,
+    not a learner grade. It is good evidence of how the assistant behaves and whether the traps
+    fire; it is no evidence of a learner's judgement, because answer-key content reaches the
+    prompts by construction. The Trainer's side of the same leak is ruled on in
+    [`harness/DESIGN.md`](harness/DESIGN.md) §3 (Mode TRAIN); the practice rubric's Source column
+    records, row by row, where each move came from.
 
 ## Running a mode today (before the built runner exists)
 ```
