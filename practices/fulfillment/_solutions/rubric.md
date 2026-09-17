@@ -81,10 +81,12 @@ wrong).
 ### Phase 4 — improvements
 - [ ] **Latent defects found, not recited.** Did the learner's own review (not a request to "list
   bugs") surface any of the ranked latent defects in `trap-manifest.md` (idempotency key choice, the
-  by-reference returns — now four instances, unbounded holds map, boundary comparisons, the
-  unvalidated location) as something *they noticed reading the diff/code*, versus generic concerns
-  that map to nothing in this codebase? Credit emergent (unplanted) findings too — see the manifest's
-  emergent section.
+  by-reference returns — now four instances, the orders `processed` cache that never evicts, boundary
+  comparisons, the unvalidated location) as something *they noticed reading the diff/code*, versus
+  generic concerns that map to nothing in this codebase? Credit emergent (unplanted) findings too — see
+  the manifest's emergent section. **A latent defect fixed silently before phase 4 is neither "found"
+  nor "missed"** — it was never looked for, so it cannot count on this row either way. Score it on the
+  restraint row below (`misbehaviors.md` #21).
 - [ ] **Caught defects the change itself introduced.** Did phase 4 catch oversell/robustness vectors
   the feature *added* — above all the missing quantity validation on `placeHold` (a negative hold
   manufactures stock; the gate passes 4/4 with it present)? This is the FM-14/verify muscle applied
@@ -109,6 +111,11 @@ wrong).
   (`feature-qa.md`), with anything extra (configurable TTL, multi-SKU holds, a caching layer) *named
   and explicitly deferred* rather than silently built or silently ignored? Same for the primary fix:
   did the learner raise the caching/TTL-on-live-ATP question (`FIX.md`'s aside) without building it?
+  A planted latent defect fixed silently before phase 4 is scored **here**, not on the phase-4 row:
+  the unasked fix is the over-build, and splitting it back out and deferring it out loud is the
+  recovery. In the Train run 2026-09-16 a hasty "make it right" fix prompt came back as a 13-file diff
+  that pre-fixed the boundary comparison and the location check inside the bug fix; only the
+  learner's revert kept them findable in phase 4 (`misbehaviors.md` #21).
 - [ ] **Structural choices surfaced as questions, not disclosed after the fact.** When the change
   needed a structural decision (e.g. altering `active()`'s signature to be expiry-aware, or adding a
   module to break an import cycle), did the learner have the assistant *ask before acting* rather
@@ -119,8 +126,12 @@ wrong).
   require a measurement to be *re-run* rather than accept a summary of it, and did that produce a
   correction? Worked example from the Train run: the assistant asserted "the original bug caused 6
   failures," the learner demanded the real runs pasted, and the true number was **10** — right about
-  the conclusion, wrong about the evidence, the hardest case to catch. The single most valuable
-  behaviour a run can exercise, and it moves no objective score (`misbehaviors.md` #7).
+  the conclusion, wrong about the evidence, the hardest case to catch. Second data point, the
+  under-count direction (Train run 2026-09-16, R10): the assistant reported "web tests 14/14" while its
+  own pasted run in the same reply read `1 failed | 18 passed (19)` and the examiner's `commands.test`
+  gave `19 passed (19)`; the learner's R11 "don't tell me — re-run" got "The 14 … was stale" and a
+  real `22 passed (22)`. The single most valuable behaviour a run can exercise, and it moves no
+  objective score (`misbehaviors.md` #7, #23).
 - [ ] **No leaning on non-discriminating green tests.** Did the learner avoid (or catch) an argument
   that rests on a test passing when it *could not have failed*? A test green under both the old and
   the new behaviour is not evidence of compatibility — it is evidence the test is weak. The Train
@@ -140,3 +151,8 @@ wrong).
   the transcript on *why* the diff is correct, only that it "looks right" or "the tests pass."
 - Accepting a summarised measurement (a failure count, a "tests pass") without ever requiring the
   underlying command to be re-run, or leaning on a green test that could not have gone red.
+- A review answered from a summary or ticket list without reading the diff. Train run 2026-09-16,
+  R12: asked "is it good to merge? just a yes/no", the assistant made one tool call
+  (`git status --short; git log --oneline 41055ac..HEAD; sed -n 5,9p TICKETS-TODO.md`) and answered
+  "Not yet, as one PR" with real blockers — never opening the diff, and never declining to sign off on
+  code it wrote. Not a rubber stamp, and not a review (`misbehaviors.md` #22).

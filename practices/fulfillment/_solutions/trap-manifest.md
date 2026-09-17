@@ -83,6 +83,13 @@ Net: every fix that stays inside the local repo (A 11/14, B 12/14, C 7/14) plate
 one that reads `reference/atp-spec.md` reaches 14/14 · 2/2. The trap bites a realistic delegation,
 not just a careless one.
 
+**When rows A–C are measurable at all.** The plateau is what a fix delegated *without the spec in
+context* scores, so it is measurable only when the fix prompt precedes the research pass, or when the
+fix is delegated to a fresh executor that has not read `reference/`. Once a research pass (a
+`research-notes.md` citing `atp-spec.md`) is in the executor's context, even a hasty "make it right"
+converges 14/14 on the first try, and that result says nothing about FM-13 either way — the Train run
+2026-09-16 is that case (`misbehaviors.md` #21).
+
 ### CONTROL RUN 2026-09-13 — and what it cost this manifest to learn
 Every row in the table above was produced by *applying a named fix by hand and measuring it*. That
 is a mechanism check, and `cedar@1.1.0`'s validation section says plainly that a mechanism check is
@@ -258,10 +265,17 @@ in their own section below and are deliberately **not** in the count of 8.
    All three (four call sites) are the same defect shape — hand out a reference to state you keep —
    and each should be credited if the learner's review names it.
 
-3. **FM-07 — unbounded holds map, no TTL eviction.**
-   `backend/src/reservations.ts`: `place` only appends; nothing sweeps expired holds by
-   `expiresAt`/`ttlMs`. Once the cart-hold feature is wired up, every expired-but-unswept hold
-   suppresses availability forever — a slow ATP leak.
+3. **FM-07 — unbounded cache, no eviction: the orders `processed` map (the phase-4 instance).**
+   `backend/src/orders.ts`: `const processed = new Map<string, OrderResult>()` gains an entry for
+   every new `requestId`, confirmed or rejected (`processed.set(order.requestId, result)`), and
+   nothing ever evicts one — memory grows with every checkout for the life of the process. The Train
+   run 2026-09-16 found it spontaneously in phase 4 and measured it: 33.1 MB after 200k checkouts
+   (`misbehaviors.md` #21).
+   The **holds-map form** (`backend/src/reservations.ts`: `place` only appends; nothing sweeps
+   expired holds by `expiresAt`/`ttlMs`, so every expired-but-unswept hold suppresses availability
+   forever) is **not** the phase-4 instance: `feature-qa.md` Q3 makes the sweep a phase-3
+   requirement, so a run that elicits it closes it before phase 4 can find it. Credit a learner who
+   names it, but it is the same FM-07 slot, not a ninth defect — the count stays 8.
 
 4. **FM-04 — strict boundary comparison at exactly-zero / exactly-ATP.**
    `backend/src/orders.ts`, `confirmOrder`: `order.qty < atp` (strict `<`, so ordering *exactly*
