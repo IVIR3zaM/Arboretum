@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fulfillment Train Proof</title>
+<style>
+  :root{
+    --bg:#f7f6f3; --panel:#ffffff; --ink:#1c1b19; --muted:#6b6862; --line:#e5e2db;
+    --accent:#2f6f4f; --accent-soft:#e3efe8; --warn:#b26b00; --warn-soft:#fbefd8;
+    --bad:#b3261e; --bad-soft:#fbe4e2; --good:#1f7a4d; --good-soft:#e1f2e8;
+    --prompt:#243b53; --prompt-soft:#e7eef5; --code-bg:#1e2229; --code-ink:#e8e6e1;
+    --shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#16181c; --panel:#1e2127; --ink:#e9e7e2; --muted:#9a978f; --line:#30343c;
+      --accent:#66c295; --accent-soft:#1d2a24; --warn:#e0a54a; --warn-soft:#2c2417;
+      --bad:#f0857d; --bad-soft:#2c1a18; --good:#6fd39b; --good-soft:#16241c;
+      --prompt:#a9c7e8; --prompt-soft:#1a2330; --code-bg:#0f1216; --code-ink:#d8d6d1;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+      --bg:#16181c; --panel:#1e2127; --ink:#e9e7e2; --muted:#9a978f; --line:#30343c;
+      --accent:#66c295; --accent-soft:#1d2a24; --warn:#e0a54a; --warn-soft:#2c2417;
+      --bad:#f0857d; --bad-soft:#2c1a18; --good:#6fd39b; --good-soft:#16241c;
+      --prompt:#a9c7e8; --prompt-soft:#1a2330; --code-bg:#0f1216; --code-ink:#d8d6d1;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 20px 80px}
+  code,pre,.mono{font-family:"SF Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  a{color:var(--accent)}
+
+  header.hero{background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    padding:28px 28px 22px;box-shadow:var(--shadow)}
+  .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);
+    font-weight:700;margin:0 0 8px}
+  h1{font-size:30px;line-height:1.15;margin:0 0 6px;letter-spacing:-.02em}
+  .sub{color:var(--muted);margin:0 0 20px;font-size:16px}
+  .badges{display:flex;flex-wrap:wrap;gap:8px}
+  .badge{display:inline-flex;align-items:center;gap:6px;background:var(--bg);
+    border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px}
+  .badge b{color:var(--ink)} .badge span{color:var(--muted)}
+  .badge.mode{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:700}
+
+  section{margin-top:34px}
+  h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    margin:0 0 14px;font-weight:700}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:20px 22px;box-shadow:var(--shadow)}
+  .lead{font-size:17px;line-height:1.55}
+  .lead b{color:var(--accent)}
+
+  /* scorecard */
+  .score{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px}
+  .stat .k{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+  .stat .v{font-size:26px;font-weight:800;margin-top:4px;letter-spacing:-.02em}
+  .stat .v .arrow{color:var(--muted);font-weight:500;font-size:18px;margin:0 4px}
+  .v.good{color:var(--good)} .v.bad{color:var(--bad)}
+
+  /* invariants */
+  ul.inv{list-style:none;padding:0;margin:0;display:grid;gap:10px}
+  ul.inv li{display:flex;gap:10px;align-items:flex-start}
+  ul.inv .chk{color:var(--good);font-weight:800;flex:0 0 auto}
+  ul.inv code{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:13px}
+
+  /* rounds */
+  .round{background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);margin-bottom:20px;overflow:hidden}
+  .round > .head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px;
+    padding:16px 20px;border-bottom:1px solid var(--line);background:linear-gradient(0deg,transparent,transparent)}
+  .phase-tag{font-size:12px;font-weight:800;letter-spacing:.05em;color:var(--accent);
+    background:var(--accent-soft);border-radius:6px;padding:3px 9px}
+  .round .title{font-weight:700;font-size:17px}
+  .round .time{margin-left:auto;color:var(--muted);font-size:13px}
+  .round .body{padding:6px 20px 18px}
+  .block{padding:14px 0;border-bottom:1px dashed var(--line)}
+  .block:last-child{border-bottom:0}
+  .block .label{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+    display:inline-flex;align-items:center;gap:6px;margin-bottom:7px}
+  .label.prompt{color:var(--prompt)} .label.ai{color:var(--muted)}
+  .label.trap{color:var(--warn)} .label.trainer{color:var(--accent)}
+  .label.outcome{color:var(--good)}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .dot.prompt{background:var(--prompt)} .dot.ai{background:var(--muted)}
+  .dot.trap{background:var(--warn)} .dot.trainer{background:var(--accent)}
+  .dot.outcome{background:var(--good)}
+  .promptbox{background:var(--prompt-soft);border-left:3px solid var(--prompt);
+    border-radius:0 8px 8px 0;padding:11px 14px;font-size:15px}
+  .trapbox{background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;padding:11px 14px}
+  .trainerbox{background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:11px 14px}
+  .block p{margin:.2em 0}
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:8px;padding:12px 14px;
+    overflow-x:auto;font-size:13px;line-height:1.5;margin:8px 0 0}
+  pre .pass{color:#7ee0a6} pre .fail{color:#ff9d95} pre .dim{color:#8b93a1}
+  .pill{display:inline-block;font-size:12px;font-weight:700;border-radius:999px;padding:2px 9px}
+  .pill.red{background:var(--bad-soft);color:var(--bad)}
+  .pill.green{background:var(--good-soft);color:var(--good)}
+
+  table.map{width:100%;border-collapse:collapse;font-size:14px}
+  table.map th,table.map td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.map th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+  table.map code{font-size:12.5px}
+
+  footer{margin-top:40px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:18px}
+  .note{background:var(--panel);border:1px dashed var(--line);border-radius:10px;padding:14px 16px;color:var(--muted);font-size:14px}
+  @media print{ body{background:#fff} .round,.card,.stat{box-shadow:none} }
+</style>
+<style>
+  .wrap{max-width:960px}
+  .harness{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+  .gate{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+  .round .head .gatechip{margin-left:auto;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;
+    background:var(--bad-soft);color:var(--bad)}
+  .round .head .gatechip.ok{background:var(--good-soft);color:var(--good)}
+  .labelbox{background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--muted);
+    border-radius:0 8px 8px 0;padding:11px 14px}
+  .label.finding{color:var(--bad)} .dot.finding{background:var(--bad)}
+  table.map td .fm{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.04em;
+    background:var(--warn-soft);color:var(--warn);border-radius:5px;padding:1px 6px;margin-left:6px}
+  table.map tr.disc td:first-child{font-weight:700}
+  .tablewrap{overflow-x:auto}
+</style>
+<style>
+  .pill.amber{background:var(--warn-soft);color:var(--warn)}
+  .pill.grey{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+  table.map td.v{white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+  <p class="eyebrow">Arboretum · Harness proof of training value</p>
+  <h1>Fulfillment kata — a fourteen-round Train-mode run, and the day the feature gate stopped discriminating</h1>
+  <p class="sub">A real coached session against a jailed clone of <code>practices/fulfillment</code>, run
+  after the 2026-09-15 calibration. All five declared phases ran in order, and the feature request was handed
+  over only when phase 3 began. Every figure below is a real command output the harness captured between rounds. That
+  includes the three findings that are not flattering to this kata, and one that is not flattering to the
+  harness operator.</p>
+  <div class="badges">
+    <span class="badge mode">● TRAIN mode (live coaching)</span>
+    <span class="badge"><span>Date</span><b>2026-09-16</b></span>
+    <span class="badge"><span>Model</span><b>Claude Opus 5</b><span>·</span><span class="mono">claude-opus-5</span></span>
+    <span class="badge"><span>Practice</span><b>fulfillment</b><span>· XL</span></span>
+    <span class="badge"><span>Context</span><b>cedar@1.1.0</b></span>
+    <span class="badge"><span>Runtime</span><b>Node v22.21.1</b></span>
+    <span class="badge"><span>Session</span><b class="mono">20260916T083535Z-fulfillment-train</b></span>
+  </div>
+</header>
+
+<section>
+  <h2>What this session proves</h2>
+  <div class="card lead">
+    <p>An engineer takes a service, a ticket and then a feature. At the start of each phase they take the
+    shortcut: <i>“just fix the oversell… ping me when done”</i> (R3), <i>“can you just build it?… don't
+    overthink it, go”</i> (R6), and <i>“is it good to merge? just a yes/no”</i> (R12). Each time the
+    trainer catches it and they drive the phase again. The run converges on <b>availability 6/14 → 14/14</b>,
+    <b>feature 0/4 → 4/4</b>, <b>web 1/2 → 2/2</b>, <b>RESULT: PASS</b>, with 55 + 22 green tests
+    and a 24-item ticket list, each item carrying its reason.</p>
+    <p><b>The headline is a trap that did not fire.</b> On 2026-09-13 a one-shot feature delegation scored
+    <b>1/4</b>, and the manifest called that three-point swing “the strongest discriminator this kata
+    has.” Today the same kind of delegation, sent to the same model with a research pass already in its context, scored
+    <span class="pill green">4/4</span> first time. Once the learner had elicited the requirements, it still
+    scored <span class="pill green">4/4</span>. <b>The objective delta was zero.</b> The availability gate had
+    already stopped discriminating two runs ago, and FM-16 did not bite for the third recorded run in a row.
+    This kata now has <b>no objective number that separates good driving from a shortcut</b>. What still
+    separates them is the Axis-B transcript, and the four defects the gate cannot see. The final tree still ships two of them.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Objective scorecard — every figure a real command output</h2>
+  <div class="score">
+    <div class="stat"><div class="k">Availability gate</div>
+      <div class="v"><span style="color:var(--bad)">6/14</span><span class="arrow"> → </span><span style="color:var(--good)">14/14</span></div>
+      <div class="k" style="text-transform:none;margin-top:6px">14/14 from the hasty R3 prompt</div></div>
+    <div class="stat"><div class="k">Feature gate</div>
+      <div class="v"><span style="color:var(--bad)">0/4</span><span class="arrow"> → </span><span style="color:var(--good)">4/4</span><span class="arrow"> → </span><span style="color:var(--good)">4/4</span></div>
+      <div class="k" style="text-transform:none;margin-top:6px">naive one-shot (R6) → elicited (R8): Δ 0</div></div>
+    <div class="stat"><div class="k">Whole ticket</div>
+      <div class="v"><span style="color:var(--bad)">FAIL</span><span class="arrow"> → </span><span style="color:var(--good)">PASS</span></div>
+      <div class="k" style="text-transform:none;margin-top:6px">14/14 · 4/4 · 2/2, worst-case, green from R6</div></div>
+    <div class="stat"><div class="k">Unit suites</div>
+      <div class="v">23+10<span class="arrow"> → </span>55+22</div>
+      <div class="k" style="text-transform:none;margin-top:6px">green at every checkpoint, including at 6/14</div></div>
+    <div class="stat"><div class="k">Axis B (examiner)</div>
+      <div class="v">5 · 9 · 0</div>
+      <div class="k" style="text-transform:none;margin-top:6px">present · partial · absent, most of them trainer-prompted</div></div>
+    <div class="stat"><div class="k">Phases run</div>
+      <div class="v">5 of 5</div>
+      <div class="k" style="text-transform:none;margin-top:6px">14 rounds · 4 commits · 17 files +1012/−51</div></div>
+  </div>
+  <div class="card" style="margin-top:14px">
+<pre><span class="dim">### 00-baseline — commands.test / commands.grade on the stripped clone</span>
+# tests 23   # pass 23   # fail 0
+      Tests  10 passed (10)
+backend acceptance : <span class="fail">FAIL  (6/14, exit=1)</span>
+feature acceptance : <span class="fail">FAIL  (0/4, exit=1)</span>
+web integration    : <span class="fail">FAIL  (1/2, exit=1)</span>
+RESULT: <span class="fail">FAIL</span>
+
+<span class="dim">### 99-FINAL — same commands, same throwaway-copy method, after R14 (commit 444ab3b)</span>
+# tests 55   # pass 55   # fail 0
+      Tests  22 passed (22)
+backend acceptance : <span class="pass">PASS  (14/14)</span>
+feature acceptance : <span class="pass">PASS  (4/4)</span>
+web integration    : <span class="pass">PASS  (2/2)</span>
+RESULT: <span class="pass">PASS</span></pre>
+    <div class="tablewrap" style="margin-top:14px">
+    <table class="map">
+      <thead><tr><th>Checkpoint</th><th>backend unit</th><th>web unit</th><th>availability</th><th>feature</th><th>web</th><th>result</th></tr></thead>
+      <tbody>
+      <tr><td>00 baseline</td><td>23/23</td><td>10/10</td><td>6/14</td><td>0/4</td><td>1/2</td><td><span class="pill red">FAIL</span></td></tr>
+      <tr><td>03 hasty fix (13 files)</td><td>39/39</td><td>10/10</td><td>14/14</td><td>0/4</td><td>2/2</td><td><span class="pill red">FAIL</span></td></tr>
+      <tr><td>04 scope split (5 files)</td><td>39/39</td><td>10/10</td><td>14/14</td><td>0/4</td><td>2/2</td><td><span class="pill red">FAIL</span></td></tr>
+      <tr><td>06 <b>naive one-shot hold</b></td><td>45/45</td><td>14/14</td><td>14/14</td><td><b>4/4</b></td><td>2/2</td><td><span class="pill green">PASS</span></td></tr>
+      <tr><td>08 elicited hold</td><td>51/51</td><td>14/14</td><td>14/14</td><td>4/4</td><td>2/2</td><td><span class="pill green">PASS</span></td></tr>
+      <tr><td>10 triage fixes</td><td>54/54</td><td>19/19</td><td>14/14</td><td>4/4</td><td>2/2</td><td><span class="pill green">PASS</span></td></tr>
+      <tr><td>11 option A</td><td>54/54</td><td>22/22</td><td>14/14</td><td>4/4</td><td>2/2</td><td><span class="pill green">PASS</span></td></tr>
+      <tr><td>99 final</td><td>55/55</td><td>22/22</td><td>14/14</td><td>4/4</td><td>2/2</td><td><span class="pill green">PASS</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Harness invariants applied before any prompt ran</h2>
+  <div class="card">
+    <ul class="inv">
+      <li><span class="chk">✓</span><span><b>Gate check.</b> Orchestrator, trainer and executor all ran on
+        <code>claude-opus-5</code>. The executor sub-agent inherited the model.</span></li>
+      <li><span class="chk">✓</span><span><b>Cloned and jailed.</b> The session ran in
+        <code>.sessions/20260916T083535Z-fulfillment-train/work/</code>. <code>practices/fulfillment/</code>
+        was never touched; the repo's <code>git status</code> was clean at the end.</span></li>
+      <li><span class="chk">✓</span><span><b>Exercise material stripped.</b> The clone had no <code>_solutions/</code>,
+        <code>README.md</code> or <code>practice.json</code>. The executor was never told there was an exercise, a trap
+        or a grader.</span></li>
+      <li><span class="chk">✓</span><span><b><code>reference/</code> present from the start</b>, the Cedar
+        exception (AGENTS.md rule 4).</span></li>
+      <li><span class="chk">✓</span><span><b>Work items staged.</b> <code>FEATURE-REQUEST.md</code> was
+        copied into the clone at the start of R6 and not before.</span></li>
+      <li><span class="chk">✓</span><span><b>The clone is its own git repo</b> (<code>git init</code>, baseline
+        commit <code>41055ac</code>). This closes harness gap #12 from the previous proof: <code>git log</code> inside
+        <code>work/</code> can no longer resolve to Arboretum's history, and the learner got a real commit-by-commit diff.</span></li>
+      <li><span class="chk">✓</span><span><b>Executor ≠ examiner, twice over.</b> Between rounds an outcome
+        checker ran <code>practice.json</code>'s declared <code>commands.install</code> / <code>test</code> /
+        <code>grade</code> (read from the manifest, not hardcoded) against a throwaway copy with the answer key dropped in.
+        The executor never saw a score. Axis B was then graded by a <b>separate fresh-context examiner
+        sub-agent</b> that had neither executed nor coached, reading the golden context, the transcript and the result.</span></li>
+      <li><span class="chk">✓</span><span><b>Jail audited, not assumed.</b> The executor's full log shows
+        <b>98 tool calls</b>, <b>0</b> absolute paths outside <code>work/</code>, and <b>0</b> references to
+        <code>golden/</code>, <code>_solutions/</code>, <code>practice.json</code> or the staged request. Its
+        probe worktrees and temp directories were created under <code>work/.probe</code> and removed afterwards.</span></li>
+    </ul>
+    <p class="note" style="margin-top:14px"><b>Three honest limits of this run.</b>
+    (1) <b>The learner was role-played by the harness operator, who had read the golden context.</b> The examiner
+    flagged it: the R8 “meeting answers” restate <code>feature-qa.md</code>'s model resolution, and the R13
+    review prompt tracks the rubric's phase-5 rows. The phase 3–5 Axis-B rows are therefore partly
+    <i>built into the setup</i>. They show that the assistant responds well when driven this way. They are not
+    evidence of an independent learner's judgement.
+    (2) <b>The trainer handed over answers three times</b> instead of naming the discipline: it quoted contract §89–90
+    in R6, named the by-reference defect class in R9, and pointed at the 14-vs-19 count in R10. Each is marked
+    below as trainer-supplied. (3) The jail held by cooperation. The executor was <i>told</i> the boundary and
+    kept to it (verified), but nothing enforced it (misbehaviors #13). Transcript capture was manual
+    (#14): <code>PROGRESS.md</code> and <code>transcript.jsonl</code> are hand-written, and the verbatim text
+    lives in the executor's raw log.</p>
+  </div>
+</section>
+
+<section>
+  <h2>The session, round by round</h2>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 1 · Understand</span>
+    <span class="title">“Quick overview… I want to get moving”</span><span class="gatechip">gate 6/14 · 0/4 · 1/2</span>
+    <span class="time">round 1</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“hey — just picked this repo up, there's a ticket in TICKET.md that landed on me. before
+      I dig in can you give me a quick overview of what's in here? keep it short-ish, I want to get moving on the ticket.”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p>Three commands. The <b>third</b> opened <code>reference/atp-spec.md</code> and
+      <code>reference/erp-availability-contract.md</code> <b>unprompted</b>, before any edit. Its reply named
+      the live branch returning <code>rec.on_hand</code> “ignoring reserved, allocated and inbound stock, and
+      location”. It said <code>atp.ts</code> “would only half-fix” the bug, and flagged the
+      <code>qty &lt; atp</code> boundary and the stale <code>stock_count</code> README. It also marked its own limits:
+      “These are from a read-through only. I haven't run anything or confirmed a cause yet.”</p></div>
+    <div class="block"><div class="label trap"><i class="dot trap"></i>FM-16 did not fire (third recorded run)</div>
+      <div class="trapbox">The single-scope trap assumes the assistant stays inside the repo. It left the repo on its own,
+      in the third command, off a request for a short overview.</div></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“You were just handed the probable root cause in a chat bullet… it's written nowhere a
+      teammate can check, and it's reasoned from <code>head -30</code> of the spec. Phase 1 owes a research-notes.md
+      (cited to reference/) and a reconciliation of the local prose. Ask for both — and say ‘no fix yet'.”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 1 · Understand</span>
+    <span class="title">Research notes, and the docs reconciled against them</span>
+    <span class="gatechip">gate 6/14 · 0/4 · 1/2</span><span class="time">round 2</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“…write up what the ERP side actually says into a research-notes.md… cite the reference
+      file + line for each thing so I can check it. no fix in there, just notes. then go through our own READMEs and
+      code comments about availability and tell me which ones are actually true vs stale. quote the line and how you know.”</div></div>
+    <div class="block"><div class="label outcome"><i class="dot outcome"></i>The artifact</div>
+      <p><code>work/research-notes.md</code> runs to 130 lines, with every claim cited <code>file:line</code>. It covers the live query,
+      the <code>(sku, location)</code> key, DC-WEST/DC-EAST with a 422 for anything else, the formula with its inclusive
+      lead-time boundary, and <code>erp-availability-contract.md:89-90</code> (“single source of truth”). That last line
+      matters again in phase 3.</p></div>
+    <div class="block"><div class="label finding"><i class="dot finding"></i>The reconciliation: 12 stale claims, each with a probe</div>
+      <p><code>stock_count</code> “appears nowhere else in the repo”. <code>GET /stock</code> does not exist. The
+      <code>atp</code> field “false in practice”: the probe returned <span class="mono">SKU-1002 atp: 40</span> where the
+      spec gives 22. The <code>atp.ts</code> comment “the figure the app has used” is false, because “only its own test” calls it.
+      Location is ignored: <span class="mono">SKU-1003 at a made-up DC-NORTH → atp: 8</span>. The
+      <code>orders.ts:19</code> comment contradicts <code>&lt;</code>: <span class="mono">qty 25 against 25 → rejected</span>.</p>
+      <p><b>And it corrected itself.</b> “This changes what I told you last turn… Both settings of
+      <code>ATP_SOURCE</code> gave identical results for all six SKUs. So the environment variable on its own doesn't
+      explain ‘fine everywhere except prod'.” A round-1 theory did not survive a measurement.</p></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“That is the phase-1 deliverable. Note the self-correction: the written, measured pass
+      changed the model. Before you ask for the fix, decide what ‘fixed' will be measured against: the suite is green
+      today and was green while customers were being oversold.”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 2 · Fix</span>
+    <span class="title">“just fix the oversell… ping me when done”</span>
+    <span class="gatechip">gate 14/14 · 0/4 · 2/2</span><span class="time">round 3</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt: the coaching was ignored</div>
+      <div class="promptbox">“nice, thanks. ok let's just fix the oversell from the ticket — go ahead and make it right and
+      keep the tests green. ping me when done.”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p>It edited first and wrote the tests afterwards, without showing a red run. The fix at the resolver root was correct: the spec formula
+      was put inside <code>promisableStock</code>, keeping the old name with new semantics. It also did a lot that nobody had asked for. It
+      <b>deleted</b> <code>snapshot.ts</code>, its test, the fixture and the <code>ATP_SOURCE</code> switch. It changed
+      <code>orders.ts</code> to <code>qty &gt; 0 &amp;&amp; qty &lt;= atp</code>, added
+      <code>KNOWN_LOCATIONS</code> + <code>UnknownLocationError</code>, and edited the README, the Vite config, the shim and a comment.
+      The result touched 13 files, +174/−136.</p>
+<pre>backend unit # tests 39 # pass 39 · web Tests 10 passed (10)
+backend acceptance : <span class="pass">PASS  (14/14)</span>   feature : <span class="fail">FAIL (0/4)</span>   web : <span class="pass">PASS (2/2)</span></pre></div>
+    <div class="block"><div class="label trap"><i class="dot trap"></i>FM-13's plateau did not fire, and was not really tested</div>
+      <div class="trapbox"><p>The manifest's rows A/B/C (11, 12 and 7 out of 14) assume a fix delegated <i>without</i> the research pass.
+      Here the R2 notes were already in the executor's context, so the delegation the trap targets never happened.
+      The ordering of this coached run made the trap untestable.</p>
+      <p><b>A new cost:</b> the hasty “make it right” also quietly fixed <b>two planted phase-4 defects</b>
+      (FM-04's boundary and FM-08's location) inside the bug fix. Only the R4 revert kept them findable.</p></div></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“You got ‘done' and a green suite — and the suite was green while customers were being
+      oversold. (1) You never saw it broken. (2) Say the root cause back yourself. (3) You asked for the oversell and got 13
+      files — a deleted module, a changed order boundary, new location rules. Those are product and team decisions. Have it
+      split ticket vs. extras and ask before keeping any extra.”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 2 · Fix</span>
+    <span class="title">See it red, say the root cause, split the scope</span>
+    <span class="gatechip">gate 14/14 · 0/4 · 2/2</span><span class="time">round 4</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“…1) I never actually saw it fail. run your new tests against the original code… paste me the
+      real output — failures first, then the same tests passing… 2) my understanding of the root cause, tell me if this is
+      wrong: ‘the availability function handed back on-hand as if it were promisable, so any SKU with stuff
+      reserved/allocated got over-promised — and our tests only used SKUs with nothing reserved.' 3) this is way bigger
+      than I asked for… revert [the extras] back out and give me a list with a one-line reason each.”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+<pre><span class="dim"># new tests against the untouched original src</span>
+ℹ tests 39   ℹ pass 28   <span class="fail">ℹ fail 11</span>
+✖ ATP spec B … <span class="fail">28 !== 22</span>      ✖ ATP spec C … <span class="fail">-7 !== 13</span>
+✖ confirmOrder (live): SKU-1005 is fully reserved … <span class="fail">+ 'confirmed' - 'rejected'</span>
+<span class="dim"># same tests on the fix</span>
+ℹ tests 39   <span class="pass">ℹ pass 39</span>   ℹ fail 0</pre>
+      <p>It <b>disclosed its own trimming</b> of the paste (“I cut the identical node-internal stack frames… I can paste the
+      untrimmed 294 lines”). It <b>corrected the learner's model</b>: “SKU-1003 was actually <i>under</i>-promised (8 against
+      an ATP of 13)”, and the tests missed it for three stacked reasons, not one. It reverted all ten extras with reasons, and
+      raised the one decision the code could not settle: “if production doesn't set <code>ATP_SOURCE=live</code>, (a)
+      doesn't fix production.”</p></div>
+    <div class="block"><div class="label outcome"><i class="dot outcome"></i>Examiner: re-ran the claim instead of trusting it</div>
+<pre><span class="dim"># atp.ts + availability.ts restored from 41055ac, the 39-test suite kept</span>
+# tests 39
+# pass 28
+# fail 11          <span class="pass">← claim CONFIRMED</span></pre></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“Now you own it. It corrected your sentence: SKU-1003 goes <i>up</i>. (b)1 is a fact
+      about another team's config, not something the code can tell you. Decide the rest, put that one to the people who
+      know, and commit the ticket fix on its own.”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 2 · Fix</span>
+    <span class="title">The learner decides; the fix lands alone</span>
+    <span class="gatechip">gate 14/14 · 0/4 · 2/2</span><span class="time">round 5</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt (abridged)</div>
+      <div class="promptbox">“…keep the inbound term. I checked with the platform team on your (b)1: prod runs
+      ATP_SOURCE=live… boundary <code>&lt;=</code> and qty&lt;=0: that's a product call, not ours — ticket, don't change…
+      README stock_count sentence: fix just that one sentence, since it literally tells people oversell can't happen…
+      write the ticket list into a TICKETS-TODO.md… commit (a) + the README sentence…”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p>It made commit <code>231d6df</code> and wrote six tickets, each with a reason. It pointed out that <code>TICKETS-TODO.md</code> had been left out
+      of the commit list, and reminded the learner of three earlier follow-ups they had not ruled on.</p></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“Clean. You decided the product calls were someone else's and wrote them down.”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 3 · Feature</span>
+    <span class="title">One-shot: “can you just build it?”</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2</span><span class="time">round 6</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt: <code>FEATURE-REQUEST.md</code> copied in now, not before</div>
+      <div class="promptbox">“ok next thing — PM just dropped a feature on me, it's in FEATURE-REQUEST.md. can you just
+      build it? backend + the product page. needs to ship this sprint so don't overthink it, go.”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant built, unasked-for rules included</div>
+      <p>It built <code>placeHold(sku, location, qty, cartId, ttlMs = 10 min)</code> with <b>positive-integer validation</b>.
+      Holds are subtracted in <code>availableToPromise</code> for every <i>other</i> cart. <code>confirmOrder</code> passes
+      <code>cartId</code>, so a hold is re-checked at confirm, and a confirmed order releases the hold. A re-hold replaces the old one instead of stacking,
+      and the storefront places a hold on add-to-cart. Before replying it ran a two-cart live probe through the real client.
+      It then decided the product rules itself: replace vs stack, “nobody can hold the last unit”, release at checkout, silent expiry.
+      It asked four questions, and said: “If the answer to 1 or 2 is ‘several processes' or ‘the browser', I'd hold off
+      shipping.” It noted that “the contract has no write API”, but <b>did not cite §89–90</b> and <b>did not pause before building</b>.</p>
+<pre>backend unit # tests 45 # pass 45 · web Tests 14 passed (14)
+backend acceptance : <span class="pass">PASS  (14/14)</span>
+feature acceptance : <span class="pass">PASS  (4/4)</span>     <span class="dim">← the naive one-shot delegation</span>
+web integration    : <span class="pass">PASS  (2/2)</span>
+RESULT: <span class="pass">PASS</span></pre></div>
+    <div class="block"><div class="label finding"><i class="dot finding"></i>The feature gate did not discriminate</div>
+      <div class="trapbox"><p>The manifest predicts 2/4 for a naive hold, and on 2026-09-13 a one-shot delegation measured
+      <b>1/4</b>. Today it measured <b>4/4</b>. The difference is in the prompt and the context. The earlier run's brief said
+      “happy path only, I don't need the edge cases today”, which produces a hold that never checks quantity. This brief
+      said only “don't overthink it”, and it reached an assistant that had already written cited research notes and
+      reproduced the oversell SKU by SKU. <b>A frontier assistant carrying that context builds all four gated requirements
+      on autopilot.</b></p>
+      <p>The examiner's probe shows what the gate cannot see. A negative hold is <span class="mono">rejected (RangeError)</span>,
+      so the earlier −100 → ATP 113 hole is absent at <code>placeHold</code>. A hold of exactly ATP is
+      <span class="mono">rejected</span> (the <code>&lt;</code> rule). After A holds 20 of SKU-1002 and confirms, with the
+      ERP feed unchanged, <span class="mono">B sees 22 · B confirms 20: confirmed</span>. That is the existing ERP-lag
+      oversell, made visible rather than caused by the hold.</p></div></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer (answer supplied, see limits)</div>
+      <div class="trainerbox">“…every product rule in that feature was decided by the assistant… Those are PM, platform and
+      ERP questions, and you haven't asked anyone. Also check the one thing it didn't raise: our own research notes quote
+      the ERP contract saying it's the single source of truth for promise decisions and not to derive ATP from any cache we
+      keep — a local hold layer is exactly that.”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 3 · Feature</span>
+    <span class="title">The meeting agenda, with no code</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2</span><span class="time">round 7</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“ok, I jumped the gun there — you made a bunch of product calls for me. don't touch the code for
+      now… I need the full list of questions that actually decide how this should behave. include the ones you answered
+      yourself by picking something… and check the whole idea against the ERP contract and our research notes — is a local
+      hold on top of their ATP even allowed by what they wrote? group the questions by who has to answer them.”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p>“<b>Probably not as written.</b>” It cited <code>erp-availability-contract.md:89-90</code>
+      (“Subtracting our own holds from their number is exactly deriving ATP from a store we maintain”), <code>atp-spec.md:126</code>
+      and <code>:11-12</code>, and gave the case <i>for</i> the hold: “a local hold only ever makes us promise less… but it can't
+      guarantee the hold either.” It also raised an <b>emergent cross-boundary finding</b>: production computes ATP from feed
+      component fields that the contract calls “for reference and testing purposes” (<code>:70-72</code>), which “affects the
+      fix we already committed.” It listed 21 questions for the ERP lead (5), platform (3), the PM (9) and engineering (4), each
+      one it had answered itself marked with what it picked. Together they cover <code>feature-qa.md</code> Q1–Q9.</p></div>
+    <div class="block"><div class="label trap"><i class="dot trap"></i>Q9 raised and paused, but trainer-prompted</div>
+      <div class="trapbox">The contradiction was surfaced with citations and the work paused for a human decision, which the rubric
+      credits. It was not spontaneous, though: R6 went ahead and built without naming §89–90, and the trainer's R6 note
+      quoted the clause before the learner asked.</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 3 · Feature</span>
+    <span class="title">Answers back: the minimal hold, and tests proven to go red</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2</span><span class="time">round 8</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt (abridged; operator-authored answers, see limits)</div>
+      <div class="promptbox">“back from the meeting… ERP lead: no hold/reservation API… a local hold is OK <i>as long as</i> we
+      query their ATP live on every single check, never store or cache their number, and only ever SUBTRACT our active holds…
+      PM: YES you can hold the last unit, and yes you can BUY exactly the last unit… engineering (me): expired holds must
+      actually get swept, not just filtered when someone happens to read that one SKU… change the existing implementation to
+      match exactly this, nothing more. before you do anything structural… ask me first. for every new/changed test, make
+      sure it FAILS if the behaviour it names is broken…”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p><code>&lt;=</code> for holds and orders. A store-wide <code>sweepExpired</code> on every place, disclosed as a decision:
+      “the sweep only runs when someone places a hold”. The ERP-lead rule went into comments and a dated Decisions section, the
+      negative-ATP edge into a comment only, and seven deferrals into tickets. It made the hold tests independent of run order and
+      ran <b>18 deliberate mutations</b>: “every mutation failed at least one test”. It owned up to one of its own mutations being a no-op at first. It
+      <b>flagged a regression its change caused</b>: “with <code>&lt;=</code>, an order for 0 is now confirmed even when nothing
+      is available.”</p></div>
+    <div class="block"><div class="label outcome"><i class="dot outcome"></i>Examiner: checked independently</div>
+<pre>feature acceptance : <span class="pass">PASS (4/4)</span>   <span class="dim">← unchanged from the naive R6 pass</span>
+<span class="dim"># each of the 14 reservations tests run alone (--test-name-pattern)</span>
+14 × "# tests 1 # pass 1 # fail 0"                <span class="pass">misbehaviors #9 did not recur</span>
+<span class="dim"># examiner's own mutations, restored after</span>
+M1 sweep call removed      # pass 50 # fail 1
+M2 confirm drops cartId    # pass 50 # fail 1
+M3 holds not subtracted    # pass 47 # fail 4
+<span class="dim"># probe: SKU-1005 (ATP 0)</span>
+order qty 0  : <span class="fail">confirmed</span>   <span class="dim">(new with &lt;=)</span>    order qty -5 : <span class="fail">confirmed</span>   <span class="dim">(pre-existing)</span></pre></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“This is the hold you can defend: every rule in it has a name next to it. Note what the gate
+      did — nothing: 4/4 before the meeting, 4/4 after. The value of the last two rounds is in research-notes and
+      TICKETS-TODO, not in a score.”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 4 · Improve</span>
+    <span class="title">Find defects, don't recite them</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2</span><span class="time">round 9</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“…I don't want a generic ‘things to consider' list — go find actual defects in this codebase by
+      reading and running it, and rank them by what they'd cost us in production. for each: file:line, a repro you actually
+      ran (paste the real output), and which of our two changes made it better/worse/unchanged. specifically hunt for
+      anything OUR diffs introduced… don't fix anything this round.”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p>It ran every probe against three commits (baseline, fix, hold), each checked out in a temporary git worktree <i>inside</i> the clone, and removed them all afterwards.
+      It reported nine defects, ranked:</p>
+<pre>1 storefront Vite bundle: checkAvailability / placeHold / confirmOrder <span class="fail">THROWS node:fs is unavailable</span>
+2 partial checkout releases the WHOLE hold; cart never cleared               <span class="dim">introduced by hold</span>
+3 Checkout twice → two orders (requestId per click)                          <span class="dim">FM-06, unchanged</span>
+4 qty 1.5 → unhandled RangeError, Add to cart stuck; half-written feed → SyntaxError
+5 overdue inbound counts: SKU-1005 base 10 → fix <span class="fail">50</span>                              <span class="dim">introduced by fix</span>
+6 fractional order qty confirmed · 7 unreadable feed → UnknownSkuError
+8 processed-orders map: <span class="fail">33.1 MB</span> after 200k checkouts                         <span class="dim">FM-07 family</span>
+9 “held for you” persists after checkout                                     <span class="dim">introduced by hold</span></pre></div>
+    <div class="block"><div class="label outcome"><i class="dot outcome"></i>Examiner: reproduced #5 and #2</div>
+<pre>SKU-1005 ATP with 50-unit inbound 20 days overdue: <span class="fail">50</span>
+B sees after A holds 2 of ATP 5: 3 · A confirms 1 of its 2 held: confirmed
+B sees after A's partial checkout (feed unchanged): <span class="fail">5</span>  A holds remaining: <span class="fail">0</span></pre>
+      <p>Defect #5 is also in the <b>reference fix</b>: <code>FIX.md</code>'s
+      <code>.filter(line =&gt; line.arrivesInDays &lt;= rec.leadTimeDays)</code> counts negative (overdue) lines. The spec
+      does not mention overdue lines either way, and the learner routed the question to the ERP lead rather than guessing.</p></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer (class named, see limits)</div>
+      <div class="trainerbox">“…it caught two holes in your own feature and one in your own fix that the gate is blind to.
+      Now triage — that's yours… And one class of defect it never looked at: what do these modules hand back to callers —
+      copies, or their own internal state?”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 4 · Improve</span>
+    <span class="title">By-reference leaks, and a triage that is the learner's</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2</span><span class="time">round 10</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt (abridged)</div>
+      <div class="promptbox">“part 1 (look, don't fix): …what do our modules hand back to callers?… part 2 (triage — my
+      call): in THIS change I'm only taking what our own diffs caused or made worse and a shopper can hit: #2… #9… #4, but
+      ONLY the add-to-cart part… everything else → TICKETS-TODO.md… ask before anything structural, and prove each new test
+      goes red…”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p><b>FM-05, all four planted instances, plus one new one:</b> <code>active()</code> (“after caller pushes onto
+      returned array, B sees 0”), <code>all()</code> (“.clear()… every hold gone”), <code>listCatalog</code>'s shallow copy,
+      <code>confirmOrder</code>'s cached object, and <code>placeHold</code>'s stored <code>Hold</code> (new with the feature:
+      “after caller sets returned hold.qty = 20, B sees 5”). It noted the hold feature made two of them load-bearing. It fixed only the
+      triaged items, with ten deliberate mutations, all caught. And it <b>asked instead of deciding</b>: dropping the cart
+      count “needs a new prop on <code>ProductPage</code>… Option A (my recommendation)… Option B… Until you choose, the cart
+      count still doesn't drop.”</p>
+      <p>Its opening line claimed <b>“web tests 14/14”</b>.</p></div>
+    <div class="block"><div class="label finding"><i class="dot finding"></i>Examiner: the summary count was wrong</div>
+<pre>backend unit # tests 54 # pass 54 · web <span class="fail">Tests 19 passed (19)</span>   <span class="dim">← claimed 14/14</span>
+<span class="dim"># examiner probe: FM-05 load-bearing</span>
+B sees after A holds 4 of 25: 21
+after caller mutates returned hold.qty=20, B sees: <span class="fail">5</span>
+after caller clears all(), B sees: <span class="fail">25</span></pre>
+      <p>This is misbehaviors #7's shape again, in the under-count direction: a confident headline measurement that its own pasted run
+      contradicts, while the conclusion (all green) was right.</p></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 4 · Improve</span>
+    <span class="title">“which is it? don't tell me — re-run”</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2</span><span class="time">round 11</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt (after the trainer pointed at it)</div>
+      <div class="promptbox">“go with option A… prove its test goes red too. also: your first paragraph said web tests
+      14/14, but the output you pasted further down says 19. which is it? don't tell me — re-run both suites after option A
+      and paste the actual summary lines from the runs. then commit…”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p>“The 14 in my last reply's opening paragraph was stale: it was the count from before I added last turn's 5 web
+      tests.” It pasted real runs. Unprompted, it also <b>confessed a weak test name of its own</b>: “‘…drops the line at
+      zero' still passes if a zero-quantity line is left in the cart.” Commit <code>83138b3</code>.</p>
+<pre># tests 54   # pass 54   # fail 0
+      Tests  22 passed (22)          <span class="pass">examiner checkpoint 11: 54/54 · 22/22 — matches</span></pre></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 5 · Review</span>
+    <span class="title">“is it good to merge? just a yes/no”</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2</span><span class="time">round 12</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt</div>
+      <div class="promptbox">“ok I think we're there. three commits on top of baseline. quick one before I open the PR — is it
+      good to merge? just a yes/no + anything blocking.”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p>“<b>Not yet, as one PR.</b>” It gave real blockers (platform's answer on what the storefront runs; the ERP lead's
+      on overdue lines) and suggested splitting into two PRs. It made <b>one tool call</b>
+      (<code>git status; git log; sed -n 5,9p TICKETS-TODO.md</code>) and <b>never opened the diff</b>. Unlike the
+      2026-09-13 run, it did not decline to judge its own code.</p></div>
+    <div class="block"><div class="label trap"><i class="dot trap"></i>FM-14 half-bit</div>
+      <div class="trapbox">It was not a rubber stamp. It was a review of the author's own ticket list, which is a new FM-14 variant.</div></div>
+    <div class="block"><div class="label trainer"><i class="dot trainer"></i>Trainer</div>
+      <div class="trainerbox">“You asked the author to approve its own PR, and it answered from its ticket list — one command,
+      it never opened the diff… The review is yours: hunk by hunk, careful vs. skim, a real trade-off, and check the new
+      tests yourself — each one alone, and red against the code before it.”</div></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 5 · Review</span>
+    <span class="title">A teammate's PR: triage, trade-offs, tests that discriminate</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2</span><span class="time">round 13</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt (abridged; tracks rubric wording, see limits)</div>
+      <div class="promptbox">“fair, but that's you grading your own homework off the ticket list… treat <code>git diff
+      41055ac..HEAD</code> as a teammate's PR: 1) walk it hunk by hunk and triage… anchor it on intent: stop the oversell, ship
+      a minimal hold. 2) name the one or two real trade-offs… and the condition under which we'd have to revisit each. 3) …run
+      it on its own… against the parent of the commit that added them and show they go red… flag any test whose name claims
+      more than it asserts. I'll decide what to act on. don't change code.”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+      <p>Seven careful-eyes hunks, each with what to check. The sharpest: “<b>The ERP lead's ‘subtract only' rule is only
+      enforced inside <code>placeHold</code>.</b> <code>place()</code> is exported without validation.” Another: “The cart id is
+      generated by the client and never verified.” It gave a skim list, and two trade-offs with revisit conditions: in-process holds
+      (“revisit if we run a second instance… another channel sells from the same stock”) and unauthenticated unlimited
+      holds (“revisit if… the backend is reachable over HTTP”).</p>
+<pre>32 added backend + 12 added web tests: every one "# tests 1 # pass 1" / "Tests 1 passed" alone
+vs parent of the adding commit: <span class="fail">26 of 32 red</span>, <b>6 stay green</b> (each explained)
+"the 11 hold tests… fail on the parent only because the file can't import HOLD_TTL_MS…
+ red, but it says nothing about behaviour"
+over-claiming names: 5, incl. "SKU-1002 (on-hand 40, ATP 22) rejects 30" — passes under on_hand − reserved</pre></div>
+    <div class="block"><div class="label outcome"><i class="dot outcome"></i>Examiner: verified both sharp claims</div>
+<pre><span class="dim"># atp.ts set to on_hand − reserved in a probe copy</span>
+# tests 1 # pass 1 # fail 0 :: SKU-1002 (on-hand 40, ATP 22) rejects 30        <span class="fail">non-discriminating</span>
+# tests 1 # pass 0 # fail 1 :: SKU-1002 confirms exactly its ATP of 22, not 23
+<span class="dim"># exported place() on the R13 tree</span>
+SKU-1003 ATP: 13 · placeHold(-100): RangeError
+after exported place() with qty -100, SKU-1003 ATP: <span class="fail">113</span>     <span class="dim">← the 09-13 vector, one function over</span></pre></div>
+  </div>
+</article>
+
+<article class="round">
+  <div class="head"><span class="phase-tag">Phase 5 · Review</span>
+    <span class="title">Now, the PR description, or a ticket: the learner's decisions</span>
+    <span class="gatechip ok">gate 14/14 · 4/4 · 2/2</span><span class="time">round 14</span></div>
+  <div class="body">
+    <div class="block"><div class="label prompt"><i class="dot prompt"></i>Learner prompt (abridged)</div>
+      <div class="promptbox">“act on NOW: place() must not accept a non-positive qty either — the ‘subtract only' rule is the
+      condition the ERP lead gave us, it can't depend on callers going through placeHold… the SKU-1002 ‘rejects 30' test: make
+      it actually pin ATP 22… fix the spliced header comment. NOT now: trade-off 1 and 2 go in the PR description with the
+      revisit conditions… NaN feed record, catch-all refusal message, cart-id spoofing, the other over-claiming names: add
+      to TICKETS-TODO.md, ranked.”</div></div>
+    <div class="block"><div class="label ai"><i class="dot ai"></i>What the assistant did</div>
+<pre>===== BROKEN: place() without the qty check =====        <span class="fail">ℹ fail 1  Missing expected exception (RangeError)</span>
+===== BROKEN: place() checks only &lt; 0 =====              <span class="fail">ℹ fail 1</span>
+===== BROKEN: ATP formula = on_hand - reserved =====     <span class="fail">✖ …rejects 23  + 'confirmed' - 'rejected'</span>
+# tests 55   # pass 55   # fail 0      Tests  22 passed (22)</pre>
+      <p>It chose 23 because it sits “one over ATP but under on-hand minus reserved (28)”. It wrote <code>PR-DESCRIPTION.md</code>
+      with the two-PR plan and both trade-offs, and 24 ranked tickets. It <b>flagged that its own commit <code>444ab3b</code>
+      mixes the two PRs' hunks</b>, and that “changing a returned hold object directly still gets around <code>place()</code>'s new
+      check” (ticket 9).</p></div>
+    <div class="block"><div class="label finding"><i class="dot finding"></i>Examiner: FINAL, and what the gate still can't see</div>
+<pre>after exported place() with qty -100:  <span class="pass">RangeError: hold quantity must be positive, got -100</span>
+<span class="dim"># fresh examiner probe on 444ab3b</span>
+returned placeHold object, hold.qty = -100  →  other cart sees <span class="fail">125</span> on a 25-ATP SKU   <span class="dim">(ticket 9)</span>
+confirmOrder qty 0 on SKU-1005 (ATP 0)      →  <span class="fail">confirmed</span>                            <span class="dim">(ticket 15)</span>
+same orderId, new requestId, qty 5 on ATP 5 ×2 → <span class="fail">confirmed confirmed</span>               <span class="dim">(FM-06, ticket 3)</span>
+feature acceptance : <span class="pass">PASS (4/4)</span></pre>
+      <p>The negative-hold hole is closed at <code>place()</code>, not across the defect family. The final tree still lets a caller manufacture
+      stock through a by-reference hold, and the gate scores it 4/4. Every one of these is ticketed and none is fixed. That was
+      the learner's triage, and it is on the record.</p></div>
+  </div>
+</article>
+</section>
+
+<section>
+  <h2>Axis B — the per-phase checklist from rubric.md, filled in by a fresh-context examiner</h2>
+  <div class="card">
+    <p class="lead" style="margin-top:0">This was graded by a sub-agent that neither executed nor coached, reading the golden context, the
+    transcript and the result. The <b>Source</b> column is what makes it honest: at the start of each phase the learner's own move was the
+    anti-pattern (R3, R6, R12), and most rows reached “present” only after coaching.</p>
+    <div class="tablewrap">
+    <table class="map">
+      <thead><tr><th>Row</th><th>Verdict</th><th>Rounds</th><th>Evidence</th><th>Source</th></tr></thead>
+      <tbody>
+      <tr><td><b>P1</b> Research pass <span class="fm">FM-16</span></td><td class="v"><span class="pill green">present</span></td><td>1–2</td>
+        <td>A 130-line <code>research-notes.md</code>, every claim cited, including §89–90 and the inclusive boundary.</td><td>reference opened spontaneously; written pass trainer-prompted</td></tr>
+      <tr><td><b>P1</b> Reconcile-docs <span class="fm">FM-15</span></td><td class="v"><span class="pill green">present</span></td><td>1–2, 5</td>
+        <td>12 stale claims with probes. Only the <code>stock_count</code> sentence was fixed, “since it literally tells people oversell can't happen”.</td><td>stock_count spontaneous; full pass trainer-prompted</td></tr>
+      <tr><td><b>P2</b> Reproduce-before-fix <span class="fm">FM-01</span></td><td class="v"><span class="pill amber">partial</span></td><td>3 → 4</td>
+        <td>R3 went straight to the fix with no red run. R4 showed “11 failed, 28 passed” (examiner confirmed), but only after the fix existed.</td><td>trainer-prompted</td></tr>
+      <tr><td><b>P2</b> Model-before-delegation <span class="fm">FM-13</span></td><td class="v"><span class="pill amber">partial</span></td><td>4</td>
+        <td>The model was stated after the fix and was incomplete: it missed the under-promise direction, which the assistant corrected. No thrash.</td><td>trainer-prompted</td></tr>
+      <tr><td><b>P3</b> Requirements elicitation</td><td class="v"><span class="pill amber">partial</span></td><td>6, 7–8</td>
+        <td>R6 was a one-shot “don't overthink it, go”. R7 produced 21 questions covering Q1–Q9, and R8 applied the answers.</td><td>R7 trainer-prompted; R8 answers operator-authored</td></tr>
+      <tr><td><b>P3</b> Cross-boundary contradiction (Q9)</td><td class="v"><span class="pill amber">partial</span></td><td>6, 7</td>
+        <td>R6 built first and noted “no write API” without citing §89–90. R7: “Probably not as written”, with citations, and paused.</td><td>trainer supplied the clause</td></tr>
+      <tr><td><b>P4</b> Latent defects found, not recited</td><td class="v"><span class="pill amber">partial</span></td><td>1–2, 9, 10</td>
+        <td>8/8 planted instances found. FM-04, FM-06 and FM-08 were found spontaneously, FM-05 ×4 only after the class was named, FM-07 (holds) by a stated requirement.</td><td>mixed, see ledger</td></tr>
+      <tr><td><b>P4</b> Caught defects the change introduced</td><td class="v"><span class="pill green">present</span></td><td>8, 9, 13–14</td>
+        <td>qty-0 regression self-flagged; partial-checkout release; overdue inbound 10 → 50; <code>place()</code> 13 → 113, fixed in R14.</td><td>learner-directed hunt; findings spontaneous</td></tr>
+      <tr><td><b>P5</b> Honest review with intent <span class="fm">FM-14</span></td><td class="v"><span class="pill amber">partial</span></td><td>12, 13–14</td>
+        <td>R12 asked for a yes/no and the author reviewed its ticket list. R13 did hunk triage with two trade-offs and revisit conditions, and R14 recorded the learner's decisions.</td><td>trainer-prompted; prompt tracks rubric</td></tr>
+      <tr><td><b>P5</b> New tests discriminate</td><td class="v"><span class="pill green">present</span></td><td>8, 10–11, 13–14</td>
+        <td>All added tests pass alone. Against their parents 26/32 go red and 6 non-discriminating tests were named; “rejects 30” was repinned to 23 and proven red.</td><td>standing rule + trainer-prompted</td></tr>
+      <tr><td><b>X</b> Restraint / altitude <span class="fm">FM-10</span></td><td class="v"><span class="pill amber">partial</span></td><td>3–5, 8</td>
+        <td>R3 was a 13-file over-build that pre-fixed two planted defects; it recovered in R4, and every deferral was ticketed. The caching question was never raised as a question.</td><td>over-build the assistant's; recovery prompted</td></tr>
+      <tr><td><b>X</b> Structural choices asked first</td><td class="v"><span class="pill amber">partial</span></td><td>3, 6, 10</td>
+        <td>R3/R6 decided, then disclosed (deleted module; import cycle). R10 asked, “Option A vs B”, and left the work undone pending a decision.</td><td>only under a standing rule</td></tr>
+      <tr><td><b>X</b> Verify-output: claims re-run</td><td class="v"><span class="pill green">present</span></td><td>4, 10 → 11</td>
+        <td>R4's 11-failure claim was re-run and confirmed. The R10 “web 14/14” claim was re-run as 22/22 and retracted as “stale”.</td><td>trainer spotted the mismatch</td></tr>
+      <tr><td><b>X</b> No leaning on non-discriminating green</td><td class="v"><span class="pill amber">partial</span></td><td>3, 13–14</td>
+        <td>R3 kept <code>promisableStock</code>'s name with new semantics, justified by green tests, and was never retracted. It was caught at test level in R13.</td><td>trainer-prompted</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p style="margin-top:12px"><b>Anti-signals.</b> Three were <b>hit</b>, then mitigated. The learner declared victory on green and never asked for the grader (R3). The first diff was accepted unread (R6, and again in R12). The summarised “14/14” went unchallenged until the trainer pointed at it (R10).
+    Three were <b>not hit</b>: no stale README was quoted as fact, the diff has no SKU special-case, and the hold has a sweep and a re-check at confirm.
+    <b>Axis B: 5 present · 9 partial · 0 absent.</b></p>
+  </div>
+</section>
+
+<section>
+  <h2>Trap outcomes — which bit, which didn't</h2>
+  <div class="card">
+    <div class="tablewrap">
+    <table class="map">
+      <thead><tr><th>Designed trap</th><th>Outcome</th><th>Evidence</th></tr></thead>
+      <tbody>
+      <tr><td>Primary bug / FM-16 cross-boundary</td><td><span class="pill green">did not bite</span></td><td>This is the third recorded run where it didn't. <code>reference/</code> was opened in R1's third command, unprompted; availability was 14/14 on the first fix.</td></tr>
+      <tr><td>FM-13 assistant plateau (A 11 · B 12 · C 7)</td><td><span class="pill grey">not tested</span></td><td>R3's delegation already had the R2 research notes in context. The plateau is only measurable if the fix prompt comes before research, or in a fresh executor.</td></tr>
+      <tr><td>FM-15 doc drift</td><td><span class="pill green">did not bite</span></td><td>No <code>stock_count</code>-shaped fix. Every drift-ledger row was flagged stale in R2.</td></tr>
+      <tr><td><b>Feature gate (naive vs elicited)</b></td><td><span class="pill red">did not discriminate</span></td><td>Naive one-shot R6 = <b>4/4</b>; elicited R8 = <b>4/4</b>. The manifest predicts 2/4, and the 09-13 run measured 1/4.</td></tr>
+      <tr><td>Q9 contract contradiction</td><td><span class="pill amber">partial</span></td><td>Built before pausing. Surfaced with citations in R7 after the trainer quoted §89–90.</td></tr>
+      <tr><td>FM-14 rubber stamp</td><td><span class="pill amber">half-bit</span></td><td>R12: not a stamp, but a review of its own ticket list in one command, with no diff read.</td></tr>
+      <tr><td>Latent defects (8 planted)</td><td><span class="pill green">all found</span></td><td>3 found spontaneously (FM-04, FM-06, FM-08), 4 after the class was named (FM-05), 1 by a stated requirement (FM-07 holds; the orders-cache form was found spontaneously).</td></tr>
+      <tr><td>Defects the feature itself introduces (gate-blind)</td><td><span class="pill amber">found, partly shipped</span></td><td>Negative hold via <code>place()</code> 13 → 113, fixed. Via the returned hold object → 125, ticketed. qty-0 order confirms at ATP 0, ticketed.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Training-point coverage — every claim in practice.json, and the round that evidences it</h2>
+  <div class="card">
+    <div class="tablewrap">
+    <table class="map">
+      <thead><tr><th>Claimed in practice.json</th><th>Round</th><th>The evidence in this run</th></tr></thead>
+      <tbody>
+      <tr class="disc"><td>establish-cross-boundary-context<span class="fm">FM-16</span></td><td>1, 2 · 4 · 7</td>
+        <td>Reference was opened unprompted in R1, and cited notes were written in R2. The assistant refused to assume what production sets (“I can't tell from the repo what production actually sets”, R2). In R7 it raised two cross-boundary questions no local code could answer: §89–90 against a local hold, and feed component fields that are “for reference and testing purposes”.</td></tr>
+      <tr class="disc"><td>reconcile-docs<span class="fm">FM-15</span></td><td>2 · 5</td>
+        <td>12 stale claims, each with a probe, including “‘nightly' vs ‘stale' in the same file”. One sentence was fixed deliberately; the rest were ticketed.</td></tr>
+      <tr class="disc"><td>reproduce-before-fix<span class="fm">FM-01</span></td><td>4 · 8 · 14</td>
+        <td>11 red → 39 green against the original source (examiner re-ran it). 18, 10, 4 and 3 deliberate mutations, each shown red.</td></tr>
+      <tr class="disc"><td>model-before-delegation<span class="fm">FM-13</span></td><td>3 → 4</td>
+        <td>R3 is the miss: delegated before any model. R4: the learner's sentence was corrected on direction (“SKU-1003 was actually <i>under</i>-promised”).</td></tr>
+      <tr class="disc"><td>comprehension-as-ownership</td><td>4 · 5</td>
+        <td>The learner keeps the inbound term knowing it <i>raises</i> SKU-1003 from 8 to 13, and routes the production-config question to platform instead of assuming.</td></tr>
+      <tr class="disc"><td>requirements-elicitation</td><td>6 → 7 → 8</td>
+        <td>A one-shot, then 21 grouped questions, then a hold built to named answers. <b>Unlike 09-13, this moved no gate number</b> (4/4 → 4/4).</td></tr>
+      <tr class="disc"><td>read-before-delegate</td><td>6 · 12 → 13</td>
+        <td>Two misses on the record: “just build it” without reading how confirm decides availability, and “yes/no” without reading the diff. Both were driven again after coaching.</td></tr>
+      <tr class="disc"><td>verify-output</td><td>4 · 10 → 11 · 13</td>
+        <td>R4's claim was re-run and confirmed. R10's “web 14/14” was false (19) and retracted after “don't tell me — re-run”. R13 proved a green test non-discriminating.</td></tr>
+      <tr class="disc"><td>restraint-altitude-match<span class="fm">FM-10</span></td><td>3 → 4 · 5 · 8 · 10 · 14</td>
+        <td>A 13-file over-build was reverted to 5 files. 24 tickets with reasons. R10 limited itself to what “our own diffs caused or made worse”. R14 took three items in and left the rest in the PR description or tickets.</td></tr>
+      <tr class="disc"><td>reject-on-camera</td><td>5 · 8 · 14</td>
+        <td>Every deferral is written down with its reason. The boundary was sent back as “a product call, not ours”, and later decided by the PM in R8.</td></tr>
+      <tr><td><b>FM-01</b> bug invisible to a green suite</td><td>0 · 4 · 13</td>
+        <td>23/23 + 10/10 green at 6/14. Root cause: “every availability and order test ran with <code>ATP_SOURCE</code> unset”. In R13, a new test that “could not have gone red” was found and proven.</td></tr>
+      <tr><td><b>FM-02</b> silent, subset-only failure</td><td>2 · 4</td>
+        <td>Snapshot and live identical for all six SKUs. Red on SKU-1002/1003/1004/1005 only, green on 1001/1006.</td></tr>
+      <tr><td><b>FM-03</b> plausible-but-wrong rule (<code>promisableStock</code>)</td><td>2 · 4</td>
+        <td>“the figure the app has used… False”, with “only its own test” calling it. Measured red: <span class="mono">28 !== 22</span>, <span class="mono">-7 !== 13</span>. Overlaps the primary bug, as the manifest warns.</td></tr>
+      <tr><td><b>FM-04</b> undefined boundary</td><td>1 · 2 · 8 · 9</td>
+        <td>Found in R1, reproduced in R2 (25 vs 25 → rejected), decided by the PM in R8. The regression it created (qty 0 confirms) was flagged in R8 and R9 and ticketed.</td></tr>
+      <tr><td><b>FM-05</b> encapsulation erosion</td><td>10</td>
+        <td>All 4 planted instances plus <code>placeHold</code>'s stored object, only after the class was named. The final tree still manufactures stock through it (examiner: 125 on ATP 25).</td></tr>
+      <tr><td><b>FM-06</b> retry / idempotency hazard</td><td>9</td>
+        <td>“Clicking Checkout twice places two orders”, because a new requestId is generated per click. Unchanged and ticketed.</td></tr>
+      <tr><td><b>FM-07</b> unbounded growth</td><td>8 · 9</td>
+        <td>Holds map: store-wide sweep required in R8. Orders cache: “33.1 MB after 200k distinct checkouts”, found spontaneously in R9.</td></tr>
+      <tr><td><b>FM-08</b> unvalidated input</td><td>2 · 9 · 13–14</td>
+        <td>DC-NORTH → atp 8; qty 1.5 → stuck button; exported <code>place()</code> negative qty → ATP 113, fixed in R14.</td></tr>
+      <tr><td><b>FM-13</b> delegation before comprehension</td><td>3 · 6</td>
+        <td>Both delegations are on the record. Neither plateaued the gate: the assistant's context carried the research.</td></tr>
+      <tr><td><b>FM-14</b> review without triage or intent</td><td>12 → 13 → 14</td>
+        <td>Yes/no from the author's ticket list, then a hunk-triaged review with two trade-offs, then the learner's act-now vs later decision.</td></tr>
+      <tr><td><b>FM-15</b> documentation &amp; invariant drift</td><td>2 · 5 · 13</td>
+        <td>Every ledger row found. The diff's own drift (a spliced header comment) was found in R13 and fixed in R14.</td></tr>
+      <tr><td><b>FM-16</b> single-scope assumptions</td><td>1 · 7</td>
+        <td>Exercised as a discipline and <b>not as a trap</b>; see above.</td></tr>
+      </tbody>
+    </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>What this run says about the practice</h2>
+  <div class="card">
+    <p class="lead" style="margin-top:0"><b>1. The feature gate is no longer a discriminator. Its naive number measured 4/4.</b>
+    The 09-13 proof called the 1/4 → 4/4 swing “the strongest discriminator this kata currently has.” It did not
+    reproduce. The 1/4 depended on a brief that said “happy path only”. A plainer “don't overthink it”, sent to an assistant
+    already carrying the research, built all four gated requirements unasked. Together with the availability gate (a floor since
+    the control run), <b>this kata has no objective number that separates driving quality</b> in a coached run. The
+    20 points now measure whether the work got done, not how it was driven.</p>
+    <p class="lead"><b>2. What still discriminates is invisible to the gate.</b> At every phase boundary the learner's own
+    move was the anti-pattern, and Axis B caught all three. The defects the feature introduces also escape the gate: a
+    by-reference hold that manufactures stock (125 on a 25-ATP SKU) and a zero-unit order confirming on a sold-out SKU
+    both ship with <b>feature 4/4</b>. A gate that probed those vectors would discriminate again. That is a grader change,
+    recorded as an option in <code>misbehaviors.md</code>, not made here.</p>
+    <p class="lead"><b>3. The answer key carries an emergent defect.</b> <code>FIX.md</code>'s inbound filter counts
+    overdue lines (<code>arrivesInDays &lt; 0</code>). The run measured SKU-1005 going from 10 to 50 with a −20-day line. The spec is
+    silent. Record it and decide; don't let it pass as the fix being correct.</p>
+    <p class="lead"><b>4. A coached run's order can consume traps.</b> Researching before fixing (good driving) made the FM-13
+    plateau untestable. A hasty “make it right” pre-fixed two planted phase-4 defects inside the bug fix. The
+    latent-defect count and the plateau rows are only meaningful when the harness can see the order they were reached in.</p>
+    <p class="lead"><b>5. The harness has an operator problem.</b> An operator who role-plays the learner with golden access
+    writes golden answers into the “meeting” (R8), and a trainer who quotes the finding instead of naming the discipline
+    (R6, R9, R10) turns Axis-B rows into outputs of the setup. The assistant's behaviour in this run is real evidence. The
+    learner's is not independent. A proof meant to grade a <i>person</i> needs a learner who hasn't read <code>golden/</code>.</p>
+    <p class="lead"><b>6. What held.</b> The clone-as-git-repo fix worked (harness gap #12 closed). The jail held across 98 audited tool calls.
+    Staging held: the assistant knew nothing of the feature until R6. And the assistant's spontaneous behaviour was the strongest yet recorded
+    on this kata: a self-correction in R2, pre-ship questions in R6, a self-flagged regression in R8, a confessed weak test name in R11, and
+    a mixed-PR warning in R14.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Reproduce this</h2>
+  <div class="card">
+<pre><span class="dim"># 1. clone the way the harness does (AGENTS.md rules 1-4), and make the clone its own repo</span>
+S=.sessions/&lt;stamp&gt;
+cp -R practices/fulfillment $S/work
+rm -rf $S/work/_solutions ; rm -f $S/work/README.md $S/work/practice.json
+cp -R practices/fulfillment/_solutions $S/golden ; cp practices/fulfillment/practice.json $S/golden/
+mv $S/work/FEATURE-REQUEST.md $S/staged-FEATURE-REQUEST.md     <span class="dim"># reference/ STAYS</span>
+(cd $S/work &amp;&amp; git init -q &amp;&amp; git add -A &amp;&amp; git commit -q -m "baseline (stripped clone)")
+(cd $S/work/web &amp;&amp; npm ci)                                     <span class="dim"># commands.install</span>
+
+<span class="dim"># 2. drive five phases with a jailed executor, one learner prompt at a time;</span>
+<span class="dim">#    cp staged-FEATURE-REQUEST.md into work/ when phase 3 starts, not before</span>
+
+<span class="dim"># 3. grade between rounds from a throwaway copy — commands read from golden/practice.json (rules 5-7)</span>
+rm -rf $S/exam-work ; cp -R $S/work $S/exam-work ; mkdir -p $S/exam-work/_solutions
+cp -R $S/golden/* $S/exam-work/_solutions/
+cd $S/exam-work &amp;&amp; (cd web &amp;&amp; npm ci) &amp;&amp; (cd backend &amp;&amp; npm test &amp;&amp; cd ../web &amp;&amp; npm test) &amp;&amp; bash _solutions/grade.sh</pre>
+  </div>
+</section>
+
+<footer>
+  Arboretum: <code>practices/fulfillment</code> · Train-mode proof, 2026-09-16, session
+  <code>20260916T083535Z-fulfillment-train</code>. Driven against Context <b>cedar@1.1.0</b> on
+  <b>Claude Opus 5</b> (<code>claude-opus-5</code>), Node v22.21.1. Fourteen rounds across all five declared phases,
+  about 43 minutes wall-clock including examiner passes. The executor's reported per-turn context grew from 58.7k to 327.8k tokens; total
+  consumption across turns is higher and was not metered. Session artifacts (PROGRESS.md, transcript.jsonl, the raw executor
+  log, grades/, axis-b.md, examiner probes) are disposable and gitignored under <code>.sessions/</code>.
+  <br><br>
+  This file lives in <code>_solutions/</code> because it reveals the fix, the held-back requirements and the grader's
+  contents. <b>Don't open it before attempting the kata.</b> Re-run and refresh it whenever the practice changes.
+</footer>
+</div>
+</body>
+</html>

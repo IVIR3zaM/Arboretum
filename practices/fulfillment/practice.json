@@ -46,6 +46,17 @@
     "alsoFound": "The run surfaced the planted latent defects unbidden — the qty < atp boundary (FM-04), erpFeed accepting and ignoring location (FM-08), and the web node:fs shim that breaks the storefront outside tests — so the latent-defect layer is doing its job."
   },
   "trainRun": {
+    "date": "2026-09-16",
+    "session": "20260916T083535Z-fulfillment-train",
+    "mode": "train",
+    "model": "claude-opus-5",
+    "method": "fourteen rounds across all five declared phases; harness-shaped clone (_solutions/ + README.md + practice.json stripped, reference/ present) initialised as its own git repo; FEATURE-REQUEST.md staged at round 6; examiner ran commands.install/test/grade (read from practice.json) against a throwaway copy between rounds; Axis B graded by a separate fresh-context examiner. The learner was role-played by the harness operator, who had golden access - see _solutions/misbehaviors.md #18.",
+    "gatePath": "availability 6/14 -> 14/14 (from the hasty round-3 prompt); feature 0/4 -> 4/4 (naive one-shot, round 6) -> 4/4 (elicited, round 8); web 1/2 -> 2/2; unit 23+10 -> 55+22; RESULT: PASS from round 6.",
+    "finding": "The feature gate did not discriminate: a one-shot 'don't overthink it, go' delegation scored 4/4, the same as the elicited hold (09-13 measured 1/4 with 'happy path only'). FM-16 did not bite for the third recorded run. Axis B 5 present / 9 partial / 0 absent, mostly trainer- or operator-prompted. Gate-blind oversell vectors shipped at 4/4 (returned-Hold mutation -> 125 on a 25-ATP SKU; qty-0 order confirms at ATP 0); FIX.md counts overdue inbound (emergent).",
+    "issues": "_solutions/misbehaviors.md #16-#25",
+    "proof": "_solutions/proof-train-2026-09-16.html"
+  },
+  "trainRunPrevious": {
     "date": "2026-09-13",
     "session": "20260913-train-v2",
     "mode": "train",
@@ -59,6 +70,6 @@
   },
   "latentDefects": 8,
   "answerKey": "_solutions/",
-  "proof": "_solutions/proof-train-2026-09-13.html",
+  "proof": "_solutions/proof-train-2026-09-16.html",
   "notes": "XL tier; provisional estimate. Grading is pass/fail on the `bash _solutions/grade.sh` exit code; grader.max 20 = availability acceptance (14, phase-2 bug) + feature acceptance (4, phase-3 cart hold) + web integration (2), scored worst-case (all three gates must be fully green — the whole ticket: fix AND deliver the feature). THE 20 IS THE OBJECTIVE FLOOR, NOT THE WHOLE GRADE: it covers phases 2 and 3 only. Phases 1 (understand/research), 4 (improve) and 5 (review) are graded on rubric.md's Axis B from the transcript, not by the 20-point number — so a run can score 20/20 and still be weak on four of the ten declared disciplines (see _solutions/misbehaviors.md #1). latentDefects (8) counts planted instances, not FM families: the by-reference FM-05 leak alone is four (reservations active/all, catalog.slice, orders cached object), plus FM-06, FM-07, FM-04, FM-08; emergent-but-unplanted findings are listed separately in trap-manifest.md and are not in this count. Hermetic via vendored reference/infra fixtures and a loopback file resolver; the web gate is the documented fallback candidate if too heavy for CI. The grade wrapper lives in `_solutions/` (cedar@1.1.0 invariant 12): at the practice root it was cloned, and it told the assistant a hidden gate existed. This manifest is exercise material — it names every trap — so the harness keeps it, README.md and _solutions/ out of the assistant's clone."
 }

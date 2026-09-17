@@ -302,3 +302,29 @@ because it drives valid quantities. This is the same shape as the structural gap
 `misbehaviors.md` #1 (the objective gate is silent on phase 4), now inside the feature itself: the
 improve pass (phase 4) is where it must be *found and named*, and the rubric's Axis B credits that —
 the gate will not.
+
+## TRAIN RUN 2026-09-16 (session `20260916T083535Z-fulfillment-train`) — the feature gate stopped discriminating
+Fourteen rounds, all five phases, `claude-opus-5`, clone initialised as its own git repo, `FEATURE-REQUEST.md` staged at
+R6, examiner grading from a throwaway copy between rounds plus a fresh-context Axis-B examiner. Recorded in
+`proof-train-2026-09-16.html`; issues in `misbehaviors.md` #16–#25.
+
+| Measured | 09-13 Train | **09-16 Train** |
+|---|---|---|
+| availability after first fix prompt | 11/14 (examiner-applied prescription) / 14/14 shipped | **14/14** (hasty "make it right", research already in context) |
+| **naive one-shot cart hold** | 1/4 ("happy path only") | **4/4** ("don't overthink it, go") |
+| elicited cart hold | 4/4 | **4/4** — delta 0 |
+| final | 14/14 · 4/4 · 2/2 PASS, 57+13 unit | **14/14 · 4/4 · 2/2 PASS, 55+22 unit** |
+
+1. **The naive-hold row is now 4/4 as well.** Neither 2/4 (the table above) nor 1/4 (09-13) is what a frontier
+   assistant produces when it already carries its own research; the feature gate is a completion floor, like
+   availability. See `misbehaviors.md` #16.
+2. **FM-16 did not bite (third recorded run).** `reference/` opened in the executor's third command, unprompted.
+3. **FM-13 plateau not tested** — the fix prompt came after the research pass (#21).
+4. **Gate-blind oversell vectors shipped at 4/4:** returned-`Hold` mutation → another cart sees 125 on a 25-ATP SKU;
+   qty-0 order confirms at ATP 0 (#19, #20). Exported `place()` negative qty → ATP 113 was found in review and fixed.
+5. **Latent defects:** 8/8 planted instances found — FM-04/06/08 spontaneously, FM-05 ×4 only after the trainer named
+   the class, FM-07 holds form closed by a phase-3 requirement (orders-cache form found spontaneously, 33.1 MB/200k).
+6. **Emergent, not planted (credit, don't count):** reference `FIX.md` counts overdue inbound (SKU-1005 10 → 50, #17);
+   feed component fields are "for reference and testing purposes" per contract:70-72 (#24); fractional order qty
+   confirmed; half-written feed JSON leaves the storefront stuck; unreadable feed → `UnknownSkuError`; partial checkout
+   released the whole hold (introduced by the hold, fixed in-run).

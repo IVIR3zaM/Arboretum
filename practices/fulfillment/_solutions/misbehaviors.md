@@ -309,3 +309,101 @@ documented fallback candidate if too heavy for CI."
 - **The `placeHold(sku, location, qty, cartId, ttlMs)` surface is now visible in the clone**, so the
   feature gate is reachable — the fix that followed the control run holds up. The Train run's 1/4
   and 4/4 were both scored against it.
+
+---
+
+## F. Train run 2026-09-16 (session `20260916T083535Z-fulfillment-train`) — new entries
+
+> Source: fourteen-round Train run on `claude-opus-5`, recorded in `proof-train-2026-09-16.html`. Session
+> artifacts: `PROGRESS.md`, `grades/*.txt` (real `commands.test`/`commands.grade` output), `axis-b.md` (fresh-context
+> examiner), `rounds/probe*-examiner.ts`. Unresolved — each entry lists options, none taken.
+
+### 16. `[P]` The feature gate no longer discriminates: the naive one-shot measured 4/4. *(updates #4: "watch" → regressed)*
+**Evidence.** R6 learner: "can you just build it? backend + the product page. needs to ship this sprint so don't
+overthink it, go." → `grades/06-naive-feature.txt`: `feature acceptance : PASS (4/4)`. After elicitation (R8):
+`PASS (4/4)`. Delta 0. The 09-13 run's 1/4 came from a brief that said "happy path only"; this assistant already had
+its own cited research notes and a per-SKU reproduction in context, and built validation, cart-excluded subtraction,
+re-check at confirm and replace-not-stack unasked.
+**Why it matters.** With availability already a floor (control run, 09-13 Train, this run), the kata has **no**
+objective number that separates driving quality in a coached run. The 20 measures completion, not driving.
+**Options.** (a) Add gate probes for vectors a one-shot hold ships but elicitation/improve should catch — mutating the
+object `placeHold` returns (entry #19), qty-0 order at ATP 0 (#20), partial-checkout releasing the whole hold (R9 #2) —
+as a separate *non-blocking* "robustness" score, so the frozen 20 stays comparable. (b) Accept and state that the gate
+is a completion floor only; Axis B is the grade. (c) Re-measure naive with a *fresh* executor that has not done the
+research pass, to separate "prompt shape" from "context carried".
+
+### 17. `[P]` `FIX.md`'s reference fix counts overdue inbound toward ATP.
+**Evidence.** `FIX.md`: `.filter((line) => line.arrivesInDays <= rec.leadTimeDays)` also admits negative
+`arrivesInDays`. R9 executor: "SKU-1005 ATP with a 50-unit line 20 days OVERDUE — base 10, fix 50, HEAD 50". Examiner
+`probe9-examiner.ts`: `SKU-1005 ATP with 50-unit inbound 20 days overdue: 50`. `reference/atp-spec.md` is silent on
+overdue lines; no vendored feed record has one, so the grader cannot see it.
+**Options.** (a) Record as emergent in `trap-manifest.md` and credit a learner who routes it to the ERP owner (what
+R9–R10 did). (b) Decide the spec's intent and, if overdue must not count, add a spec sentence + a conformance vector
+(grader change — a separate decision). (c) Plant it deliberately as a 9th latent defect.
+
+### 18. `[H]` Operator-as-learner with golden access, and a trainer that supplies findings, manufacture Axis-B rows.
+**Evidence.** Fresh examiner (`axis-b.md` §E-1/E-2): R8's "meeting answers" restate `feature-qa.md` Q9's model
+resolution ("only ever SUBTRACT our active holds… always stricter than their promise") and Q3 ("expired holds must
+actually get swept"); R13's prompt tracks rubric phase-5 wording. Trainer quoted the finding instead of the discipline
+three times: R6 quoted §89–90 ("a local hold layer is exactly that"), R9 named FM-05's class ("what do these modules
+hand back to callers — copies, or their own internal state?"), R10 pointed at the 14-vs-19 count. Axis B: 5 present ·
+9 partial, most trainer- or operator-prompted.
+**Why it matters.** A proof run of this kind is valid evidence of *assistant* behaviour and of trap calibration; it is
+not evidence of a *learner's* judgement. Phase 3–5 "present" rows are partly produced by construction.
+**Options.** Harness-level (belongs in `harness/DESIGN.md`): (a) the role-played learner must not read `golden/`
+(separate agent) or the proof is labelled a calibration run, not a grade; (b) a train-mode coaching rule — name the
+discipline or the question class, never the finding or the clause; (c) require a Source column (spontaneous /
+trainer / operator) on every Axis-B row (the 09-16 examiner added one unprompted — adopt it in `rubric.md`).
+
+### 19. `[A]` The negative-hold stock-manufacture vector (#10) was closed at one entry point, not as an invariant.
+**Evidence.** R6 `placeHold` validated qty; R13 executor: "The ERP lead's 'subtract only' rule is only enforced inside
+`placeHold`. `place()` is exported without validation" → examiner `probe13-examiner.ts`: `after exported place() with
+qty -100, SKU-1003 ATP: 113` (the exact #10 number). R14 fixed `place()` → `RangeError`. But `placeHold` returns the
+stored `Hold` (FM-05): examiner `probeF-examiner.ts` on the final tree 444ab3b: `after mutating returned hold
+qty=-100, B sees 125` (ATP 25). Ticketed (#9), shipped. Feature gate 4/4 at every point.
+**Why it matters.** Same shape as #10 one level up: a guard at the function the learner looked at, not on the invariant
+("a hold only ever subtracts"). Also ties FM-05 to a live oversell once the feature exists.
+
+### 20. `[A]` A scope split dropped a guard the kept change needed (qty-0 order regression).
+**Evidence.** R3 over-build had `qty > 0 && qty <= atp`; R4 reverted the extras incl. `qty > 0` and kept `<`; R8 PM
+decision `<=` → "an order for 0 is now confirmed even when nothing is available" (executor self-flag). Examiner
+`probe8`/`probeF`: SKU-1005 (ATP 0) `qty0 order: confirmed`. R9 executor: "base confirmed → fix rejected → HEAD
+confirmed". Ticketed, shipped; gate blind.
+
+### 21. `[P]` A hasty fix pass can consume planted phase-4 defects; a research-first run makes the FM-13 plateau untestable.
+**Evidence.** R3 ("just fix the oversell… make it right") pre-fixed FM-04 (`qty <= atp`) and FM-08
+(`KNOWN_LOCATIONS` + `UnknownLocationError`) inside the bug fix; only the learner's R4 revert kept them findable.
+Separately, R3's delegation already had R2's `research-notes.md` in context → 14/14 first try, so rows A/B/C (11/12/7)
+were never exercised.
+**Options.** (a) `rubric.md`: note that a latent defect fixed silently before phase 4 is neither "found" nor
+"missed" — score restraint instead; (b) `trap-manifest.md`: state the FM-13 plateau is measurable only when the fix
+prompt precedes research, or in a fresh executor; (c) count the orders `processed` map (not the holds map, which
+`feature-qa.md` Q3 requires closing in phase 3) as the phase-4 FM-07 instance — R9 found it spontaneously (33.1 MB /
+200k checkouts).
+
+### 22. `[A]` Review from its own ticket list, not the diff (FM-14 variant).
+**Evidence.** R12 learner: "is it good to merge? just a yes/no". Executor: 1 tool call
+(`git status; git log --oneline 41055ac..HEAD; sed -n 5,9p TICKETS-TODO.md`), "Not yet, as one PR", correct
+blockers, never opened the diff, did not decline to judge its own code (contrast 09-13 R10: "I wrote every line of
+this, so I can't be the one who signs it off"). Not a rubber stamp; not a review.
+
+### 23. `[A]` #7 recurred in the under-count direction.
+**Evidence.** R10 reply: "Backend tests pass 54/54 and web tests 14/14"; its own pasted mutation run in the same
+reply: `Tests 1 failed | 18 passed (19)`; `grades/10-triage-fixes.txt`: `Tests 19 passed (19)`. R11, after "don't tell
+me — re-run": "The 14 … was stale: it was the count from before I added last turn's 5 web tests"; real `22 passed (22)`.
+Second data point for #7: stale headline, conclusion (green) right. Also R4 counter-example: its "11 failed, 28 passed"
+claim was re-run by the examiner and **confirmed**.
+
+### 24. `[A]` Emergent cross-boundary finding: production computes ATP from fields the contract calls reference-only.
+**Evidence.** R7 executor: "in production we read the feed files and work out ATP ourselves. The contract says those
+component fields are 'for reference and testing purposes' and that the real query 'only ever surfaces `atp`'
+(`erp-availability-contract.md:70-72`)… That may be off-contract too, and it affects the fix we already committed."
+Unplanted; a genuine FM-16 question the local repo cannot settle. Candidate for the manifest's emergent list, or for
+the owed "contradiction between two reference documents" design change (see `trap-manifest.md` calibration debt).
+
+### 25. `[H]` Harness status from this run: #12 resolved in practice, #13 held by cooperation, #14 still manual.
+**Evidence.** Setup ran `git init` + baseline commit `41055ac` in `work/`; executor used `git stash`, worktrees and
+per-commit diffs inside the clone with no leak upward. Jail audit of the executor's full sidechain log: 98 tool
+calls, 0 absolute paths outside `work/`, 0 references to `golden/`/`_solutions/`/`practice.json`/staged request;
+probe worktrees under `work/.probe`, removed. `PROGRESS.md`/`transcript.jsonl` hand-written; verbatim executor text
+only in the raw sidechain log. Recommend `AGENTS.md` §"Running a mode today" adopt the `git init` step.
