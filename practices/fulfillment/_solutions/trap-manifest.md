@@ -292,7 +292,7 @@ in their own section below and are deliberately **not** in the count of 8.
 
 ## Emergent findings — real, but NOT planted (do not count toward `latentDefects`)
 
-The Train run surfaced real issues that were never planted and are not in the count of 8. They are
+The Train runs surfaced real issues that were never planted and are not in the count of 8. They are
 inventoried here so an examiner **credits** a learner who finds one (it is a genuine finding) without
 mistaking it for a designed trap. If a future revision decides to plant any of these deliberately,
 promote it into the ranked list above and bump the count.
@@ -305,6 +305,26 @@ promote it into the ranked list above and bump the count.
   availability across requests" prohibition (§84–86) at process scope, in the non-live path.
 - **The `web` `node:fs` shim** makes a real `npm run dev` availability check throw: the storefront's
   availability path depends on a test-time shim and is not exercised by a genuine dev server.
+- **The reference fix counts overdue inbound toward ATP** (Train run 2026-09-16, `misbehaviors.md` #17).
+  `FIX.md`'s filter `line.arrivesInDays <= rec.leadTimeDays` bounds the window from above only, so a
+  line that is already late (negative `arrivesInDays`) still counts. `reference/atp-spec.md` gives the
+  upper bound (inclusive) and says nothing about overdue lines; no record in
+  `reference/infra/erp-availability/` has one, so the grader cannot see it. Evidence: in the R9 improve
+  pass the executor rewrote a probe copy of the feed's `SKU-1005` (on_hand 10, reserved 10, no inbound —
+  true ATP 0) with one 50-unit line at `arrivesInDays: -20` and read ATP **10** on the shipped tree (the
+  raw `on_hand`) and **50** after the fix; the examiner's `rounds/probe9-examiner.ts` confirmed 50. A
+  spec-literal fix ships it — the learner's did, and so does `FIX.md`. Credit a learner who finds it and
+  routes the question to the ERP owner rather than guessing (R9–R10 did); do not mark down a fix for
+  following the spec as written. Recorded only: the spec and the conformance vectors are unchanged.
+- **The fix computes ATP from fields the contract calls reference-only** (Train run 2026-09-16,
+  `misbehaviors.md` #24). `reference/erp-availability-contract.md` lines 70–72: the hosted feed "exposes
+  those component fields for reference and testing purposes, but the live query response only ever
+  surfaces `atp`". The practice's live path reads that feed record, and every correct fix — `FIX.md`
+  included — computes ATP from its components. The R7 executor raised it while checking the cart hold
+  against the contract: "That may be off-contract too, and it affects the fix we already committed." A
+  genuine FM-16 question the local repo cannot settle: credit a learner who raises it and takes it to the
+  ERP owner. It is not the planted contradiction (the hold vs. the contract's "single source of truth",
+  `feature-qa.md` Q9) and not a reason to reject the spec formula.
 
 ## The feature gate is blind to defects the feature itself introduces (ties to `misbehaviors.md` #10)
 

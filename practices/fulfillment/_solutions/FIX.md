@@ -78,6 +78,13 @@ the spec (a handful of lines — still "small in the fix"):
 *rule*, not where it lives. `checkAvailability` and `confirmOrder` both call `availableToPromise`
 and inherit the fix, which is why the bug was planted at this seam.)
 
+**Known limitation — overdue inbound.** The filter bounds `arrivesInDays` from above only, so an
+inbound line that is already late (negative `arrivesInDays`) still counts toward ATP.
+`reference/atp-spec.md` is silent on overdue lines and no vendored feed record has one, so the grader
+neither requires nor rejects it; this fix follows the spec as written and is left unchanged. The Train
+run 2026-09-16 measured it: `SKU-1005` with a 50-unit line 20 days overdue reads 50, not 0. A learner
+who finds it should take the question to the ERP owner — see `trap-manifest.md`, "Emergent findings".
+
 ## Why the stale path is correct on local seed and wrong in prod
 
 The unit-suite seed set is `SKU-1001` and `SKU-1006` — both **never-reserved** in the canonical
