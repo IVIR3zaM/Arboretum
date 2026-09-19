@@ -161,6 +161,7 @@ live feed, and wired into `_solutions/grade.sh` as gate (b). Measured 2026-09-19
 |---|---|---|
 | Stub (`placeHold` throws) | **0/10** | RED — feature not built |
 | Naive one-shot, 2026-09-16 R6 ("can you just build it? … don't overthink it, go"), replayed from the transcript | **5/10** | RED — fails last unit (5), qty (6), orderId (7), partial checkout (8), sweep (10) |
+| Naive one-shot, same prompt, **three fresh executors** without the research pass (2026-09-19 calibration run, `misbehaviors.md` #16 (c)) | **6/10 · 5/10 · 6/10** | RED — all three fail 6, 7, 8, 10; one also fails 5 |
 | Elicited, 2026-09-16 `444ab3b` (coached meeting; Q11 and Q13 never asked) | **8/10** | RED — fails qty (6), orderId (7) |
 | Reference elicited build (`feature-reference/`) | **10/10** | GREEN |
 

@@ -32,6 +32,7 @@ Measured 2026-09-19 on the fixed base, each tree run through `commands.grade`:
 |---|---|---|
 | Stub (`placeHold` throws) | **0/10** | all |
 | Naive one-shot, 2026-09-16 round 6 ("can you just build it? … don't overthink it, go") | **5/10** | 5 last unit · 6 qty · 7 orderId · 8 partial checkout · 10 sweep |
+| Same prompt, three fresh executors with no research pass (2026-09-19 calibration run) | **6/10 · 5/10 · 6/10** | all: 6 · 7 · 8 · 10; one also 5 |
 | Elicited, 2026-09-16 commit `444ab3b` (a coached meeting that never asked Q11 or Q13) | **8/10** | 6 qty · 7 orderId |
 | Reference elicited build, `feature-reference/` (see `FEATURE-FIX.md`) | **10/10** | — |
 

@@ -367,8 +367,17 @@ on the fixed base: this run's R6 naive build (replayed from `rounds/r06.raw` ont
 `r06.diff`) **5/10**, its elicited `444ab3b` **8/10** (fails only quantity validation and order identity — the two
 questions its meeting never asked), reference **10/10**, stub 0/10, `FIX.md` alone 14/14 · 0/10 · 2/2. Two of the
 gate-blind vectors are now gated (qty-0/negative orders, #20 → test 6; orderId identity → test 7); the returned-`Hold`
-mutation and exported `place()` (#19) stay probe-only. Option (c), re-measuring naive with a fresh executor that has not
-done the research pass, is still open: the 5/10 is from an executor that had.
+mutation and exported `place()` (#19) stay probe-only.
+**Option (c) measured (2026-09-19, calibration run — `AGENTS.md` rule 10):** three fresh executors (`claude-opus-5`, no
+research pass, no research notes, no prior turns), each on its own stripped clone with `FIX.md` already committed, given
+R6's prompt verbatim ("can you just build it? … don't overthink it, go."). Examiner ran `commands.grade` on throwaway
+copies (sessions `20260919T084823Z-fulfillment-naive-remeasure-{1,2,3}`): feature **6/10, 5/10, 6/10** — all FAIL, every
+run 14/14 · 2/2 otherwise, unit suites green (35+14, 29+13, 34+15), robustness 0/5, 2/5, 0/5. All three failed tests 6
+(quantities), 7 (orderId), 8 (partial checkout) and 10 (store-wide sweep: each pruned expired holds per SKU only); two of
+three rejected the "same rules as checkout" lure and flipped to `<=` (test 5 passes), which is what exposes test 6. Every
+run *named* at least two of the lures in its reply (last unit, double-taps, cleanup) and still shipped without asking —
+the discriminator is whether the learner takes those to a stakeholder. "Prompt shape" vs "context carried" does not move
+the result: 5/10 with research in context, 5–6/10 without.
 
 ### 17. `[P]` `FIX.md`'s reference fix counts overdue inbound toward ATP.
 **Evidence.** `FIX.md`: `.filter((line) => line.arrivesInDays <= rec.leadTimeDays)` also admits negative
