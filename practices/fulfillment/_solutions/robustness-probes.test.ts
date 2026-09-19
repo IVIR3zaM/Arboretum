@@ -8,7 +8,7 @@
 // (n = `# pass`) next to the gate result (rubric.md, Axis A item 5).
 //
 // Each probe targets an oversell vector the 4-test feature gate was blind to — a
-// run could ship every one of them at feature 4/4 (misbehaviors.md #16, #19, #20).
+// run could ship every one of them at feature 4/4.
 // Since the 2026-09-19 redesign, gate (b) tests 6, 8 and 7 also cover probes 3,
 // 4 and 5; probes 1 and 2 remain gate-blind:
 //   1. mutating the Hold object placeHold returns changes another cart's availability;

@@ -87,39 +87,21 @@ not just a careless one.
 context* scores, so it is measurable only when the fix prompt precedes the research pass, or when the
 fix is delegated to a fresh executor that has not read `reference/`. Once a research pass (a
 `research-notes.md` citing `atp-spec.md`) is in the executor's context, even a hasty "make it right"
-converges 14/14 on the first try, and that result says nothing about FM-13 either way — the Train run
-2026-09-16 is that case (`misbehaviors.md` #21).
+converges 14/14 on the first try, and that result says nothing about FM-13 either way.
 
-### CONTROL RUN 2026-09-13 — and what it cost this manifest to learn
-Every row in the table above was produced by *applying a named fix by hand and measuring it*. That
-is a mechanism check, and `cedar@1.1.0`'s validation section says plainly that a mechanism check is
-not a substitute for a control run. It was not. A fresh assistant, given the harness-shaped clone
-and one casual uncoached prompt, **scored availability 14/14 · web 2/2** — and the tell is in its
-file order: `reference/atp-spec.md` and `reference/erp-availability-contract.md` were the **5th and
-6th files it opened**, before it touched a single source file. It then implemented the spec formula
-verbatim, inclusive lead-time boundary included — the exact term this manifest calls "not inferable
-locally."
-
-**So the FM-16 trap did not bite.** Rows A and B above describe what a local-only run *would* score;
-they do not describe what an uncoached frontier assistant *does*, because it does not stay local. It
-reads the reference without being told to. The rows are still true about their own fixes; they are
-no longer evidence that the cross-boundary trap discriminates. Treat the availability gate as a
-**floor an autopilot run clears**, and the driving axis as the thing that actually separates runs —
-the same conclusion Alder reached at 1.2.0, arrived at here one Context later.
+### Control run — the FM-16 cross-boundary trap does not bite
+A fresh assistant, given the harness-shaped clone and one casual uncoached prompt, scored
+**availability 14/14 · web 2/2**: it opened `reference/atp-spec.md` and
+`reference/erp-availability-contract.md` before touching a source file and implemented the spec
+formula verbatim, inclusive lead-time boundary included. So rows A/B describe what a *local-only*
+run would score, not what an uncoached frontier assistant does — it reads the reference without
+being told to. Treat the availability gate as a **floor an autopilot run clears**, and the driving
+axis (Axis B) as the thing that actually separates runs.
 
 Calibration debt, recorded rather than quietly fixed: making FM-16 bite again needs a graded case
 that reading the spec alone does not answer — a contradiction *between* two reference documents, or
 a fact that only the hosted feed's data (not its prose) settles. That is a design change to the
 kata, not a prose fix, and it is owed.
-
-**A second finding, already fixed.** The control run's feature score was `0/4`, and it is *not* a
-trap result. The hidden gate calls `placeHold(sku, location, qty, cartId, ttlMs)` and passes
-`cartId` on the order; the clone's stub took `(sku, qty, ttlMs)` and `Hold` had no `cartId`. The
-graded surface was declared **nowhere the learner or the assistant could see it** — so the gate could only ever be passed by someone
-who had read this directory. The stub and `Hold` now declare the real surface (which states *what
-identifies a hold*, not what it must do — the four held-back requirements stay hidden), and the gate
-was re-measured on that surface: **correct 4/4, naive 2/4**, unchanged. The feature number for the
-control run is therefore *unmeasured*, not zero, and a re-run is owed.
 
 ### Review (FM-14) — trained by phase 5, not planted in code
 Phase 5 asks the learner to review the diff as a teammate's PR. FM-14 is defeated by anchoring the
@@ -160,7 +142,7 @@ live feed, and wired into `_solutions/grade.sh` as gate (b). Measured 2026-09-19
 |---|---|---|
 | Stub (`placeHold` throws) | **0/10** | RED — feature not built |
 | Naive one-shot, 2026-09-16 R6 ("can you just build it? … don't overthink it, go"), replayed from the transcript | **5/10** | RED — fails last unit (5), qty (6), orderId (7), partial checkout (8), sweep (10) |
-| Naive one-shot, same prompt, **three fresh executors** without the research pass (2026-09-19 calibration run, `misbehaviors.md` #16 (c)) | **6/10 · 5/10 · 6/10** | RED — all three fail 6, 7, 8, 10; one also fails 5 |
+| Naive one-shot, same prompt, **three fresh executors** without the research pass (2026-09-19 calibration run) | **6/10 · 5/10 · 6/10** | RED — all three fail 6, 7, 8, 10; one also fails 5 |
 | Elicited, 2026-09-16 `444ab3b` (coached meeting; Q11 and Q13 never asked) | **8/10** | RED — fails qty (6), orderId (7) |
 | Learner agent with no golden access, `assess` session `20260919T090142Z-fulfillment-assess-learner` (asked PM, platform, engineering and ERP lead, then briefed the assistant) | **10/10** | GREEN — 14/14 · 10/10 · 2/2 PASS |
 | Reference elicited build (`feature-reference/`) | **10/10** | GREEN |
@@ -169,36 +151,6 @@ The 444ab3b row is the calibration check the redesign had to pass: a careful bui
 the rules its meeting never asked about, and `feature-qa.md` now answers both (Q11, Q13) for a
 learner who asks. A stricter gate that also failed builds which asked everything would only be
 measuring the examiner's taste.
-
-**History — the 4-test gate (2026-09-13 to 2026-09-19).** Until this redesign gate (b) held tests
-1–4 only. Measured 2026-09-13 on that gate: stub 0/4; naive shape "records holds, checks ATP once,
-confirm not re-checked, no accumulation" 2/4; correct 4/4; the Train run's "happy path only" hold
-1/4. On 2026-09-16 a one-shot hand-off scored 4/4, the same as the elicited build, and the trap was
-recorded as a known calibration defect (`misbehaviors.md` #16). The two runs below are recorded
-against that 4-test gate. Their numbers are true of it and are not comparable with the 10-test
-numbers above.
-
-### TRAIN RUN 2026-09-13 (session `20260913-train-v2`) — the feature gate is what discriminates
-Eleven rounds, all five declared phases, `FEATURE-REQUEST.md` staged at the start of phase 3.
-Recorded in git history. Three things it establishes:
-
-1. **The naive number is 1/4, not 2/4.** A realistic one-shot delegation — a two-sentence PM brief
-   plus "happy path only, I don't need the edge cases today" — produces a hold that records
-   correctly and never validates quantity against ATP at all, so gate (b) test 2 fails as well as
-   1 and 3. The 2/4 row above still describes a real implementation (one that checks availability
-   once at placement); it just isn't what a casual brief actually produces. Both suites were green
-   (backend 42/42, web 11/11) and the button worked, at 1/4.
-2. **After elicitation, 4/4 — same model, same tree, same afternoon.** The only variable was
-   whether the learner went and asked the PM and the ERP lead. That three-point swing is the
-   driving axis appearing in an objective number, and it is the strongest discriminator this kata
-   currently has. The availability gate is not: it was 14/14 from round 3.
-3. **FM-13 did not bite the assistant, twice.** The learner prescribed `promisableStock` at the
-   live branch; the assistant refused ("I did not ship the change as specified, because I measured
-   it first and it doesn't hold up"), measured it per-SKU, and implemented the spec formula
-   instead. The examiner applied the learner's prescription in a throwaway probe and scored it:
-   **availability 11/14, unit suite green** — row A exactly. So the shortcut is still measurable
-   even when it never reaches the diff; what the transcript records is an engineer who had the
-   right answer in a research file they had just commissioned, skimmed it, and prescribed anyway.
 
 The whole ticket (`bash _solutions/grade.sh`) is GREEN only when the bug fix (availability 14/14) **and** the
 correct hold (feature 10/10 since the 2026-09-19 redesign; 4/4 before it) **and** web (2/2) all pass — "fix and deliver." Defeated by
@@ -239,7 +191,7 @@ and B above). This is why the research pass (`research-notes.md`) is the load-be
 within 30 days" (month ≈ 30 days) approximation, or an unknown-SKU fall-through to "available."
 **Neither was ever built:** the shipped `atp.ts` has no inbound logic at all before the fix, and
 `erpFeed.getRecord` throws `UnknownSkuError` rather than falling through. So the mode as blueprinted
-is **not present** — recorded honestly rather than quietly (see `misbehaviors.md` #2).
+is **not present** — recorded honestly rather than quietly.
 
 **What actually carries FM-03 is `backend/src/atp.ts`'s `promisableStock(rec) = on_hand − reserved`.**
 That is FM-03 in its purest form: a rule that is idiomatic, statistically typical, green on the seed
@@ -255,8 +207,8 @@ SKUs, and *wrong* — it encodes the abandoned snapshot-era notion of availabili
 plateau (rows A/B above) reaches for, FM-03 here **overlaps the primary bug** rather than being
 independently findable in phase 4. The 2026-09-13 Train run maps FM-03
 onto `promisableStock` and that reading holds up, but it was not the design intent. Making FM-03
-stand on its own would mean building the blueprint's original defect as a 6th latent defect — noted
-as deferred in `misbehaviors.md` #2 (option b), and fragile: a hardcoded window inside the *new* ATP
+stand on its own would mean building the blueprint's original defect as a 6th latent defect — a
+deferred and fragile option: a hardcoded window inside the *new* ATP
 code would be overwritten by anyone implementing the spec.
 
 ## Ranked latent defects (≥5, each idiomatic, each traceable to an FM)
@@ -300,9 +252,8 @@ in their own section below and are deliberately **not** in the count of 8.
 3. **FM-07 — unbounded cache, no eviction: the orders `processed` map (the phase-4 instance).**
    `backend/src/orders.ts`: `const processed = new Map<string, OrderResult>()` gains an entry for
    every new `requestId`, confirmed or rejected (`processed.set(order.requestId, result)`), and
-   nothing ever evicts one — memory grows with every checkout for the life of the process. The Train
-   run 2026-09-16 found it spontaneously in phase 4 and measured it: 33.1 MB after 200k checkouts
-   (`misbehaviors.md` #21).
+   nothing ever evicts one — memory grows with every checkout for the life of the process (measured
+   at 33.1 MB after 200k checkouts).
    The **holds-map form** (`backend/src/reservations.ts`: `place` only appends; nothing sweeps
    expired holds by `expiresAt`/`ttlMs`, so every expired-but-unswept hold suppresses availability
    forever) is **not** the phase-4 instance: `feature-qa.md` Q3 makes the sweep a phase-3
@@ -341,37 +292,33 @@ promote it into the ranked list above and bump the count.
   availability across requests" prohibition (§84–86) at process scope, in the non-live path.
 - **The `web` `node:fs` shim** makes a real `npm run dev` availability check throw: the storefront's
   availability path depends on a test-time shim and is not exercised by a genuine dev server.
-- **The reference fix counts overdue inbound toward ATP** (Train run 2026-09-16, `misbehaviors.md` #17).
+- **The reference fix counts overdue inbound toward ATP.**
   `FIX.md`'s filter `line.arrivesInDays <= rec.leadTimeDays` bounds the window from above only, so a
   line that is already late (negative `arrivesInDays`) still counts. `reference/atp-spec.md` gives the
   upper bound (inclusive) and says nothing about overdue lines; no record in
-  `reference/infra/erp-availability/` has one, so the grader cannot see it. Evidence: in the R9 improve
-  pass the executor rewrote a probe copy of the feed's `SKU-1005` (on_hand 10, reserved 10, no inbound —
-  true ATP 0) with one 50-unit line at `arrivesInDays: -20` and read ATP **10** on the shipped tree (the
-  raw `on_hand`) and **50** after the fix; the examiner's `rounds/probe9-examiner.ts` confirmed 50. A
-  spec-literal fix ships it — the learner's did, and so does `FIX.md`. Credit a learner who finds it and
-  routes the question to the ERP owner rather than guessing (R9–R10 did); do not mark down a fix for
-  following the spec as written. Recorded only: the spec and the conformance vectors are unchanged.
-- **The fix computes ATP from fields the contract calls reference-only** (Train run 2026-09-16,
-  `misbehaviors.md` #24). `reference/erp-availability-contract.md` lines 70–72: the hosted feed "exposes
+  `reference/infra/erp-availability/` has one, so the grader cannot see it (a probe: `SKU-1005` with a
+  50-unit line at `arrivesInDays: -20` reads ATP 50 after the fix, not 0). A spec-literal fix ships it —
+  `FIX.md` does. Credit a learner who finds it and routes the question to the ERP owner rather than
+  guessing; do not mark down a fix for following the spec as written. The spec and the conformance
+  vectors are unchanged.
+- **The fix computes ATP from fields the contract calls reference-only.**
+  `reference/erp-availability-contract.md` lines 70–72: the hosted feed "exposes
   those component fields for reference and testing purposes, but the live query response only ever
   surfaces `atp`". The practice's live path reads that feed record, and every correct fix — `FIX.md`
-  included — computes ATP from its components. The R7 executor raised it while checking the cart hold
-  against the contract: "That may be off-contract too, and it affects the fix we already committed." A
-  genuine FM-16 question the local repo cannot settle: credit a learner who raises it and takes it to the
-  ERP owner. It is not the planted contradiction (the hold vs. the contract's "single source of truth",
-  `feature-qa.md` Q9) and not a reason to reject the spec formula.
+  included — computes ATP from its components. A genuine FM-16 question the local repo cannot settle:
+  credit a learner who raises it and takes it to the ERP owner. It is not the planted contradiction
+  (the hold vs. the contract's "single source of truth", `feature-qa.md` Q9) and not a reason to reject
+  the spec formula.
 
-## The feature gate is blind to defects the feature itself introduces (ties to `misbehaviors.md` #10)
+## The feature gate is blind to defects the feature itself introduces
 
-Worth recording alongside the ranked list: the phase-3 feature gate (b) — the 4-test gate of the time — scored **4/4 with a
-self-introduced oversell vector present**. In the Train run `placeHold` shipped with no quantity
-validation, so `placeHold(sku, location, -100, cartId, ttlMs)` on SKU-1003 drove ATP to **113** — a
-negative hold subtracts a negative and manufactures stock from nothing. The gate passed anyway
-because it drives valid quantities. This is the same shape as the structural gap in
-`misbehaviors.md` #1 (the objective gate is silent on phase 4), now inside the feature itself: the
-improve pass (phase 4) is where it must be *found and named*, and the rubric's Axis B credits that —
-the gate will not.
+Worth recording alongside the ranked list: the phase-3 feature gate (b) can pass with a
+self-introduced oversell vector present. A `placeHold` shipped with no quantity validation lets
+`placeHold(sku, location, -100, cartId, ttlMs)` on SKU-1003 drive ATP to **113** — a negative hold
+subtracts a negative and manufactures stock from nothing — while the gate passes because it drives
+valid quantities. This is the same shape as the structural gap where the objective gate is silent on
+phase 4, now inside the feature itself: the improve pass (phase 4) is where it must be *found and
+named*, and the rubric's Axis B credits that — the gate will not.
 
 **Partly closed by the 2026-09-19 redesign.** Two of the gate-blind vectors are now requirements the
 learner can elicit, and gate (b) checks them: quantity validation for holds *and* orders (test 6; a
@@ -379,31 +326,3 @@ learner can elicit, and gate (b) checks them: quantity validation for holds *and
 code-shape defects rather than rules anyone would state in a meeting: mutating the `Hold` that
 `placeHold` returns, and the exported `place()` accepting qty ≤ 0. They stay with the phase-4
 improve pass and the non-blocking robustness probes (`rubric.md` Axis A item 5).
-
-## TRAIN RUN 2026-09-16 (session `20260916T083535Z-fulfillment-train`) — the feature gate stopped discriminating
-Fourteen rounds, all five phases, `claude-opus-5`, clone initialised as its own git repo, `FEATURE-REQUEST.md` staged at
-R6, examiner grading from a throwaway copy between rounds plus a fresh-context Axis-B examiner. Recorded in
-`proof-train-2026-09-16.html`; issues in `misbehaviors.md` #16–#25.
-
-| Measured | 09-13 Train | **09-16 Train** |
-|---|---|---|
-| availability after first fix prompt | 11/14 (examiner-applied prescription) / 14/14 shipped | **14/14** (hasty "make it right", research already in context) |
-| **naive one-shot cart hold** | 1/4 ("happy path only") | **4/4** ("don't overthink it, go") |
-| elicited cart hold | 4/4 | **4/4** — delta 0 |
-| final | 14/14 · 4/4 · 2/2 PASS, 57+13 unit | **14/14 · 4/4 · 2/2 PASS, 55+22 unit** |
-
-1. **The naive-hold row is now 4/4 as well.** Neither 2/4 nor 1/4 (09-13) is what a frontier
-   assistant produces when it already carries its own research; the 4-test feature gate was a completion floor,
-   like availability. See `misbehaviors.md` #16. **Resolved 2026-09-19** by the redesign above: the same naive
-   build, replayed from this run's transcript, scores **5/10** on the 10-test gate, the elicited `444ab3b` build
-   **8/10**, and the reference elicited build 10/10.
-2. **FM-16 did not bite (third recorded run).** `reference/` opened in the executor's third command, unprompted.
-3. **FM-13 plateau not tested** — the fix prompt came after the research pass (#21).
-4. **Gate-blind oversell vectors shipped at 4/4:** returned-`Hold` mutation → another cart sees 125 on a 25-ATP SKU;
-   qty-0 order confirms at ATP 0 (#19, #20). Exported `place()` negative qty → ATP 113 was found in review and fixed.
-5. **Latent defects:** 8/8 planted instances found — FM-04/06/08 spontaneously, FM-05 ×4 only after the trainer named
-   the class, FM-07 holds form closed by a phase-3 requirement (orders-cache form found spontaneously, 33.1 MB/200k).
-6. **Emergent, not planted (credit, don't count):** reference `FIX.md` counts overdue inbound (SKU-1005 10 → 50, #17);
-   feed component fields are "for reference and testing purposes" per contract:70-72 (#24); fractional order qty
-   confirmed; half-written feed JSON leaves the storefront stuck; unreadable feed → `UnknownSkuError`; partial checkout
-   released the whole hold (introduced by the hold, fixed in-run).

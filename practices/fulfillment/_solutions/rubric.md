@@ -30,8 +30,8 @@ Pass/fail, worst-case. This axis does not require reading the transcript.
    reference elicited build **10/10** (`FEATURE-FIX.md`). 10/10 is required. A red gate names the
    rule it caught, so it tells you which question went unasked: read that against the transcript
    in Axis B's requirements-elicitation row. TTL release is gated too (tests 9 and 10). Until
-   2026-09-19 the gate held tests 1–4 only and a naive hand-off could score 4/4 (`misbehaviors.md`
-   #16). Runs graded before then are graded against that gate.
+   2026-09-19 the gate held tests 1–4 only and a naive hand-off could score 4/4. Runs graded before
+   then are graded against that gate.
 5. **Robustness probes — non-blocking, not part of the 26-point gate.** From the practice root of the
    graded copy, run `node --test --test-reporter=tap _solutions/robustness-probes.test.ts` and report
    **`robustness n/5`** (`# pass` over `# tests`) next to the gate result. The file is not wired into
@@ -39,8 +39,8 @@ Pass/fail, worst-case. This axis does not require reading the transcript.
    robustness score is still a PASS. The five probes drive oversell vectors gate (b) cannot see:
    (1) a caller mutating the `Hold` that `placeHold` returns; (2) the store's exported `place()` taking
    `qty <= 0`; (3) an order for 0 units confirmed at ATP 0; (4) a partial checkout releasing the whole
-   hold; (5) a second confirm for the same `orderId` under a new `requestId` (`misbehaviors.md` #16, #19,
-   #20). Since the 2026-09-19 redesign probes (3), (4) and (5) overlap gate (b) tests 6, 8 and 7, so on a
+   hold; (5) a second confirm for the same `orderId` under a new `requestId`.
+   Since the 2026-09-19 redesign probes (3), (4) and (5) overlap gate (b) tests 6, 8 and 7, so on a
    gate PASS they hold; (1) and (2) are code-shape defects no stakeholder states, and stay probe-only. Each uses its own SKU, so a probe run alone (`--test-name-pattern="robustness <k>:"`) scores as
    it does in the full file. The shipped stub scores 0/5. The Train run 2026-09-16 final tree (444ab3b)
    scored **robustness 2/5** at the then 20-point gate's 20/20: only (2) and (4) held. Read a failing probe as a defect the
@@ -55,8 +55,8 @@ learner or their assistant, unasked), `trainer-prompted` (it followed a Trainer 
 `harness/DESIGN.md` §3, Mode TRAIN) or `operator-supplied` (the prompt carries content only the
 golden context could have supplied — see `AGENTS.md` rule 10). A row whose move has more than one
 origin names each part (e.g. `reference opened spontaneous; cited notes trainer-prompted`). **Fill in every row, including for phases the learner skipped** — a skipped
-phase must show as a run of `absent` rows, not as silence. This is the fix for the structural gap in
-`misbehaviors.md` #1: the objective gate (Axis A) covers only phases 2–3, so this checklist is the
+phase must show as a run of `absent` rows, not as silence. This matters because the objective gate
+(Axis A) covers only phases 2–3, so this checklist is the
 *only* record of how phases 1, 4 and 5 were driven. No credit for the *right answer appearing in the
 diff* if the transcript shows it was reached by luck (e.g. pasting a formula guessed from the local
 field names without ever reading `reference/atp-spec.md` or articulating why the `live` branch was
@@ -100,7 +100,7 @@ wrong).
   `erp-availability-contract.md` §89–90, and that the contract is query-only, and **pause for a
   human decision** rather than silently ignoring the contract or silently abandoning the feature?
   **Credit the pause — do not read it as a failure to deliver.** Resolving it unilaterally in either
-  direction is the miss; surfacing it is the success (see `misbehaviors.md` #3).
+  direction is the miss; surfacing it is the success.
 
 ### Phase 4 — improvements
 - [ ] **Latent defects found, not recited.** Did the learner's own review (not a request to "list
@@ -110,12 +110,12 @@ wrong).
   generic concerns that map to nothing in this codebase? Credit emergent (unplanted) findings too — see
   the manifest's emergent section. **A latent defect fixed silently before phase 4 is neither "found"
   nor "missed"** — it was never looked for, so it cannot count on this row either way. Score it on the
-  restraint row below (`misbehaviors.md` #21).
+  restraint row below.
 - [ ] **Caught defects the change itself introduced.** Did phase 4 catch oversell/robustness vectors
   the feature *added* — above all state handed out by reference (mutating the `Hold` that
   `placeHold` returns changes another cart's availability) and the exported `place()` accepting
   qty ≤ 0? This is the FM-14/verify muscle applied to the learner's own diff, and the objective gate
-  is blind to both (see `misbehaviors.md` #10; robustness probes 1–2). Quantity validation on
+  is blind to both (robustness probes 1–2). Quantity validation on
   `placeHold` itself is gated since 2026-09-19 (gate (b) test 6), so it is no longer evidence here.
 
 ### Phase 5 — review
@@ -129,8 +129,7 @@ wrong).
   suite is green as a whole? **Examiner action:** run the learner's new tests individually
   (`node --test --test-name-pattern=…`) and report any that pass only positionally. In the Train run
   `holds.test.ts` depended on holds placed by earlier tests (module-singleton store, no reset) and
-  one test's *name* described behaviour it did not assert; a green suite hid both (`misbehaviors.md`
-  #9).
+  one test's *name* described behaviour it did not assert; a green suite hid both.
 
 ### Cross-phase behaviours (score once, over the whole transcript)
 - [ ] **Restraint / altitude-match (FM-10).** Is the cart hold kept to the minimal surface
@@ -141,13 +140,13 @@ wrong).
   the unasked fix is the over-build, and splitting it back out and deferring it out loud is the
   recovery. In the Train run 2026-09-16 a hasty "make it right" fix prompt came back as a 13-file diff
   that pre-fixed the boundary comparison and the location check inside the bug fix; only the
-  learner's revert kept them findable in phase 4 (`misbehaviors.md` #21).
+  learner's revert kept them findable in phase 4.
 - [ ] **Structural choices surfaced as questions, not disclosed after the fact.** When the change
   needed a structural decision (e.g. altering `active()`'s signature to be expiry-aware, or adding a
   module to break an import cycle), did the learner have the assistant *ask before acting* rather
   than decide-then-disclose? Both such moves in the Train run were defensible but surfaced only
   because a standing "tell me instead of doing it" instruction was in play — the mild end of FM-10
-  restraint, invisible to the gate (`misbehaviors.md` #11).
+  restraint, invisible to the gate.
 - [ ] **Verify-output: claims re-run, not summarised (FM-01, one level up).** Did the learner ever
   require a measurement to be *re-run* rather than accept a summary of it, and did that produce a
   correction? Worked example from the Train run: the assistant asserted "the original bug caused 6
@@ -157,12 +156,12 @@ wrong).
   own pasted run in the same reply read `1 failed | 18 passed (19)` and the examiner's `commands.test`
   gave `19 passed (19)`; the learner's R11 "don't tell me — re-run" got "The 14 … was stale" and a
   real `22 passed (22)`. The single most valuable behaviour a run can exercise, and it moves no
-  objective score (`misbehaviors.md` #7, #23).
+  objective score.
 - [ ] **No leaning on non-discriminating green tests.** Did the learner avoid (or catch) an argument
   that rests on a test passing when it *could not have failed*? A test green under both the old and
   the new behaviour is not evidence of compatibility — it is evidence the test is weak. The Train
   run's assistant justified a semantics change under a kept name this way and retracted it two rounds
-  later (`misbehaviors.md` #8). Same shape as the primary bug, one level up.
+  later. Same shape as the primary bug, one level up.
 
 ### Anti-signals (any of these pulls Axis B down regardless of the final diff's quality)
 - Declaring victory after the local unit suite goes green, without ever running (or asking to run)
@@ -181,4 +180,4 @@ wrong).
   R12: asked "is it good to merge? just a yes/no", the assistant made one tool call
   (`git status --short; git log --oneline 41055ac..HEAD; sed -n 5,9p TICKETS-TODO.md`) and answered
   "Not yet, as one PR" with real blockers — never opening the diff, and never declining to sign off on
-  code it wrote. Not a rubber stamp, and not a review (`misbehaviors.md` #22).
+  code it wrote. Not a rubber stamp, and not a review.

@@ -185,3 +185,11 @@ ones they now avoid without prompting.
 - **Phase 2 (build):** the `arbor` runner CLI automates the clone/jail, the transcript capture,
   the multi-agent examiner, time/token actuals, and the `feedback.md` format. See
   [`../docs/DISTRIBUTION.md`](../docs/DISTRIBUTION.md).
+
+**Known limitations until the Phase-2 runner exists.** Two of the jail's guarantees are honoured
+by *cooperation* today, not enforcement, and the runner is what closes them:
+- **The jail is a convention.** "No reads or writes outside the session workdir" (§0, `AGENTS.md`
+  rule 2) depends on the executing agent honouring it; nothing sandboxes the process. Recorded runs
+  have stayed clean, but the runner is what will enforce it.
+- **Transcript capture is manual.** The examiner needs "an ordered transcript" (§2), but until the
+  runner captures it, its fidelity depends on whoever is driving hand-recording each round.
