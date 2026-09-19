@@ -16,22 +16,23 @@ Pass/fail, worst-case. This axis does not require reading the transcript.
    (a) **availability acceptance** (`_solutions/backend-acceptance.test.ts`, worst-case across all
    SKU states + conformance vectors, **14/14**); (b) **feature acceptance**
    (`_solutions/feature-acceptance.test.ts`, the cart hold driven through its public surface,
-   **4/4**); (c) **web integration** (`_solutions/web-integration.test.tsx`, **2/2**). Anything
+   **10/10**); (c) **web integration** (`_solutions/web-integration.test.tsx`, **2/2**). Anything
    short of all three at full marks is a FAIL on this axis regardless of how good the transcript
-   looks. Verified baseline availability 6/14 · feature 0/4 · web 1/2 → post-solution 14/14 · 4/4 ·
-   2/2 (see `FIX.md` and `trap-manifest.md`).
-4. **Feature is objectively gated, not just judged — meant to discriminate, currently does not.**
-   Gate (b) FAILS the naive hold shape (records holds but never re-checks them at confirm, or holds
-   against raw on-hand, or doesn't accumulate across carts → oversell: that shape scores **2/4**)
-   and PASSES the minimal correct hold (reserves against live ATP net of other carts, keyed on
-   `(SKU, cart)`, re-checked at confirm — see `feature-qa.md`). By design a raw "just build it"
-   hand-off should land on the naive side. **Known calibration defect, redesign pending:** a naive
-   one-shot delegation measured 1/4 on 2026-09-13 but 4/4 on 2026-09-16 (`misbehaviors.md` #16), so
-   a 4/4 does not yet show the hold was driven well. Until the redesign, read driving quality from
-   Axis B plus item 5's `robustness n/5` report. The pass/fail rule is unchanged: 4/4 is required.
-   TTL release is a held-back requirement checked on the transcript / diff (not in gate (b) to avoid
-   clock plumbing).
-5. **Robustness probes — non-blocking, not part of the 20-point gate.** From the practice root of the
+   looks. Verified baseline availability 6/14 · feature 0/10 · web 1/2 → post-solution 14/14 · 10/10 ·
+   2/2 (see `FIX.md`, `FEATURE-FIX.md` and `trap-manifest.md`).
+4. **Feature is objectively gated, and the gate discriminates.** `FEATURE-REQUEST.md` looks easy
+   and five of its lines lure an assistant onto the wrong rule. Gate (b) holds 10 tests: 1–4 check
+   that the hold reserves at all (live ATP net of other carts, keyed on `(SKU, cart)`, re-checked at
+   confirm, own hold not counted), and 5–10 check the rules only elicitation returns (last unit,
+   whole quantities, orderId identity, partial checkout, re-place/restart, store-wide sweep —
+   `feature-qa.md` Q3, Q4, Q10–Q13). Measured 2026-09-19: the 2026-09-16 naive one-shot hand-off
+   **5/10**, that run's elicited build `444ab3b` **8/10** (its meeting never asked Q11 or Q13), the
+   reference elicited build **10/10** (`FEATURE-FIX.md`). 10/10 is required. A red gate names the
+   rule it caught, so it tells you which question went unasked: read that against the transcript
+   in Axis B's requirements-elicitation row. TTL release is gated too (tests 9 and 10). Until
+   2026-09-19 the gate held tests 1–4 only and a naive hand-off could score 4/4 (`misbehaviors.md`
+   #16). Runs graded before then are graded against that gate.
+5. **Robustness probes — non-blocking, not part of the 26-point gate.** From the practice root of the
    graded copy, run `node --test --test-reporter=tap _solutions/robustness-probes.test.ts` and report
    **`robustness n/5`** (`# pass` over `# tests`) next to the gate result. The file is not wired into
    `grade.sh`, and it never changes this axis's pass/fail or the grade exit code: a gate PASS with a low
@@ -39,9 +40,10 @@ Pass/fail, worst-case. This axis does not require reading the transcript.
    (1) a caller mutating the `Hold` that `placeHold` returns; (2) the store's exported `place()` taking
    `qty <= 0`; (3) an order for 0 units confirmed at ATP 0; (4) a partial checkout releasing the whole
    hold; (5) a second confirm for the same `orderId` under a new `requestId` (`misbehaviors.md` #16, #19,
-   #20). Each uses its own SKU, so a probe run alone (`--test-name-pattern="robustness <k>:"`) scores as
+   #20). Since the 2026-09-19 redesign probes (3), (4) and (5) overlap gate (b) tests 6, 8 and 7, so on a
+   gate PASS they hold; (1) and (2) are code-shape defects no stakeholder states, and stay probe-only. Each uses its own SKU, so a probe run alone (`--test-name-pattern="robustness <k>:"`) scores as
    it does in the full file. The shipped stub scores 0/5. The Train run 2026-09-16 final tree (444ab3b)
-   scored **robustness 2/5** at gate 20/20: only (2) and (4) held. Read a failing probe as a defect the
+   scored **robustness 2/5** at the then 20-point gate's 20/20: only (2) and (4) held. Read a failing probe as a defect the
    change introduced that phase 4/5 did not close. It is evidence for Axis B's "Caught defects the change
    itself introduced" row, not a score of its own.
 
@@ -86,9 +88,13 @@ wrong).
 ### Phase 3 — build the feature
 - [ ] **Requirements elicitation.** Did the learner ask or answer (even in their own planning,
   stated in the transcript) something close to `feature-qa.md`'s held-back questions —
-  decrement-vs-advisory, the `(SKU, cart)` key, TTL release, re-check-at-confirm — before prompting
-  for an implementation? A one-shot "implement the cart hold" prompt with no elicitation is the
-  anti-pattern.
+  decrement-vs-advisory, the `(SKU, cart)` key, TTL release, re-check-at-confirm, and the lure
+  lines (last unit, valid quantities, partial checkout, re-placing, what makes two confirms the
+  same order) — before prompting for an implementation? Did they take the answers to the people who
+  own them (PM, platform, ERP lead) rather than accept the assistant's picks? A one-shot "implement
+  the cart hold" prompt with no elicitation is the anti-pattern. Credit questions the learner had
+  the assistant draft and then took to stakeholders. Cross-check with gate (b): each red test names
+  a rule whose question was not asked or not answered.
 - [ ] **Cross-boundary contradiction raised (FM-16, `feature-qa.md` Q9).** Did the learner (or its
   assistant) notice that a local hold layered over ERP ATP contradicts
   `erp-availability-contract.md` §89–90, and that the contract is query-only, and **pause for a
@@ -106,9 +112,11 @@ wrong).
   nor "missed"** — it was never looked for, so it cannot count on this row either way. Score it on the
   restraint row below (`misbehaviors.md` #21).
 - [ ] **Caught defects the change itself introduced.** Did phase 4 catch oversell/robustness vectors
-  the feature *added* — above all the missing quantity validation on `placeHold` (a negative hold
-  manufactures stock; the gate passes 4/4 with it present)? This is the FM-14/verify muscle applied
-  to the learner's own diff, and the objective gate is blind to it (see `misbehaviors.md` #10).
+  the feature *added* — above all state handed out by reference (mutating the `Hold` that
+  `placeHold` returns changes another cart's availability) and the exported `place()` accepting
+  qty ≤ 0? This is the FM-14/verify muscle applied to the learner's own diff, and the objective gate
+  is blind to both (see `misbehaviors.md` #10; robustness probes 1–2). Quantity validation on
+  `placeHold` itself is gated since 2026-09-19 (gate (b) test 6), so it is no longer evidence here.
 
 ### Phase 5 — review
 - [ ] **Honest review with intent (FM-14).** Does the final review show triage — distinguishing what

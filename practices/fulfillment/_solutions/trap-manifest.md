@@ -130,32 +130,52 @@ rubber-stamping the AI's change. The rubric's driving axis scores this; nothing 
 
 ## Feature trap (phase 3) — the cart hold, objectively graded
 
-`FEATURE-REQUEST.md` is a thin PM ask ("let shoppers hold an item for 10 minutes"). The held-back
-requirements — the hold must **reserve against live ATP net of other carts**, be keyed on
-**(SKU, cart)**, be released on **TTL**, and be **re-checked at confirm** — are not stated. The
-ask is meant to look easy and lead an assistant the wrong way. The naive shape this trap targets
-(read-before-delegate / requirements-elicitation miss) builds a hold *store* and a `placeHold` that
-checks availability once and records the hold, but never wires it into `confirmOrder` and never
-accumulates across carts. It looks done — unit suites green, the button works — and it
-**oversells**: two carts hold the same units and both confirm. Gate (b) is meant to discriminate a
-raw hand-off like that from an elicited build.
+`FEATURE-REQUEST.md` is a short PM ask ("let shoppers hold an item for 10 minutes") that **looks
+easy and leads an assistant the wrong way**. It never states the rules the gate checks. Five of its
+lines are lures, casual PM statements that each point at the wrong rule and sound settled: "same
+rules as checkout" (checkout's rule is the strict `qty < atp`), "just refresh the hold", "once they
+check out, the hold's done — clear it", "double-taps on confirm are already handled", "they clean
+themselves up". `feature-qa.md` tabulates each lure against the rule it hides, the question that
+surfaces it, the stakeholder who answers it, and the gate test that checks it.
 
-**Known calibration defect, redesign pending:** the trap does not currently bite. A naive one-shot
-delegation measured 1/4 on 2026-09-13 but 4/4 on 2026-09-16, the same as the elicited hold (see the
-TRAIN RUN entries below and `misbehaviors.md` #16). Until the kata is redesigned, read driving
-quality from `rubric.md` Axis B plus the robustness report (Axis A item 5, `robustness n/5`).
+The held-back requirements come in two layers:
+- **The hold reserves at all** (gate tests 1–4): reserve against **live ATP net of other carts**,
+  keyed on **(SKU, cart)**, **re-checked at confirm**, and not blocked by the cart's own hold. The
+  naive shape these tests were built for records holds, checks ATP once, and never wires the hold
+  into `confirmOrder`. A frontier assistant no longer builds that shape (2026-09-16: 4/4 on these
+  four from a one-shot hand-off), so tests 1–4 are a floor, not the discriminator.
+- **The rules the request leaves out or states wrongly** (gate tests 5–10): the last unit is
+  holdable and buyable (`<=`, holds and orders); quantities are whole units ≥ 1 for holds and orders;
+  an order is identified by its `orderId`, not the `requestId`; a partial checkout releases only the
+  units bought; re-placing sets the line's new total and restarts the timer; expired holds are swept
+  store-wide on every placement. Each is a product or platform fact the repo does not hold, and an
+  assistant given the request raw fills it in with the lure or with the existing code's behaviour.
 
 The feature is **objectively gated** (not just rubric-judged) by
-`_solutions/feature-acceptance.test.ts`, driven through the public surface (`placeHold` +
-`confirmOrder`) against the live feed, and wired into `_solutions/grade.sh` as gate (b). Measured
-(2026-09-13, each impl applied on a fixed base then reverted):
+`_solutions/feature-acceptance.test.ts` (10 tests), driven through the public surface (`placeHold`,
+`confirmOrder` with the cart id the request declares, and the holds store's `all()`) against the
+live feed, and wired into `_solutions/grade.sh` as gate (b). Measured 2026-09-19 through
+`commands.grade` on the fixed base (`FEATURE-FIX.md` has the method):
 
 | Cart-hold implementation | feature acceptance | result |
 |---|---|---|
-| Stub (`placeHold` throws) | **0/4** | RED — feature not built |
-| Naive: records holds, checks ATP once, **confirm not re-checked**, no accumulation | **2/4** | RED — oversells (cart A holds 15, cart B still confirms 10 on a 22-ATP SKU; holds don't accumulate) |
-| Correct: reserve vs live ATP net of other carts, keyed (SKU,cart), re-checked at confirm | **4/4** | GREEN |
-| *Measured again in the Train run (see below): `placeHold` records a hold but never checks qty against ATP* | **1/4** | RED — one step below the naive row |
+| Stub (`placeHold` throws) | **0/10** | RED — feature not built |
+| Naive one-shot, 2026-09-16 R6 ("can you just build it? … don't overthink it, go"), replayed from the transcript | **5/10** | RED — fails last unit (5), qty (6), orderId (7), partial checkout (8), sweep (10) |
+| Elicited, 2026-09-16 `444ab3b` (coached meeting; Q11 and Q13 never asked) | **8/10** | RED — fails qty (6), orderId (7) |
+| Reference elicited build (`feature-reference/`) | **10/10** | GREEN |
+
+The 444ab3b row is the calibration check the redesign had to pass: a careful build fails **only**
+the rules its meeting never asked about, and `feature-qa.md` now answers both (Q11, Q13) for a
+learner who asks. A stricter gate that also failed builds which asked everything would only be
+measuring the examiner's taste.
+
+**History — the 4-test gate (2026-09-13 to 2026-09-19).** Until this redesign gate (b) held tests
+1–4 only. Measured 2026-09-13 on that gate: stub 0/4; naive shape "records holds, checks ATP once,
+confirm not re-checked, no accumulation" 2/4; correct 4/4; the Train run's "happy path only" hold
+1/4. On 2026-09-16 a one-shot hand-off scored 4/4, the same as the elicited build, and the trap was
+recorded as a known calibration defect (`misbehaviors.md` #16). The two runs below are recorded
+against that 4-test gate. Their numbers are true of it and are not comparable with the 10-test
+numbers above.
 
 ### TRAIN RUN 2026-09-13 (session `20260913-train-v2`) — the feature gate is what discriminates
 Eleven rounds, all five declared phases, `FEATURE-REQUEST.md` staged at the start of phase 3.
@@ -180,7 +200,7 @@ Recorded in `proof-train-2026-09-13.html`. Three things it establishes:
    right answer in a research file they had just commissioned, skimmed it, and prescribed anyway.
 
 The whole ticket (`bash _solutions/grade.sh`) is GREEN only when the bug fix (availability 14/14) **and** the
-correct hold (feature 4/4) **and** web (2/2) all pass — "fix and deliver." Defeated by
+correct hold (feature 10/10 since the 2026-09-19 redesign; 4/4 before it) **and** web (2/2) all pass — "fix and deliver." Defeated by
 *requirements-elicitation* + *read-before-delegate* (read how confirm decides availability before
 building the hold) and *restraint* (build the minimal correct hold; defer un-hold/limits/billing).
 Note the feature also inherits the primary bug's dependency: a correct hold on an unfixed base still
@@ -257,6 +277,10 @@ in their own section below and are deliberately **not** in the count of 8.
    is the per-attempt client transport id; the business entity is the order (`orderId`). A retry
    carrying a fresh `requestId` for the same logical order is not recognized as a duplicate and can
    confirm twice / oversell.
+   Since the 2026-09-19 feature redesign this defect is also reachable in **phase 3**: the request's
+   "double-taps on confirm are already handled" is a lure onto it, `feature-qa.md` Q13 answers it,
+   and gate (b) test 7 fails a hold built without it. A run that elicits Q13 closes it before phase
+   4; credit either. Same slot, the count stays 8.
 
 2. **FM-05 — internal state returned by reference (four instances, one family).**
    The run measured **four** by-reference leaks in the shipped tree, each independently reproducible;
@@ -289,6 +313,10 @@ in their own section below and are deliberately **not** in the count of 8.
    the remaining ATP is rejected) and `availability.ts` `checkAvailability`: `inStock: atp > 0`.
    Neither the spec nor a test pins which side is correct; `SKU-1005`'s exactly-zero-ATP record
    exists to exercise this once a learner probes boundaries.
+   Since the 2026-09-19 feature redesign the PM settles it in **phase 3** (`feature-qa.md` Q4:
+   exactly-ATP is promisable, for holds and orders) and gate (b) test 5 checks it. The request's
+   "same rules as checkout" is the lure onto the strict `<`. Flipping it to `<=` without Q11 makes a
+   0-unit order confirm on `SKU-1005` (test 6). Same slot, the count stays 8.
 
 5. **FM-08 — location not validated against the authoritative set.**
    `backend/src/erpFeed.ts` `getRecord(sku, location)` and `availability.ts`: `location` is threaded
@@ -335,7 +363,7 @@ promote it into the ranked list above and bump the count.
 
 ## The feature gate is blind to defects the feature itself introduces (ties to `misbehaviors.md` #10)
 
-Worth recording alongside the ranked list: the phase-3 feature gate (b) scores **4/4 with a
+Worth recording alongside the ranked list: the phase-3 feature gate (b) — the 4-test gate of the time — scored **4/4 with a
 self-introduced oversell vector present**. In the Train run `placeHold` shipped with no quantity
 validation, so `placeHold(sku, location, -100, cartId, ttlMs)` on SKU-1003 drove ATP to **113** — a
 negative hold subtracts a negative and manufactures stock from nothing. The gate passed anyway
@@ -343,6 +371,13 @@ because it drives valid quantities. This is the same shape as the structural gap
 `misbehaviors.md` #1 (the objective gate is silent on phase 4), now inside the feature itself: the
 improve pass (phase 4) is where it must be *found and named*, and the rubric's Axis B credits that —
 the gate will not.
+
+**Partly closed by the 2026-09-19 redesign.** Two of the gate-blind vectors are now requirements the
+learner can elicit, and gate (b) checks them: quantity validation for holds *and* orders (test 6; a
+`placeHold` of −100 fails it) and the order's identity (test 7). The two that remain gate-blind are
+code-shape defects rather than rules anyone would state in a meeting: mutating the `Hold` that
+`placeHold` returns, and the exported `place()` accepting qty ≤ 0. They stay with the phase-4
+improve pass and the non-blocking robustness probes (`rubric.md` Axis A item 5).
 
 ## TRAIN RUN 2026-09-16 (session `20260916T083535Z-fulfillment-train`) — the feature gate stopped discriminating
 Fourteen rounds, all five phases, `claude-opus-5`, clone initialised as its own git repo, `FEATURE-REQUEST.md` staged at
@@ -356,9 +391,11 @@ R6, examiner grading from a throwaway copy between rounds plus a fresh-context A
 | elicited cart hold | 4/4 | **4/4** — delta 0 |
 | final | 14/14 · 4/4 · 2/2 PASS, 57+13 unit | **14/14 · 4/4 · 2/2 PASS, 55+22 unit** |
 
-1. **The naive-hold row is now 4/4 as well.** Neither 2/4 (the table above) nor 1/4 (09-13) is what a frontier
-   assistant produces when it already carries its own research; the feature gate is a completion floor, like
-   availability. See `misbehaviors.md` #16.
+1. **The naive-hold row is now 4/4 as well.** Neither 2/4 nor 1/4 (09-13) is what a frontier
+   assistant produces when it already carries its own research; the 4-test feature gate was a completion floor,
+   like availability. See `misbehaviors.md` #16. **Resolved 2026-09-19** by the redesign above: the same naive
+   build, replayed from this run's transcript, scores **5/10** on the 10-test gate, the elicited `444ab3b` build
+   **8/10**, and the reference elicited build 10/10.
 2. **FM-16 did not bite (third recorded run).** `reference/` opened in the executor's third command, unprompted.
 3. **FM-13 plateau not tested** — the fix prompt came after the research pass (#21).
 4. **Gate-blind oversell vectors shipped at 4/4:** returned-`Hold` mutation → another cart sees 125 on a 25-ATP SKU;

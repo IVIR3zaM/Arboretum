@@ -1,5 +1,5 @@
 // EXAMINER-ONLY robustness probes (non-blocking). Stripped from the learner
-// clone with the rest of _solutions/. NOT wired into grade.sh: the 20-point
+// clone with the rest of _solutions/. NOT wired into grade.sh: the 26-point
 // gate and its exit code are unchanged by this file. The examiner runs
 //
 //   node --test --test-reporter=tap _solutions/robustness-probes.test.ts
@@ -7,8 +7,10 @@
 // from the practice root of the graded copy and reports "robustness n/5"
 // (n = `# pass`) next to the gate result (rubric.md, Axis A item 5).
 //
-// Each probe targets an oversell vector the feature gate is blind to — a run
-// can ship every one of them at feature 4/4 (misbehaviors.md #16, #19, #20):
+// Each probe targets an oversell vector the 4-test feature gate was blind to — a
+// run could ship every one of them at feature 4/4 (misbehaviors.md #16, #19, #20).
+// Since the 2026-09-19 redesign, gate (b) tests 6, 8 and 7 also cover probes 3,
+// 4 and 5; probes 1 and 2 remain gate-blind:
 //   1. mutating the Hold object placeHold returns changes another cart's availability;
 //   2. the exported store's place() accepts qty <= 0 and so manufactures stock;
 //   3. an order for 0 units confirms on a SKU with nothing to promise;

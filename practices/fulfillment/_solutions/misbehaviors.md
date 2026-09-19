@@ -332,10 +332,10 @@ documented fallback candidate if too heavy for CI."
 > examiner), `rounds/probe*-examiner.ts`. Unresolved — each entry lists options, none taken.
 >
 > **Update 2026-09-19.** #16–#25 were worked through in the 2026-09-16 fix loop (issues I-1…I-6); each entry now
-> ends with a dated Resolution line naming the issue, its commit and the option applied. #16 is only partly
-> resolved: the feature-trap redesign is still open.
+> ends with a dated Resolution line naming the issue, its commit and the option applied. #16 was only partly
+> resolved by the fix loop; the feature-trap redesign that closes it landed the same day (second Resolution line on #16).
 
-### 16. `[P]` The feature gate no longer discriminates: the naive one-shot measured 4/4. *(updates #4: "watch" → regressed)*
+### 16. `[P]` The feature gate no longer discriminates: the naive one-shot measured 4/4. *(updates #4: "watch" → regressed; redesigned 2026-09-19)*
 **Evidence.** R6 learner: "can you just build it? backend + the product page. needs to ship this sprint so don't
 overthink it, go." → `grades/06-naive-feature.txt`: `feature acceptance : PASS (4/4)`. After elicitation (R8):
 `PASS (4/4)`. Delta 0. The 09-13 run's 1/4 came from a brief that said "happy path only"; this assistant already had
@@ -348,7 +348,7 @@ object `placeHold` returns (entry #19), qty-0 order at ATP 0 (#20), partial-chec
 as a separate *non-blocking* "robustness" score, so the frozen 20 stays comparable. (b) Accept and state that the gate
 is a completion floor only; Axis B is the grade. (c) Re-measure naive with a *fresh* executor that has not done the
 research pass, to separate "prompt shape" from "context carried".
-**Resolution (2026-09-19):** partly resolved by I-5 and I-6; **the trap redesign is still open.** Option (a),
+**Resolution (2026-09-19, fix loop):** partly resolved by I-5 and I-6; the trap redesign was left open (closed by the next line). Option (a),
 I-5 (`9f91edb`): `_solutions/robustness-probes.test.ts` drives five gate-blind vectors (the returned-`Hold` mutation
 and exported `place()` of #19, the qty-0 order of #20, R9's partial checkout releasing the whole hold, a repeat confirm
 under a new `requestId`) as a non-blocking `robustness n/5` (`rubric.md` Axis A item 5), not wired into `grade.sh`;
@@ -358,6 +358,17 @@ it), not a completion floor, so the 09-16 naive 4/4 is recorded as a known calib
 `practice.json` (`featureTrap`, `notes`), `feature-qa.md`, `rubric.md` Axis A item 4 and `trap-manifest.md`'s
 feature-trap passage; until the redesign, driving quality is read from Axis B plus the robustness report. The pass/fail
 rule is unchanged (4/4 still required). Option (c) was not run; it belongs to the redesign, tracked as separate work.
+**Resolution (2026-09-19, redesign): the feature gate discriminates again.** The redesign changed the trap and the gate, not just the prose around them:
+`FEATURE-REQUEST.md` still looks like a small job, but five of its PM lines now lure an assistant onto the wrong rule;
+`feature-qa.md` answers each (Q3, Q4, Q10–Q13, naming the stakeholder who owns the answer, plus an operator note on
+answering only what was asked); gate (b) grew from 4 to 10 tests (`grader.max` 20 → 26); and
+`_solutions/feature-reference/` + `FEATURE-FIX.md` hold a reference elicited build. Measured through `commands.grade`
+on the fixed base: this run's R6 naive build (replayed from `rounds/r06.raw` onto `231d6df`; diffstat identical to
+`r06.diff`) **5/10**, its elicited `444ab3b` **8/10** (fails only quantity validation and order identity — the two
+questions its meeting never asked), reference **10/10**, stub 0/10, `FIX.md` alone 14/14 · 0/10 · 2/2. Two of the
+gate-blind vectors are now gated (qty-0/negative orders, #20 → test 6; orderId identity → test 7); the returned-`Hold`
+mutation and exported `place()` (#19) stay probe-only. Option (c), re-measuring naive with a fresh executor that has not
+done the research pass, is still open: the 5/10 is from an executor that had.
 
 ### 17. `[P]` `FIX.md`'s reference fix counts overdue inbound toward ATP.
 **Evidence.** `FIX.md`: `.filter((line) => line.arrivesInDays <= rec.leadTimeDays)` also admits negative

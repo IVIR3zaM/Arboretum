@@ -113,8 +113,10 @@ you and not your assistant.** The green unit suites above are not the bar.
    against the real ERP feed across several SKU states — a fix that only satisfies your local
    seed data does not pass.
 3. **Build the feature.** Read [`FEATURE-REQUEST.md`](FEATURE-REQUEST.md). It is deliberately
-   underspecified. Gather the requirements *before* you delegate — there is a trap that punishes a
-   straight "implement this" prompt. Build the **smallest correct thing**.
+   underspecified, and it reads like a small job. Gather the requirements *before* you delegate —
+   there is a trap that punishes a straight "implement this" prompt, and a request that sounds
+   settled is not the same as one that is. The people who own the answers can be asked; your
+   assistant is not one of them. Build the **smallest correct thing**.
 4. **Improvements.** Ask the assistant to find (not recite) the highest-value correctness and
    robustness issues remaining, ranked, across both packages. There are several real ones seeded
    in the code.
@@ -131,9 +133,9 @@ you and not your assistant.** The green unit suites above are not the bar.
 > cross-package/external
 > context before delegating, rejected bad output, matched the altitude of the exercise instead of
 > over-building — is the other half, and the half this platform cares about most. Concretely: the
-> hidden gate's 20 points cover **phases 2 and 3 only** (the fix and the feature). Phases 1
+> hidden gate's 26 points cover **phases 2 and 3 only** (the fix and the feature). Phases 1
 > (understand/research), 4 (improve) and 5 (review) are not in that number at all — they are judged
-> from your transcript against the rubric's driving axis, so a green 20/20 is silent on more than
+> from your transcript against the rubric's driving axis, so a green 26/26 is silent on more than
 > half of what the kata trains. See the [rubric](_solutions/rubric.md) after you finish (don't read
 > it first).
 
