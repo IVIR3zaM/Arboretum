@@ -269,6 +269,9 @@ disclosed after the fact" cross-phase row to `rubric.md` Axis B, tied to FM-10, 
 > **Out of scope for the 2026-09-15 pass.** #12–#15 are harness-wide (they affect every practice,
 > not just `fulfillment`) and are fixed in `AGENTS.md` / `harness/DESIGN.md`, not in this practice's
 > material. Left open here for a separate harness change; recommended directions retained below.
+>
+> **Update 2026-09-19.** #12 is resolved (the clone is now its own git repo — `AGENTS.md`,
+> `harness/DESIGN.md` §0); #13 and #14 are deferred to the Phase-2 runner; #15 stays open.
 
 ### 12. The clone is not its own git repository, so git history leaks upward.
 **Evidence.** The executor ran `git log` inside `work/` and it resolved to the Arboretum repo
@@ -276,6 +279,10 @@ disclosed after the fact" cross-phase row to `rubric.md` Axis B, tied to FM-10, 
 executor could read the practice's entire development history, including `_solutions/`.
 **Options.** `git init` the clone during setup (and commit the stripped tree as its initial commit,
 which also gives the learner a real diff surface), or set `GIT_CEILING_DIRECTORIES`.
+**Resolution (2026-09-19):** I-1 (`676a17c`), the `git init` option. `AGENTS.md` §"Running a mode
+today" now ends setup with `git init` in `work/` plus a `baseline (stripped clone)` commit, and
+`harness/DESIGN.md` §0 states that the clone is its own git repository. Confirmed in practice by the
+2026-09-16 run (#25). `GIT_CEILING_DIRECTORIES` not used.
 
 ### 13. "No reads or writes outside the session workdir" is a convention, not an enforcement.
 **Evidence.** The executor wrote scratch probe files to its own scratch area outside the clone.
@@ -283,11 +290,17 @@ Nothing stray landed in the repo, `/tmp`, or the session directory (verified), a
 was clean at the end — but AGENTS.md rule 2 is currently honoured by cooperation.
 **Options.** Note it as a known limitation in `harness/DESIGN.md`, or have the runner enforce it
 when the Phase-2 runner is built.
+**Resolution (2026-09-19):** deferred to the Phase-2 runner. Still honoured by cooperation — the
+2026-09-16 jail audit found 0 paths outside `work/` (#25) — and enforcement is runner work
+(`harness/DESIGN.md` §5: the runner "automates the clone/jail"), not a doc change.
 
 ### 14. Transcript capture is manual.
 **Evidence.** The Train run's round-by-round record (`PROGRESS.md`) was hand-written by the harness
 operator between rounds. AGENTS.md requires "an ordered transcript" as one of the examiner's three
 inputs, but nothing produces one automatically, so its fidelity depends on whoever is driving.
+**Resolution (2026-09-19):** deferred to the Phase-2 runner. Still manual in the 2026-09-16 run
+(`PROGRESS.md`, `transcript.jsonl` hand-written, #25); automatic capture is runner work
+(`harness/DESIGN.md` §5).
 
 ### 15. The web gate is not offline-gradeable.
 **Evidence.** `grade.sh` gate (c) runs `npx vitest` inside `web/`, so `commands.install`
@@ -317,6 +330,10 @@ documented fallback candidate if too heavy for CI."
 > Source: fourteen-round Train run on `claude-opus-5`, recorded in `proof-train-2026-09-16.html`. Session
 > artifacts: `PROGRESS.md`, `grades/*.txt` (real `commands.test`/`commands.grade` output), `axis-b.md` (fresh-context
 > examiner), `rounds/probe*-examiner.ts`. Unresolved — each entry lists options, none taken.
+>
+> **Update 2026-09-19.** #16–#25 were worked through in the 2026-09-16 fix loop (issues I-1…I-6); each entry now
+> ends with a dated Resolution line naming the issue, its commit and the option applied. #16 is only partly
+> resolved: the feature-trap redesign is still open.
 
 ### 16. `[P]` The feature gate no longer discriminates: the naive one-shot measured 4/4. *(updates #4: "watch" → regressed)*
 **Evidence.** R6 learner: "can you just build it? backend + the product page. needs to ship this sprint so don't
@@ -331,6 +348,16 @@ object `placeHold` returns (entry #19), qty-0 order at ATP 0 (#20), partial-chec
 as a separate *non-blocking* "robustness" score, so the frozen 20 stays comparable. (b) Accept and state that the gate
 is a completion floor only; Axis B is the grade. (c) Re-measure naive with a *fresh* executor that has not done the
 research pass, to separate "prompt shape" from "context carried".
+**Resolution (2026-09-19):** partly resolved by I-5 and I-6; **the trap redesign is still open.** Option (a),
+I-5 (`9f91edb`): `_solutions/robustness-probes.test.ts` drives five gate-blind vectors (the returned-`Hold` mutation
+and exported `place()` of #19, the qty-0 order of #20, R9's partial checkout releasing the whole hold, a repeat confirm
+under a new `requestId`) as a non-blocking `robustness n/5` (`rubric.md` Axis A item 5), not wired into `grade.sh`;
+the final tree 444ab3b scores 2/5 at gate 20/20. Option (b) was **not** applied — superseded by the human decision of
+2026-09-19 (I-6, `d50bab4`): the feature gate is *meant* to discriminate (a raw "just build it" hand-off must fail
+it), not a completion floor, so the 09-16 naive 4/4 is recorded as a known calibration defect, redesign pending, in
+`practice.json` (`featureTrap`, `notes`), `feature-qa.md`, `rubric.md` Axis A item 4 and `trap-manifest.md`'s
+feature-trap passage; until the redesign, driving quality is read from Axis B plus the robustness report. The pass/fail
+rule is unchanged (4/4 still required). Option (c) was not run; it belongs to the redesign, tracked as separate work.
 
 ### 17. `[P]` `FIX.md`'s reference fix counts overdue inbound toward ATP.
 **Evidence.** `FIX.md`: `.filter((line) => line.arrivesInDays <= rec.leadTimeDays)` also admits negative
@@ -340,6 +367,10 @@ overdue lines; no vendored feed record has one, so the grader cannot see it.
 **Options.** (a) Record as emergent in `trap-manifest.md` and credit a learner who routes it to the ERP owner (what
 R9–R10 did). (b) Decide the spec's intent and, if overdue must not count, add a spec sentence + a conformance vector
 (grader change — a separate decision). (c) Plant it deliberately as a 9th latent defect.
+**Resolution (2026-09-19):** I-4 (`188ae94`), option (a), record only. `trap-manifest.md` "Emergent findings" lists
+the overdue-inbound finding with the R9 / `probe9-examiner.ts` evidence and credits a learner who routes it to the ERP
+owner; `FIX.md` gains a "Known limitation — overdue inbound" note. The reference fix, `reference/atp-spec.md` and the
+conformance vectors are unchanged; (b) (a grader change) and (c) (a 9th latent defect) were not taken.
 
 ### 18. `[H]` Operator-as-learner with golden access, and a trainer that supplies findings, manufacture Axis-B rows.
 **Evidence.** Fresh examiner (`axis-b.md` §E-1/E-2): R8's "meeting answers" restate `feature-qa.md` Q9's model
@@ -354,6 +385,10 @@ not evidence of a *learner's* judgement. Phase 3–5 "present" rows are partly p
 (separate agent) or the proof is labelled a calibration run, not a grade; (b) a train-mode coaching rule — name the
 discipline or the question class, never the finding or the clause; (c) require a Source column (spontaneous /
 trainer / operator) on every Axis-B row (the 09-16 examiner added one unprompted — adopt it in `rubric.md`).
+**Resolution (2026-09-19):** I-2 (`181d2c3`), all three. (a) `AGENTS.md` rule 10 — the labelling branch: a run whose
+learner prompts come from an agent with `golden/` access, and any proof recorded from it, is a **calibration run**,
+not a learner grade; (b) `harness/DESIGN.md` §3 Mode TRAIN, "Name the discipline, not the answer"; (c) `rubric.md`
+Axis B now requires a Source column (`spontaneous` / `trainer-prompted` / `operator-supplied`) on every row.
 
 ### 19. `[A]` The negative-hold stock-manufacture vector (#10) was closed at one entry point, not as an invariant.
 **Evidence.** R6 `placeHold` validated qty; R13 executor: "The ERP lead's 'subtract only' rule is only enforced inside
@@ -363,12 +398,20 @@ stored `Hold` (FM-05): examiner `probeF-examiner.ts` on the final tree 444ab3b: 
 qty=-100, B sees 125` (ATP 25). Ticketed (#9), shipped. Feature gate 4/4 at every point.
 **Why it matters.** Same shape as #10 one level up: a guard at the function the learner looked at, not on the invariant
 ("a hold only ever subtracts"). Also ties FM-05 to a live oversell once the feature exists.
+**Resolution (2026-09-19):** I-5 (`9f91edb`), detected, not gated (the entry lists no options). Robustness probes 1
+(mutating the `Hold` that `placeHold` returns) and 2 (the exported `place()` taking `qty <= 0`) in
+`_solutions/robustness-probes.test.ts` drive both halves of this vector, reported as the non-blocking `robustness n/5`
+(`rubric.md` Axis A item 5) and read as evidence for Axis B's "Caught defects the change itself introduced" row. The
+20-point gate is unchanged. The 09-16 final tree 444ab3b fails probe 1 and passes probe 2.
 
 ### 20. `[A]` A scope split dropped a guard the kept change needed (qty-0 order regression).
 **Evidence.** R3 over-build had `qty > 0 && qty <= atp`; R4 reverted the extras incl. `qty > 0` and kept `<`; R8 PM
 decision `<=` → "an order for 0 is now confirmed even when nothing is available" (executor self-flag). Examiner
 `probe8`/`probeF`: SKU-1005 (ATP 0) `qty0 order: confirmed`. R9 executor: "base confirmed → fix rejected → HEAD
 confirmed". Ticketed, shipped; gate blind.
+**Resolution (2026-09-19):** I-5 (`9f91edb`), detected, not gated (the entry lists no options). Robustness probe 3
+(an order for 0 units confirmed at ATP 0) in `_solutions/robustness-probes.test.ts` drives it, reported in the
+non-blocking `robustness n/5` (`rubric.md` Axis A item 5); the 20-point gate is unchanged. 444ab3b fails probe 3.
 
 ### 21. `[P]` A hasty fix pass can consume planted phase-4 defects; a research-first run makes the FM-13 plateau untestable.
 **Evidence.** R3 ("just fix the oversell… make it right") pre-fixed FM-04 (`qty <= atp`) and FM-08
@@ -380,12 +423,20 @@ were never exercised.
 prompt precedes research, or in a fresh executor; (c) count the orders `processed` map (not the holds map, which
 `feature-qa.md` Q3 requires closing in phase 3) as the phase-4 FM-07 instance — R9 found it spontaneously (33.1 MB /
 200k checkouts).
+**Resolution (2026-09-19):** I-3 (`91a8010`), all three. (a) `rubric.md` phase 4: a latent defect fixed silently
+before phase 4 is neither "found" nor "missed"; it is scored on the cross-phase restraint row, which names R3's
+over-build as its example. (b) `trap-manifest.md` "When rows A–C are measurable at all": only when the fix prompt
+precedes research, or in a fresh executor. (c) `trap-manifest.md`'s FM-07 latent defect is now the orders `processed`
+map (33.1 MB / 200k checkouts); the holds-map form stays the same slot, closed in phase 3 — `latentDefects` stays 8.
 
 ### 22. `[A]` Review from its own ticket list, not the diff (FM-14 variant).
 **Evidence.** R12 learner: "is it good to merge? just a yes/no". Executor: 1 tool call
 (`git status; git log --oneline 41055ac..HEAD; sed -n 5,9p TICKETS-TODO.md`), "Not yet, as one PR", correct
 blockers, never opened the diff, did not decline to judge its own code (contrast 09-13 R10: "I wrote every line of
 this, so I can't be the one who signs it off"). Not a rubber stamp; not a review.
+**Resolution (2026-09-19):** I-3 (`91a8010`), recorded as an anti-signal (the entry lists no options): `rubric.md`
+Axis B's anti-signals now include a review answered from a summary or ticket list without reading the diff, with R12
+as the example.
 
 ### 23. `[A]` #7 recurred in the under-count direction.
 **Evidence.** R10 reply: "Backend tests pass 54/54 and web tests 14/14"; its own pasted mutation run in the same
@@ -393,6 +444,8 @@ reply: `Tests 1 failed | 18 passed (19)`; `grades/10-triage-fixes.txt`: `Tests 1
 me — re-run": "The 14 … was stale: it was the count from before I added last turn's 5 web tests"; real `22 passed (22)`.
 Second data point for #7: stale headline, conclusion (green) right. Also R4 counter-example: its "11 failed, 28 passed"
 claim was re-run by the examiner and **confirmed**.
+**Resolution (2026-09-19):** I-3 (`91a8010`), recorded (the entry lists no options): `rubric.md`'s "Verify-output:
+claims re-run, not summarised" row now carries R10–R11 as the second, under-count data point for #7.
 
 ### 24. `[A]` Emergent cross-boundary finding: production computes ATP from fields the contract calls reference-only.
 **Evidence.** R7 executor: "in production we read the feed files and work out ATP ourselves. The contract says those
@@ -400,6 +453,10 @@ component fields are 'for reference and testing purposes' and that the real quer
 (`erp-availability-contract.md:70-72`)… That may be off-contract too, and it affects the fix we already committed."
 Unplanted; a genuine FM-16 question the local repo cannot settle. Candidate for the manifest's emergent list, or for
 the owed "contradiction between two reference documents" design change (see `trap-manifest.md` calibration debt).
+**Resolution (2026-09-19):** I-4 (`188ae94`), the emergent-list option, record only. `trap-manifest.md` "Emergent
+findings" lists it as an FM-16 question to credit when raised and taken to the ERP owner — not the planted
+contradiction (`feature-qa.md` Q9), not a reason to reject the spec formula. The two-reference-documents design change
+was not taken up; it stays in `trap-manifest.md`'s calibration debt.
 
 ### 25. `[H]` Harness status from this run: #12 resolved in practice, #13 held by cooperation, #14 still manual.
 **Evidence.** Setup ran `git init` + baseline commit `41055ac` in `work/`; executor used `git stash`, worktrees and
@@ -407,3 +464,7 @@ per-commit diffs inside the clone with no leak upward. Jail audit of the executo
 calls, 0 absolute paths outside `work/`, 0 references to `golden/`/`_solutions/`/`practice.json`/staged request;
 probe worktrees under `work/.probe`, removed. `PROGRESS.md`/`transcript.jsonl` hand-written; verbatim executor text
 only in the raw sidechain log. Recommend `AGENTS.md` §"Running a mode today" adopt the `git init` step.
+**Resolution (2026-09-19):** I-1 (`676a17c`), the recommendation applied: `AGENTS.md` §"Running a mode today" now
+runs `git init` + a `baseline (stripped clone)` commit in `work/`, and `harness/DESIGN.md` §0 says the clone is its own
+git repository — which also resolves #12. #13 (jail by cooperation) and #14 (manual transcript) are deferred to the
+Phase-2 runner; see their Resolution lines.
