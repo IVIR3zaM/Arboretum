@@ -132,13 +132,20 @@ rubber-stamping the AI's change. The rubric's driving axis scores this; nothing 
 
 `FEATURE-REQUEST.md` is a thin PM ask ("let shoppers hold an item for 10 minutes"). The held-back
 requirements — the hold must **reserve against live ATP net of other carts**, be keyed on
-**(SKU, cart)**, be released on **TTL**, and be **re-checked at confirm** — are not stated. A
-straight "implement the hold" delegation (read-before-delegate / requirements-elicitation miss)
-builds a hold *store* and a `placeHold` that checks availability once and records the hold, but
-never wires it into `confirmOrder` and never accumulates across carts. It looks done — unit suites
-green, the button works — and it **oversells**: two carts hold the same units and both confirm.
+**(SKU, cart)**, be released on **TTL**, and be **re-checked at confirm** — are not stated. The
+ask is meant to look easy and lead an assistant the wrong way. The naive shape this trap targets
+(read-before-delegate / requirements-elicitation miss) builds a hold *store* and a `placeHold` that
+checks availability once and records the hold, but never wires it into `confirmOrder` and never
+accumulates across carts. It looks done — unit suites green, the button works — and it
+**oversells**: two carts hold the same units and both confirm. Gate (b) is meant to discriminate a
+raw hand-off like that from an elicited build.
 
-This is now **objectively gated** (not just rubric-judged) by
+**Known calibration defect, redesign pending:** the trap does not currently bite. A naive one-shot
+delegation measured 1/4 on 2026-09-13 but 4/4 on 2026-09-16, the same as the elicited hold (see the
+TRAIN RUN entries below and `misbehaviors.md` #16). Until the kata is redesigned, read driving
+quality from `rubric.md` Axis B plus the robustness report (Axis A item 5, `robustness n/5`).
+
+The feature is **objectively gated** (not just rubric-judged) by
 `_solutions/feature-acceptance.test.ts`, driven through the public surface (`placeHold` +
 `confirmOrder`) against the live feed, and wired into `_solutions/grade.sh` as gate (b). Measured
 (2026-09-13, each impl applied on a fixed base then reverted):

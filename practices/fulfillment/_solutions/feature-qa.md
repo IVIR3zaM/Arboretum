@@ -10,11 +10,19 @@ exists — like the TICKET, it just states what the PM wants). A learner who eli
 before delegating should surface something close to the questions below; one who doesn't will hand
 an assistant a vague prompt and get a plausible-but-wrong cart hold back (a feature-shaped FM-13).
 
-**Objectively gated:** the phase-3 feature is graded by `_solutions/feature-acceptance.test.ts`
-(wired into `_solutions/grade.sh` as gate (b)) — a naive hold that records holds but never re-checks them at
-confirm scores **2/4** (oversells), the minimal correct hold scores **4/4**. So "the AI built a
-hold and the demo works" is not enough; it has to actually reserve. See `trap-manifest.md`'s
-"Feature trap (phase 3)".
+**Objectively gated — and meant to discriminate:** the phase-3 feature is graded by
+`_solutions/feature-acceptance.test.ts` (wired into `_solutions/grade.sh` as gate (b)). The request
+is written to look easy and lead an assistant the wrong way, so handing it over raw ("just build
+this") is meant to fail the gate: the naive implementation shape — records holds but never
+re-checks them at confirm — scores **2/4** (oversells), the minimal correct hold scores **4/4**. So
+"the AI built a hold and the demo works" is not enough; it has to actually reserve.
+**Known calibration defect, redesign pending:** the trap does not currently bite. A naive one-shot
+delegation measured **1/4** in the 2026-09-13 Train run ("happy path only") but **4/4** in the
+2026-09-16 Train run (research already in context), the same as the elicited hold
+(`misbehaviors.md` #16). Until the kata is redesigned, a 4/4 does not show the hold was driven well:
+read driving quality from `rubric.md` Axis B plus the robustness report (Axis A item 5,
+`robustness n/5`), which drives the gate-blind oversell vectors a 4/4 hold can still ship. See
+`trap-manifest.md`'s "Feature trap (phase 3)".
 
 Existing scaffolding the learner will find: `backend/src/reservations.ts` already has a
 `holds` store (`place`, `active`, `all`) and a `placeHold(sku, location, qty, cartId, ttlMs)` stub

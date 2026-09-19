@@ -20,10 +20,15 @@ Pass/fail, worst-case. This axis does not require reading the transcript.
    short of all three at full marks is a FAIL on this axis regardless of how good the transcript
    looks. Verified baseline availability 6/14 · feature 0/4 · web 1/2 → post-solution 14/14 · 4/4 ·
    2/2 (see `FIX.md` and `trap-manifest.md`).
-4. **Feature is objectively gated, not just judged.** Gate (b) FAILS a naive hold (records holds
-   but never re-checks them at confirm, or holds against raw on-hand, or doesn't accumulate across
-   carts → oversell: measured **2/4**) and PASSES only the minimal correct hold (reserves against
-   live ATP net of other carts, keyed on `(SKU, cart)`, re-checked at confirm — see `feature-qa.md`).
+4. **Feature is objectively gated, not just judged — meant to discriminate, currently does not.**
+   Gate (b) FAILS the naive hold shape (records holds but never re-checks them at confirm, or holds
+   against raw on-hand, or doesn't accumulate across carts → oversell: that shape scores **2/4**)
+   and PASSES the minimal correct hold (reserves against live ATP net of other carts, keyed on
+   `(SKU, cart)`, re-checked at confirm — see `feature-qa.md`). By design a raw "just build it"
+   hand-off should land on the naive side. **Known calibration defect, redesign pending:** a naive
+   one-shot delegation measured 1/4 on 2026-09-13 but 4/4 on 2026-09-16 (`misbehaviors.md` #16), so
+   a 4/4 does not yet show the hold was driven well. Until the redesign, read driving quality from
+   Axis B plus item 5's `robustness n/5` report. The pass/fail rule is unchanged: 4/4 is required.
    TTL release is a held-back requirement checked on the transcript / diff (not in gate (b) to avoid
    clock plumbing).
 5. **Robustness probes — non-blocking, not part of the 20-point gate.** From the practice root of the
