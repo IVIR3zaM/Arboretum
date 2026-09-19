@@ -115,10 +115,12 @@ grader is run **by the harness, not by the learner or the assistant**, and the n
   10); refreshed whenever the practice changes.
 
 ## `practice.json` (the manifest — NOT part of the clone)
-Fill [`practice.template.json`](practice.template.json); `contextVersion` is `cedar@1.1.0`; every
+Fill [`practice.template.json`](practice.template.json); `contextVersion` is `cedar@1.2.0`; every
 `failureModes` id must exist in `../failure-modes.md` and appear in the trap manifest; a Cedar
 practice includes `FM-15` and `FM-16`, declares the multi-package `stack`, the wrapper
-`commands.grade`, the `reference` + `researchArtifact` fields, and the measured `controlRun`. It
+`commands.grade`, the `reference` + `researchArtifact` fields, the measured `controlRun`, and the
+`featureTrap` object recording the lure and the paired **naive** (must fail) and **elicited** (must
+pass) feature-gate scores. It
 names the planted bug, the doc-drift trap and the cross-boundary trap outright, so like the README
 it stays out of the assistant's clone — the harness reads it from the practice, and the examiner
 gets a copy in `golden/`.

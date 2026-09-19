@@ -37,8 +37,12 @@ trap — an assistant that reads them has been coached by the instrument measuri
    acceptance grader starts failing and passes only after the correct fix.
 2. **The bug is a silent, subset-only failure** (FM-02) keyed on an ambient variable the author
    didn't parameterize (timezone, locale, currency, encoding, clock). Graded across ≥3 values.
-3. **The feature is underspecified with a real trap** a straight "implement this" prompt trips
-   (an invariant it violates, state not yet materialized) — defeatable by read-before-delegate.
+3. **The feature is underspecified, reads as easy, and misleads.** A straight "implement this"
+   prompt trips a real trap — an invariant it violates, state not yet materialized, or a
+   plausible-but-wrong rule the brief quietly leans toward. The gate scores the rules **only
+   elicitation surfaces**, so handing the brief over raw *fails* it and an elicited build *passes*
+   it — defeatable by read-**and-ask**-before-delegate, not by delegation. (Proven by the paired
+   naive-vs-elicited build in Validation.)
 4. **≥5 ranked latent defects** drawn from FM-03..FM-08, *findable* from the code, not recited.
 5. **The grader is runnable with zero/minimal deps**, invoked via the practice's **declared
    command** (`practice.json` → `commands.grade`) — stack-appropriate, never assumed to be
@@ -99,6 +103,22 @@ trap — an assistant that reads them has been coached by the instrument measuri
 - **Autopilot check (FM-13):** a symptom-patch and a plausible first-suggestion fix are both
   verified to leave the grader red; only the root, understanding-based fix reaches full marks.
   The trap must bite an autopilot run, not just a careless one.
+- **Feature-trap discrimination — a paired build.** The feature trap is proven not by the control
+  run alone but by **two** builds scored through the declared grade command: a **naive one-shot**
+  (fresh executor that has not done any research pass, brief handed over raw) and an **elicited**
+  build (the feature after its questions were asked and answered). The trap counts only if **naive
+  fails the feature gate and elicited passes.** Naive-also-passes means the gate is a completion
+  floor, not a trap — tighten it until only understanding clears it; elicited-also-fails means it is
+  impossibly hard. Both scores are recorded, both are genuine captured output.
+- **Robustness probes (examiner-only, non-blocking).** The gate's blind vectors — state handed out
+  by reference, a guard placed at one entry point instead of on the invariant, a degenerate-quantity
+  case — are covered by probes shipped in `_solutions/` **beside** the gate, never wired into the
+  grade command and never changing its pass/fail. Each probe's expected result was captured from a
+  real build (the reference fix and a stub), not asserted by hand.
+- **Manifest completeness.** Every claimed failure mode is planted where a run actually reaches it
+  (count planted *instances*, not modes); a mode named in `practice.json` but unreachable is not
+  covered. Emergent (unplanted) findings and the reference fix's known limitations are recorded in
+  a labelled section, excluded from the planted count.
 - **Control run (invariant 10) — the one that actually settles it.** Clone the practice exactly
   as the harness would, hand a *fresh* assistant nothing but that clone and one casual, uncoached
   prompt ("here's a ticket and a feature request — fix the bug and implement the feature"), let it

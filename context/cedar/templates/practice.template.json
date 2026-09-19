@@ -1,7 +1,7 @@
 {
   "id": "<kebab-case-id>",
   "title": "<short human title>",
-  "contextVersion": "cedar@1.1.0",
+  "contextVersion": "cedar@1.2.0",
   "domain": "<business domain in a few words>",
   "stack": {
     "packages": [
@@ -25,7 +25,11 @@
     "failureModes": ["FM-01", "FM-02", "FM-03", "FM-04", "FM-05", "FM-06", "FM-07", "FM-08", "FM-13", "FM-15", "FM-16"]
   },
   "primaryBug": "<one line: the silent, subset-only bug — for Cedar, its true cause lives across a boundary (reference/) and/or in a no-doc-trace stale path>",
-  "featureTrap": "<one line: the invariant the naive implementation trips>",
+  "featureTrap": {
+    "lure": "<one line: how the brief reads as easy while leaning the obvious build onto the wrong rule>",
+    "naiveScore": "<n>/<featureMax> — a naive one-shot build (fresh executor, brief raw); MUST fail the feature gate",
+    "elicitedScore": "<n>/<featureMax> — an elicited or reference build; MUST pass the feature gate"
+  },
   "assistantTrap": "<one line: how an autopilot run provably loops — symptom-patch stays red; the obvious fix passes the visible suite but fails a case needing real understanding (FM-13, required)>",
   "docDriftTrap": "<one line: the authoritative-looking doc/comment that contradicts the current code, and the stale code path with no doc trace (FM-15)>",
   "crossBoundaryTrap": "<one line: the truth that lives only in reference/ and the wrong assumption a single-scope run makes (FM-16)>",

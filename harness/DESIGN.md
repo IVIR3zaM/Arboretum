@@ -117,6 +117,24 @@ prompt good practice (which best-practice / which failure-mode did it hit or mis
 the consequence in the code · what would the best-practice prompt have been.* That is the shape
 of every line in `feedback.md`.
 
+**Grading principles the examiner applies to every practice.** These are properties of *how* the
+harness grades, not of any one kata, so a generated rubric encodes them rather than re-inventing
+them (`generator/CONTRACT.md`, `generation-spec.md`):
+- **Compare grade and test output *normalised*, never raw bytes.** Two runs of the *same* tree
+  differ on timing (`duration_ms`, elapsed `ms`/`s`) and on the copy's own path (it appears in TAP
+  `location:` lines and stack traces). Judge a result by its pass/fail counts and exit code, and
+  when comparing two trees, diff output with those timing fields and the working-directory path
+  stripped — a raw-byte diff of identical trees is never empty and proves nothing.
+- **Check the assistant's self-reported numbers against real command output.** A failure count, a
+  "N passed", a "tests are green" in the transcript is a claim, not a result; the examiner re-runs
+  the command and grades the run against what it actually prints. Self-reported counts drift in
+  both directions (stale over- and under-counts), and a conclusion can be right while its cited
+  evidence is wrong.
+- **A latent defect fixed silently before its phase is neither "found" nor "missed."** If a hasty
+  earlier pass fixed a planted phase-4 defect inside the bug fix, it was never *looked for*, so it
+  cannot score on the "defects found, not recited" row either way — score it on restraint/altitude
+  (the unasked fix is the over-build; splitting it back out and deferring it aloud is the recovery).
+
 ---
 
 ## 3. The three modes

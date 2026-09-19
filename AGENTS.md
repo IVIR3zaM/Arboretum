@@ -28,7 +28,7 @@ Offer the learner these options:
 **Suggested path to master a Context:** `read` → `assess` → `train`. Diagnose, then remediate.
 
 ## Rules for an agent running the harness — NON-NEGOTIABLE
-These come from [`harness/DESIGN.md`](harness/DESIGN.md §0–§2). Follow them exactly.
+These come from [`harness/DESIGN.md`](harness/DESIGN.md §0–§3). Follow them exactly.
 
 1. **Never run prompts against `practices/<id>/` itself.** Every session, **clone** the practice
    into a disposable session workdir and work only there. The original is read-only.
@@ -84,6 +84,7 @@ These come from [`harness/DESIGN.md`](harness/DESIGN.md §0–§2). Follow them 
 ## Running a mode today (before the built runner exists)
 ```
 # one-time per session, for assess/train:
+mkdir -p .sessions/<stamp>                                        # the session dir must exist first
 cp -R practices/<id> .sessions/<stamp>/work
 rm -rf .sessions/<stamp>/work/_solutions                          # the answer key
 rm -f  .sessions/<stamp>/work/README.md .sessions/<stamp>/work/practice.json   # the briefing + the manifest

@@ -1,7 +1,7 @@
 {
   "id": "<kebab-case-id>",
   "title": "<short human title>",
-  "contextVersion": "alder@1.2.0",
+  "contextVersion": "alder@1.3.0",
   "domain": "<business domain in a few words>",
   "stack": { "language": "<lang>", "runtime": "<runtime+version>", "dependencies": 0 },
   "difficulty": "S | M | L",
@@ -18,7 +18,11 @@
     "failureModes": ["FM-01", "FM-02", "FM-03", "FM-04", "FM-05", "FM-06", "FM-07", "FM-08", "FM-13"]
   },
   "primaryBug": "<one line: the silent, subset-only bug>",
-  "featureTrap": "<one line: the invariant the naive implementation trips>",
+  "featureTrap": {
+    "lure": "<one line: how the brief reads as easy while leaning the obvious build onto the wrong rule>",
+    "naiveScore": "<n>/<featureMax> — a naive one-shot build (fresh executor, brief raw); MUST fail the feature gate",
+    "elicitedScore": "<n>/<featureMax> — an elicited or reference build; MUST pass the feature gate"
+  },
   "assistantTrap": "<one line: how an autopilot run provably loops — symptom-patch stays red; the obvious fix passes the visible suite but fails a case needing real understanding (FM-13, required)>",
   "controlRun": {
     "date": "<YYYY-MM-DD>",

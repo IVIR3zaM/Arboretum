@@ -11,7 +11,26 @@ See [`../../docs/TREE-NAMING.md`](../../docs/TREE-NAMING.md).
 Cedar **inherits the whole of Alder** — every discipline in [`goals.md`](goals.md), every entry
 FM-01..FM-14 in [`failure-modes.md`](failure-modes.md), and best practices A–E — and extends it.
 A practice pins the exact Context it trains to via `practice.json` → `contextVersion`; a Cedar
-practice declares `cedar@1.1.0`.
+practice declares `cedar@1.2.0`.
+
+## 1.2.0 — the feature trap must discriminate (carried forward from Alder 1.3.0)
+Cedar carries **Alder 1.3.0** forward. Driving a Cedar-shaped practice end-to-end showed that a
+feature request could be handed over raw and still clear the feature gate — the gate was scoring
+"a feature exists," not "the rules only elicitation surfaces," so it was a completion floor, not a
+trap.
+- **Generation spec:** invariant 3 now requires the feature to **read as easy and mislead** and
+  the gate to score the elicitation-only rules. Validation gains the **paired naive-vs-elicited
+  build** (the trap counts only if naive fails the feature gate and elicited passes),
+  **examiner-only robustness probes** beside the dual grade wrapper (never inside it, each
+  expectation captured from a real build), and **manifest completeness** (claimed modes planted
+  where a run reaches them; emergent findings and reference-fix limitations kept out of the planted
+  count).
+- **Templates:** `practice.template.json`'s `featureTrap` becomes an object recording the lure and
+  the naive/elicited scores.
+- **Harness & operator docs (repo-level):** the harness-wide grading discipline (normalised output
+  comparison, self-reports checked against real output, silently-fixed defects scored as restraint)
+  and the `AGENTS.md` / `harness/DESIGN.md` corrections land once at the repo level — see Alder
+  1.3.0.
 
 ## 1.1.0 — the workdir stops coaching, across a boundary
 Cedar 1.0.0 branched from `alder@1.1.0` and shipped before Alder learned its hardest lesson. Alder

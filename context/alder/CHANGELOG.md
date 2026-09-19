@@ -4,6 +4,33 @@ Tree-name rationale: **Alder** is a nitrogen-fixing pioneer species — the firs
 establish on bare ground, enriching the soil for everything that grows after. Fitting for the
 first, foundational Context. See [`../../docs/TREE-NAMING.md`](../../docs/TREE-NAMING.md).
 
+## 1.3.0 — the feature trap must discriminate, and grading gets disciplined
+Driving a practice end-to-end through the harness surfaced a gap the earlier control run did not
+catch: a feature request could be handed to an assistant raw — *"just build it"* — and still clear
+the feature gate, because the gate scored "a feature exists" rather than "the rules only
+elicitation surfaces." A gate that an autopilot feature build passes is a completion floor, not a
+trap. The same run exposed that some grading rested on the assistant's own self-reported numbers
+and on raw-byte output comparison, and that gate-blind robustness vectors had nowhere to be
+recorded. The fixes are folded up out of the one practice into the Context and the harness.
+- **Generation spec:** invariant 3 now requires the feature to **read as easy and mislead** — lean
+  the obvious build onto the wrong rule — and the gate to score the elicitation-only rules.
+  Validation gains a **paired naive-vs-elicited build**: the feature trap counts only if a naive
+  one-shot (fresh executor) *fails* the feature gate and an elicited build *passes*. Added
+  **examiner-only robustness probes** (gate-blind vectors covered beside the frozen gate, never
+  inside it, each expectation captured from a real build) and **manifest completeness** (claimed
+  modes planted where a run reaches them; emergent findings and a reference fix's known limitations
+  recorded separately from the planted count).
+- **Generator contract:** the feature, proof and acceptance steps carry the paired-build
+  requirement; the manifest and grader steps carry emergent-findings and known-limitation
+  recording; the rubric step requires the harness-wide grading columns.
+- **Templates:** `practice.template.json`'s `featureTrap` becomes an object recording the lure and
+  the naive/elicited scores.
+- **Harness & operator docs (repo-level):** `harness/DESIGN.md` §2 states the grading principles
+  that apply to every practice — compare grade output **normalised**, never raw bytes; **check
+  self-reported counts against real command output**; a **latent defect fixed silently before its
+  phase** is scored on restraint, not found/missed. `AGENTS.md`'s setup block creates the session
+  dir before cloning, and its rules header points at DESIGN §0–§3.
+
 ## 1.2.0 — the workdir stops coaching
 A control run — a fresh assistant given a cloned practice and one casual, uncoached prompt —
 cleared the objective gate outright, including the traps the practice claimed an autopilot could

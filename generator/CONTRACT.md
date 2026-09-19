@@ -6,7 +6,7 @@ agent follows — not a coded tool (a coded runner is Phase 3). It works with Cl
 Agent SDK, or any capable assistant.
 
 ## Inputs
-`context` (e.g. `alder@1.2.0`, `cedar@1.1.0`) · `domain` · `stack` · `difficulty` (S|M|L, +XL from
+`context` (e.g. `alder@1.3.0`, `cedar@1.2.0`) · `domain` · `stack` · `difficulty` (S|M|L, +XL from
 Cedar) · optional `time budget` and `coverage`. Read the whole Context first — the paths below
 point at Alder; substitute `context/<tree>/` for whichever version you were given:
 [`goals.md`](../context/alder/goals.md), [`best-practices.md`](../context/alder/best-practices.md),
@@ -24,7 +24,16 @@ point at Alder; substitute `context/<tree>/` for whichever version you were give
    failure modes (an ambient-variable bug, an invariant a feature can trip, places for latent
    defects). Sanity-check it maps to every required discipline in `goals.md`.
 2. **Map failure modes → concrete traps.** For each required FM, instantiate its *trap recipe*
-   in this domain. Write the mapping down first (it becomes `_solutions/trap-manifest.md`).
+   in this domain. Write the mapping down first (it becomes `_solutions/trap-manifest.md`). The
+   manifest must **name a defect instance a run can actually reach** — a mode claimed in
+   `practice.json` but not planted where a run hits it is not covered (count planted *instances*,
+   not modes, and if one mode has several by-reference/boundary instances, list them all). Note for
+   any FM-13 plateau row that it is measurable **only when the fix prompt precedes the research
+   pass, or in a fresh executor** — a run that fixes with research already in context converges on
+   the first try and never exercises the plateau. As runs expose them, the manifest also records
+   **emergent (unplanted) findings** in a clearly-labelled section (excluded from the planted
+   count, so an examiner credits them without treating them as planted) and the **reference fix's
+   known limitations** (a case `FIX.md` does not handle and the grader cannot see) — see step 6.
 3. **Design the primary bug** as a silent, subset-only failure (FM-01+FM-02) keyed on an
    ambient variable (timezone, locale, currency, clock, encoding). Decide the correct rule and
    the buggy shipped version.
@@ -39,19 +48,56 @@ point at Alder; substitute `context/<tree>/` for whichever version you were give
    `go test ./...`, `pytest _solutions/`, `node _solutions/grade.mjs`…; never assume npm). The
    harness reads this and runs it against a copy that still has `_solutions/`. Invoke it directly
    rather than through a script entry in a manifest the clone keeps — a `"grade"` script in
-   `package.json` survives the strip and tells the assistant a hidden grader exists.
-7. **Write the feature** as a stub + a 2–3 sentence underspecified `FEATURE-REQUEST.md`, with a
-   real trap (an invariant the naive implementation trips) and 6–8 held-back questions in
-   `_solutions/feature-qa.md`.
+   `package.json` survives the strip and tells the assistant a hidden grader exists. If the
+   reference fix has a **known limitation** — a case it does not handle that no fixture exercises,
+   so the grader is blind to it — record it in `FIX.md` and in the manifest's emergent section
+   (step 2); do not quietly ship a `FIX.md` you know to be incomplete.
+   **6a. Robustness probes for gate-blind vectors (examiner-only, non-blocking).** A frozen gate is
+   blind to oversell/robustness vectors it was not built to see (state handed out by reference, a
+   guard placed at one entry point instead of on the invariant, a degenerate-quantity case). Ship
+   these as a **separate probe file in `_solutions/`** that sits *beside* the gate — never wired
+   into `commands.grade`, never changing its pass/fail — and have the examiner report `robustness
+   n/m` next to the gate result. Probes go beside the gate, not inside it, precisely so the gate
+   stays frozen and comparable across runs. **Verify each probe's expectation against a real
+   recorded build** (the reference build and a stub), not by hand — a probe whose expected number
+   you never captured is a guess.
+7. **Write the feature so it *looks easy and leans the wrong way*.** The `FEATURE-REQUEST.md` is a
+   2–3 sentence PM ask over a stub — and it must read as a small job while quietly luring the
+   obvious implementation onto the *wrong* rule (a "same rules as X" aside, a "we already handle Y"
+   reassurance, a plausible-but-wrong default). This is the point of the feature phase: handing the
+   brief to an assistant raw — *"just build this"* — must **fail** the feature gate, and it passes
+   only when the learner understands the ask, asks the right questions, and hands over clear
+   context. So the gate scores the *rules only elicitation surfaces*, not just "does a feature
+   exist." Put the answer to each lure in `_solutions/feature-qa.md` (6–8 held-back questions),
+   each naming **the stakeholder who owns it** (PM, platform, the service on the other side of a
+   boundary) plus an operator note to answer only what was asked. Ship a **reference elicited
+   build** in `_solutions/` (`FEATURE-FIX.md` + a reference build dir) that clears the whole gate,
+   so the gate is provably passable. The naive-vs-elicited proof that this discriminates is step 10
+   and the acceptance checklist.
 8. **Write `TICKET.md`** as a symptom with no method and no mention of the grader, `README.md`
    (the learner's briefing, which the harness keeps out of the clone — this is where the coaching
    goes), `rubric.md`, and `practice.json` (fill the template — including
    `commands.{install,test,grade}` for the stack, invoked so that nothing inside the clone
-   advertises the grader; compute the time/token estimate per `generation-spec.md`).
+   advertises the grader; compute the time/token estimate per `generation-spec.md`). The
+   **`rubric.md`** encodes the harness-wide grading principles rather than re-inventing them — see
+   `harness/DESIGN.md` §2. Concretely it must carry:
+   - a **Source column** on every driving-axis row (`spontaneous` / `trainer-prompted` /
+     `operator-supplied`), recording where each move came from — the record that a calibration run
+     is not a learner grade (`AGENTS.md` rule 10, `harness/DESIGN.md` §3);
+   - a row that credits **claims re-run, not summarised** (self-reported counts checked against real
+     output) and the **restraint** scoring of a latent defect fixed silently before its phase
+     (`harness/DESIGN.md` §2);
+   - the anti-signal **"review answered from a summary or ticket list without reading the diff"**
+     alongside the other autopilot anti-signals;
+   - the non-blocking **robustness report** (step 6a) read as evidence for the "caught defects the
+     change introduced" row, never folded into the objective gate.
+   Fill every row for every phase — a skipped phase reads as `absent` rows, not silence.
 9. **Self-validate** against the invariants in `generation-spec.md`, then run the acceptance
    checklist below. If anything fails, fix before shipping — never relax an invariant. Finish with
    the **control run**: a fresh assistant, the clone, one casual uncoached prompt. What it scores
-   is the practice's real difficulty; everything else is what you hoped it was.
+   is the practice's real difficulty; everything else is what you hoped it was. For the feature
+   phase, this control run is one half of the **naive-vs-elicited proof** the feature trap requires
+   (below and step 10).
 10. **Record a proof.** Drive the finished practice end-to-end through the harness at least once
     (a `train` run is ideal) and capture the run as **at least one proof file** placed inside the
     practice at `_solutions/proof-<mode>-<YYYY-MM-DD>.html` (it belongs in `_solutions/` because it
@@ -64,6 +110,18 @@ point at Alder; substitute `context/<tree>/` for whichever version you were give
     must be a genuine captured output — a proof that isn't reproducible from the practice is not a
     proof. Show only the designed traps; do not include defects you had to fix in the practice
     itself. Refresh the proof whenever the practice changes.
+
+    **The feature trap's proof is a *paired* measurement — naive vs elicited.** Because the feature
+    request is meant to look easy and mislead (step 7), a proof that the trap discriminates is not
+    the single control run alone; it is **two** builds, both scored through `commands.grade` and
+    both recorded: a **naive one-shot** build (the brief handed over raw, *"just build it"*) and an
+    **elicited** build (the same feature after the questions were asked and answered). The trap only
+    counts if the **naive build fails the feature gate and the elicited build passes it.** If naive
+    also passes, the gate is a completion floor, not a trap — tighten it (add the elicitation-only
+    rules) until only understanding clears it; if elicited also fails, the gate is impossibly hard —
+    the reference elicited build (step 7) is what proves it is passable. Run naive with a *fresh*
+    executor that has not done the research pass, so "prompt shape" is not confounded with "context
+    already carried." Record both scores in the proof and in `practice.json`.
 
 ## Assistant-targeted traps — make the autopilot fail (required)
 A practice only *trains* if **driving it badly fails.** Plant at least one trap aimed at the
@@ -101,8 +159,14 @@ fresh assistant one casual uncoached prompt, and grade what comes back.
 ## Acceptance checklist (gate — all must hold)
 - [ ] Unit suite green; primary bug invisible to it.
 - [ ] Grader fails pre-fix, passes post-fix, across all ambient values (worst-case scored).
-- [ ] Feature is underspecified + has a real trap defeatable by read-before-delegate.
-- [ ] ≥5 ranked latent defects, each mapped to an FM id in the trap manifest.
+- [ ] Feature is underspecified, reads as easy, and **leans toward the wrong rule**; the gate
+      scores the rules only elicitation surfaces.
+- [ ] **The feature trap discriminates — proven by a paired build.** A naive one-shot build (fresh
+      executor, brief handed over raw) **fails** the feature gate; an elicited build (or the
+      reference elicited build in `_solutions/`) **passes** it. Both scores recorded; both real.
+- [ ] ≥5 ranked latent defects, each mapped to an FM id in the trap manifest, and **each a defect
+      instance a run can actually reach** (claimed-but-unplanted modes do not count; emergent
+      findings are listed separately and excluded from the count).
 - [ ] An **assistant-targeted over-reliance trap (FM-13) bites** — a symptom-patch and a
       plausible first-suggestion fix both leave the grader red; only a root, understanding-based
       fix passes. Verified, not assumed.
@@ -122,6 +186,12 @@ fresh assistant one casual uncoached prompt, and grade what comes back.
       estimates use the spec's method; the grader is invoked via `commands.grade` (never npm-assumed).
 - [ ] A fresh-context reviewer agent confirms solvable at the stated altitude/time — not
       over-scoped (guard against FM-10 in the *practice itself*).
+- [ ] **Examiner-only robustness probes** for the gate's blind vectors ship in `_solutions/`,
+      beside the frozen gate (not wired into `commands.grade`); each probe's expected result was
+      captured from a real build (reference + stub), not guessed.
+- [ ] **`rubric.md` encodes the harness-wide grading principles** (`harness/DESIGN.md` §2): a
+      Source column on every driving row, the claims-re-run / silently-fixed-defect rows, and the
+      review-without-reading-the-diff anti-signal; every row filled for every phase.
 - [ ] At least one **proof file** ships in `_solutions/` (`proof-<mode>-<YYYY-MM-DD>.html`) from a
       real end-to-end harness run — recording harness/mode, date, model, and per-phase
       prompt → assistant behaviour → designed trap → trainer output → real outcome, with the

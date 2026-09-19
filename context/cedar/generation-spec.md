@@ -6,13 +6,13 @@ stack that trains the **same points** as the Context. The agent reads this file 
 [`failure-modes.md`](failure-modes.md); the step-by-step an agent executes is in
 [`../../generator/CONTRACT.md`](../../generator/CONTRACT.md).
 
-Cedar is a superset of Alder's spec (`alder@1.2.0`): **invariants 1 and 3–9 below are Alder's,
+Cedar is a superset of Alder's spec (`alder@1.3.0`): **invariants 1 and 3–9 below are Alder's,
 unchanged**, and **invariant 12 is Alder's invariant 10, carried forward and extended** — Cedar
 numbers it 12 because 10 and 11 were already taken when Cedar branched. Cedar extends invariant 2,
 adds invariants 10–11, a multi-repo practice shape, a dual grade gate, and a new XL difficulty tier.
 
 ## Inputs
-- **context** — `cedar@1.1.0`.
+- **context** — `cedar@1.2.0`.
 - **domain** — the business story (e.g. "metering & billing", "warehouse inventory sync").
   Picks the vocabulary and the natural home for the planted bugs.
 - **stack** — one or more packages, each language + runtime + test runner. Zero-dependency or
@@ -72,8 +72,12 @@ distillation of `reference/`); it is not shipped in the source.
    locale, currency, encoding, clock) to include **cross-boundary / externally-hosted state** — a
    hosted document that can rotate, a sibling service's contract, an infra config the local repo
    never parameterized. Graded across ≥3 values of it.
-3. **The feature is underspecified with a real trap** a straight "implement this" prompt trips
-   (an invariant it violates, state not yet materialized) — defeatable by read-before-delegate.
+3. **The feature is underspecified, reads as easy, and misleads.** A straight "implement this"
+   prompt trips a real trap — an invariant it violates, state not yet materialized, or a
+   plausible-but-wrong rule the brief quietly leans toward. The gate scores the rules **only
+   elicitation surfaces**, so handing the brief over raw *fails* it and an elicited build *passes*
+   it — defeatable by read-**and-ask**-before-delegate, not by delegation. (Proven by the paired
+   naive-vs-elicited build in Validation.)
 4. **≥5 ranked latent defects** drawn from FM-03..FM-08, *findable* from the code, not recited.
 5. **The grader is runnable with zero/minimal deps**, invoked via the practice's **declared
    command** (`practice.json` → `commands.grade`) — stack-appropriate, never assumed to be
@@ -204,6 +208,22 @@ distillation of `reference/`); it is not shipped in the source.
 - **Cross-boundary check (FM-16):** a run that never opens `reference/` makes a provably wrong
   assumption and fails the reference-derived conformance vectors; a run that does the research pass
   converges. The `_solutions/context-map.md` states the true cross-boundary contract.
+- **Feature-trap discrimination — a paired build.** The feature trap is proven not by the control
+  run alone but by **two** builds scored through the declared grade command: a **naive one-shot**
+  (fresh executor that has not done the research pass, brief handed over raw) and an **elicited**
+  build (the feature after its questions were asked and answered). The trap counts only if **naive
+  fails the feature gate and elicited passes.** Naive-also-passes means the gate is a completion
+  floor, not a trap — tighten it until only understanding clears it; elicited-also-fails means it is
+  impossibly hard. Both scores are recorded, both are genuine captured output.
+- **Robustness probes (examiner-only, non-blocking).** The gate's blind vectors — state handed out
+  by reference, a guard placed at one entry point instead of on the invariant, a degenerate-quantity
+  case — are covered by probes shipped in `_solutions/` **beside** the gate, never wired into the
+  grade wrapper and never changing its pass/fail. Each probe's expected result was captured from a
+  real build (the reference fix and a stub), not asserted by hand.
+- **Manifest completeness.** Every claimed failure mode is planted where a run actually reaches it
+  (count planted *instances*, not modes); a mode named in `practice.json` but unreachable is not
+  covered. Emergent (unplanted) findings and the reference fix's known limitations are recorded in
+  a labelled section, excluded from the planted count.
 - **Control run (invariant 12) — the one that actually settles it.** Clone the practice exactly as
   the harness would (`_solutions/`, `README.md` and `practice.json` stripped, `reference/` present),
   hand a *fresh* assistant nothing but that clone and one casual, uncoached prompt, let it finish,
