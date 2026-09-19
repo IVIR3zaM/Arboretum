@@ -9,7 +9,7 @@
 > decision already taken.
 >
 > **Sources so far:** the control run (2026-09-13, recorded in `trap-manifest.md`) and the
-> eleven-round Train run (session `20260913-train-v2`, recorded in `proof-train-2026-09-13.html`).
+> eleven-round Train run (session `20260913-train-v2`, proof retired to git history).
 > Add new entries as further runs expose them; keep the evidence line concrete enough to re-check.
 
 **Legend.** `[P]` = the practice's own material is wrong or incomplete · `[A]` = assistant behaviour
@@ -60,7 +60,7 @@ grade.sh gates / a phase-4 scorer) were dropped by the frozen-gate decision.
 
 ### 2. `[P]` FM-03 is claimed in `practice.json` but was never planted.
 **Evidence.** `practice.json` lists `FM-03` in `trainingPoints.failureModes`.
-`_solutions/DESIGN-blueprint.md:230` planned it as ranked latent defect #5 — *"an 'inbound counts if
+The original design blueprint (retired to git history) planned it as ranked latent defect #5 — *"an 'inbound counts if
 within 30 days' approximation (month ≈ 30 days), or an unknown-SKU fall-through to 'available.'"*
 Neither exists in the shipped tree: `atp.ts` has no inbound logic at all before the fix, and
 `erpFeed.getRecord` throws `UnknownSkuError` rather than falling through. `trap-manifest.md`'s

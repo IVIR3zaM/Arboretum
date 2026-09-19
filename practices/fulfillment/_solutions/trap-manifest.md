@@ -115,8 +115,7 @@ kata, not a prose fix, and it is owed.
 **A second finding, already fixed.** The control run's feature score was `0/4`, and it is *not* a
 trap result. The hidden gate calls `placeHold(sku, location, qty, cartId, ttlMs)` and passes
 `cartId` on the order; the clone's stub took `(sku, qty, ttlMs)` and `Hold` had no `cartId`. The
-graded surface was declared **nowhere the learner or the assistant could see it** — `BUILD-LEDGER.md`
-records it as something "the correct impl adds" — so the gate could only ever be passed by someone
+graded surface was declared **nowhere the learner or the assistant could see it** — so the gate could only ever be passed by someone
 who had read this directory. The stub and `Hold` now declare the real surface (which states *what
 identifies a hold*, not what it must do — the four held-back requirements stay hidden), and the gate
 was re-measured on that surface: **correct 4/4, naive 2/4**, unchanged. The feature number for the
@@ -181,7 +180,7 @@ numbers above.
 
 ### TRAIN RUN 2026-09-13 (session `20260913-train-v2`) — the feature gate is what discriminates
 Eleven rounds, all five declared phases, `FEATURE-REQUEST.md` staged at the start of phase 3.
-Recorded in `proof-train-2026-09-13.html`. Three things it establishes:
+Recorded in git history. Three things it establishes:
 
 1. **The naive number is 1/4, not 2/4.** A realistic one-shot delegation — a two-sentence PM brief
    plus "happy path only, I don't need the edge cases today" — produces a hold that records
@@ -235,8 +234,8 @@ and B above). This is why the research pass (`research-notes.md`) is the load-be
 
 ## FM-03 — a plausible rule that encodes the wrong one (declared carrier: `promisableStock`)
 
-`practice.json` lists `FM-03` in `trainingPoints.failureModes`, and the blueprint
-(`DESIGN-blueprint.md:230`) had planned it as a *separate* latent defect — an "inbound counts if
+`practice.json` lists `FM-03` in `trainingPoints.failureModes`, and the original design blueprint
+(retired to git history) had planned it as a *separate* latent defect — an "inbound counts if
 within 30 days" (month ≈ 30 days) approximation, or an unknown-SKU fall-through to "available."
 **Neither was ever built:** the shipped `atp.ts` has no inbound logic at all before the fix, and
 `erpFeed.getRecord` throws `UnknownSkuError` rather than falling through. So the mode as blueprinted
@@ -254,7 +253,7 @@ SKUs, and *wrong* — it encodes the abandoned snapshot-era notion of availabili
 
 **Caveat, stated plainly:** because `promisableStock` is the same stale helper the primary bug's
 plateau (rows A/B above) reaches for, FM-03 here **overlaps the primary bug** rather than being
-independently findable in phase 4. The Train-run proof (`proof-train-2026-09-13.html`) maps FM-03
+independently findable in phase 4. The 2026-09-13 Train run maps FM-03
 onto `promisableStock` and that reading holds up, but it was not the design intent. Making FM-03
 stand on its own would mean building the blueprint's original defect as a 6th latent defect — noted
 as deferred in `misbehaviors.md` #2 (option b), and fragile: a hardcoded window inside the *new* ATP
