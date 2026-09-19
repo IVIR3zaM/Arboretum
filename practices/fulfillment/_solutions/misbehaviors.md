@@ -378,6 +378,15 @@ three rejected the "same rules as checkout" lure and flipped to `<=` (test 5 pas
 run *named* at least two of the lures in its reply (last unit, double-taps, cleanup) and still shipped without asking —
 the discriminator is whether the learner takes those to a stakeholder. "Prompt shape" vs "context carried" does not move
 the result: 5/10 with research in context, 5–6/10 without.
+**Elicited side confirmed (2026-09-19, `assess`, session `20260919T090142Z-fulfillment-assess-learner`):** a learner
+sub-agent with no tools and no golden access (briefed with the README's phase-3 text and `FEATURE-REQUEST.md` only), a
+separate executor jailed to the clone, the operator answering as PM / platform / engineering / ERP lead from this
+file's sibling `feature-qa.md` — only what was asked. In six turns the learner had the assistant investigate read-only,
+asked all four stakeholders (raising the Q9 contract contradiction with the ERP lead unprompted), and handed over a spec
+stating all six rules of gate tests 5–10. `commands.grade`: **14/14 · 10/10 · 2/2 PASS**, unit 42 + 18 green, robustness
+3/5 (probes 1–2, the code-shape defects, as designed). One operator lean, recorded in the session transcript: asked
+*when* a hold clears, the PM answer also gave Q12's partial-checkout rule. So: naive 5–6/10 (four samples), elicited
+10/10 (one learner run plus the reference build) — the gate discriminates in both directions.
 
 ### 17. `[P]` `FIX.md`'s reference fix counts overdue inbound toward ATP.
 **Evidence.** `FIX.md`: `.filter((line) => line.arrivesInDays <= rec.leadTimeDays)` also admits negative
