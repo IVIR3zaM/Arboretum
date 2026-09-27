@@ -14,11 +14,14 @@ err() { echo "verify FAIL: $1" >&2; status=1; }
 
 # (1) Leak guard: practices/credentials/ minus _solutions/, README.md, practice.json, DESIGN.md
 # has no grade.sh and no file mentioning _solutions, grade.sh, grader or .plan. TICKET*.md and
-# FEATURE-REQUEST.md contain no warning marker.
+# FEATURE-REQUEST.md contain no warning marker. Scans only git-shippable files (tracked, plus
+# untracked-not-ignored): gitignored build output (target/, build/, .dart_tool/) never reaches a
+# clone or a commit, and Flutter/Cargo caches embed absolute repo paths that would trip the guard.
 check_leak_guard() {
   [ -d "$PRACTICE" ] || return 0
   local f rel base
-  while IFS= read -r f; do
+  while IFS= read -r -d '' f; do
+    [ -f "$f" ] || continue   # tracked but deleted in the worktree
     rel=${f#"$PRACTICE"/}
     case "$rel" in
       _solutions/*|README.md|practice.json|DESIGN.md) continue ;;
@@ -30,7 +33,7 @@ check_leak_guard() {
     if grep -lE '_solutions|grade\.sh|grader|\.plan' -- "$f" >/dev/null 2>&1; then
       err "leak guard: $f — mentions _solutions, grade.sh, grader or .plan"
     fi
-  done < <(find "$PRACTICE" -type f)
+  done < <(git ls-files -z --cached --others --exclude-standard -- "$PRACTICE")
 
   while IFS= read -r f; do
     grep -q '⚠️' -- "$f" 2>/dev/null && err "leak guard: $f — contains a ⚠️ warning marker"
