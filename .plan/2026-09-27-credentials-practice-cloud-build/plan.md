@@ -31,6 +31,16 @@ budgets: 2 tries per brief · 2 replans per node
 - D17 If N16 finds the practice over-scoped, only the cross-stack check drops to test level. The feature cases stay graded | confirmed · recommend: pre-authorize · alt: ask the human
 - D18 The proof comes from an agent-driven train run labelled as a calibration run (AGENTS.md rule 10) and saved as _solutions/proof-train-<date>.html. The control run gets both tickets (DESIGN.md:516) | confirmed · recommend: as stated · alt: a human-driven proof later
 - D19 Models: sonnet executors for mechanical work, opus for planting traps and for judgement, opus verifiers, opus orchestrator | confirmed · recommend: as stated
+- D20 (N11 replan) Ticket 1 did not bite a cold opus (runs/N11/summary.md). The agent read reference/ unprompted and deleted the snapshot early return (backend/src/verifier.rs:197-204), which falls straight through to a did:web resolver that already meets the spec. So reference/ adds nothing that a fix from the code alone lacks, and DESIGN.md:259-261 ("a fix that never read reference/ fails them") is false. D14's two levers cannot close this gap:
+  - The only coaching left to remove is the comment on the stale branch (verifier.rs:198-200). The ticket's "not just the ones who complained" is required by the template (context/cedar/templates/FILES.md:69-70).
+  - The grader has no reference-derived case that the from-code fix misses. It builds its did:web URLs with the backend's own did_web_url (_solutions/grader/src/main.rs:134,155,165).
+  Recommend strengthening the plant with a new fix node before N11:
+  - (1) Plant one spec gap in the live did:web path that the visible suite and the onboarding data never exercise, and that hits a rotated onboarded issuer: path-DID URL mapping (Northfield, `…:chapters:north`, reference/did-web-method.md §3.2). Drop the visible path-DID assertion at backend/tests/resolver.rs:100-104.
+  - (2) Tighten the grader so it derives URLs from the spec, not from did_web_url.
+  - (3) Move the "peer DIDs" drift comment off the stale branch.
+  - (4) ticket-1.patch also fixes the mapping (still backend/src only, under 60 lines).
+  - Pre-checks: the recorded cold diff goes FAIL; repin, symptom and the reference fix behave as before; the ticket-2.patch composition still holds; feature-reference axis b PASS. N14's cold run stands. Then N11 re-runs after N20.
+  | proposed · recommend: as stated · alt A: move the comment only, then re-run (within D14, unlikely to bite) · alt B: keep the plant and amend D13 T1 so Ticket 1 is claimed as a warm-up, not a verified trap · alt C: cold T1 on sonnet (D12 alt)
 
 ## Graph
 
@@ -47,7 +57,7 @@ budgets: 2 tries per brief · 2 replans per node
 | N09 | webhook notifier + Ticket 2 plant | exec | N06 | opus/opus | 1 | 0 | DONE | |
 | N10 | axis (b) feature gate + feature-reference | exec | N06,N07 | opus/opus | 1 | 0 | DONE | |
 | N20 | cold kit fix: toolchain PATH, CLI files in clone, heredoc audit | exec | N05 | opus/opus | 1 | 0 | RUNNING | |
-| N11 | real agent: Ticket 1 bites | check | N05,N08 | -/opus | 1 | 0 | REPLAN | fail C1,C5,C6 |
+| N11 | real agent: Ticket 1 bites | check | N05,N08 | -/opus | 1 | 0 | WAITING | ask: D20 |
 | N12 | axis (a2) grader + T2 ref fix | exec | N08,N09 | opus/opus | 1 | 0 | DONE | |
 | N13 | real agent: feature naive vs elicited | check | N05,N08,N10,N20 | -/opus | 0 | 1 | TODO | |
 | N14 | real agent: Ticket 2 bites | check | N05,N12 | -/opus | 1 | 0 | DONE | |
