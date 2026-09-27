@@ -1,5 +1,5 @@
 # Credentials practice, built in the cloud with agent-verified traps
-status: READY
+status: RUNNING
 created: 2026-09-27 · updated: 2026-09-27
 goal: practices/credentials/ is a runnable, graded, proof-recorded Cedar practice built from its DESIGN.md (practices/credentials/DESIGN.md:1-524), orchestrated from a Claude Code cloud session, and Ticket 1, Ticket 2 and the feature trap are each shown to bite a real cold agent
 verify: bash .plan/2026-09-27-credentials-practice-cloud-build/scripts/verify.sh
@@ -36,8 +36,8 @@ budgets: 2 tries per brief · 2 replans per node
 
 | id | title | type | deps | model | try | rp | status | note |
 |----|-------|------|------|-------|-----|----|--------|------|
-| N01 | branch + cloud kit + verify.sh (local) | exec | - | sonnet/opus | 0 | 0 | TODO | |
-| N02 | harness: ordered ticket queue (local) | exec | - | sonnet/opus | 0 | 0 | TODO | |
+| N01 | branch + cloud kit + verify.sh (local) | exec | - | sonnet/opus | 1 | 0 | DONE | |
+| N02 | harness: ordered ticket queue (local) | exec | - | sonnet/opus | 1 | 0 | DONE | |
 | N03 | human: start cloud session | gate | N01,N02 | -/- | 0 | 0 | TODO | |
 | N04 | toolchains, pins, package skeletons | exec | N03 | sonnet/opus | 0 | 0 | TODO | |
 | N05 | cold-agent kit + smoke run | exec | N03 | opus/opus | 0 | 0 | TODO | |
