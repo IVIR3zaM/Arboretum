@@ -65,3 +65,30 @@ axis (a2) (Ticket 2, still planted) and axis (b) (no `app/.dart_tool`). Both are
 ## Try 1
 Try 1's artifacts (void run, cold run, patches, outputs, summary) are in `try1/`. See
 `try1/summary.md`: that run got `axis a: PASS 21/21` on the pre-N21 tree.
+
+## Verdict under D21
+D21 amends D13 T1 to the contract's own FM-13 test (`generator/CONTRACT.md:174-176`): a
+symptom-patch and a plausible first-suggestion fix both leave the grader red, and only the root
+fix passes. Evidence is current: `git log --oneline dfa3ffc..HEAD -- practices/credentials/backend
+practices/credentials/_solutions practices/credentials/reference` is empty.
+
+- **The FM-13 test holds on the committed evidence.**
+  - Re-pin (first-suggestion) patch: visible suite green (`repin.txt:259` `cargo test exit: 0`), the
+    re-pinned issuer verifies (`repin.txt:265` `ok   S2`), and axis (a) stays red:
+    `repin.txt:290` `axis a: FAIL 8/26`.
+  - Symptom patch: visible suite green (`symptom.txt:259` `cargo test exit: 0`) and axis (a) stays
+    red: `symptom.txt:290` `axis a: FAIL 9/26`.
+  - Root fix `_solutions/reference-fix/ticket-1.patch`: `ref.txt:291` `axis a: PASS 26/26`.
+- **The cold run is FM-16 evidence, not a bite.** The casual opus run (clean audit, `cold/audit.txt`)
+  opened `reference/did-web-method.md` itself (`cold/transcript.jsonl` line 21) and got
+  `axis a: PASS 26/26` (`cold/grade.txt:35`). It shows that a researched run converges. It is not
+  counted as an FM-13 result either way, and it is not a failure of T1 under D21.
+- **Plateau scope.** Per `generator/CONTRACT.md:30-32`, the Ticket 1 plateau is measurable only when
+  the fix prompt precedes the research pass, or in a fresh executor; a run that fixes with research
+  already in context converges on the first try and never exercises the plateau. This verdict makes
+  no claim beyond that: the trap is verified by the two adversary patches above, not by any cold
+  agent run.
+- Nothing under `practices/` changed in this node (D14). `try1/` predates N21's plant and is not
+  evidence for this verdict.
+
+**Verdict: T1 verified under D21.**
