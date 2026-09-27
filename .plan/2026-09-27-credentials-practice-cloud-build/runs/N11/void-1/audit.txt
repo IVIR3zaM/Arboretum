@@ -1,0 +1,3 @@
+VIOLATION [file] call #5 Read: file_path=/root/.claude/projects/-tmp-n11v-clone/20d6fe92-4df5-4de5-9ccc-2f813b2fa94d/tool-results/blciqz5qa.txt is outside the clone
+audit: 1 violation(s) in 12 tool call(s) — clone /tmp/n11v/clone
+exit: 1

@@ -1,0 +1,81 @@
+diff --git a/backend/src/verifier.rs b/backend/src/verifier.rs
+index 0afb09e..769daad 100644
+--- a/backend/src/verifier.rs
++++ b/backend/src/verifier.rs
+@@ -195,12 +195,9 @@ impl Verifier {
+ 
+     /// The DID document an issuer's credentials are checked against.
+     pub fn resolve_issuer(&self, did: &str) -> Result<Document, VerifyError> {
+-        // Issuer documents are self-contained, as with the peer DIDs issuers
+-        // first onboarded with: keys and service endpoints travel with the
+-        // document, so the copy recorded at onboarding is all verification needs.
+-        if let Some(issuer) = self.store.onboarded_issuer(did) {
+-            return Ok(issuer.document);
+-        }
++        // Always resolve: a did:web issuer rotates keys and moves endpoints by
++        // replacing its hosted document, and only the document currently served
++        // is authoritative. The copy recorded at onboarding goes stale.
+         Ok(self.resolver.resolve(did)?)
+     }
+ }
+diff --git a/backend/tests/verifier.rs b/backend/tests/verifier.rs
+index 8bdc48f..697a888 100644
+--- a/backend/tests/verifier.rs
++++ b/backend/tests/verifier.rs
+@@ -1,8 +1,14 @@
+ mod common;
+ 
++use std::sync::Arc;
++
+ use credentials_backend::credential;
++use credentials_backend::issuer::Issuer;
++use credentials_backend::resolver::{did_key_for, Resolver};
+ use credentials_backend::status::revoke_credential;
+-use credentials_backend::verifier::VerifyError;
++use credentials_backend::store::Store;
++use credentials_backend::transport::StaticTransport;
++use credentials_backend::verifier::{Verifier, VerifyError};
+ use serde_json::json;
+ 
+ use common::*;
+@@ -181,3 +187,40 @@ fn a_credential_without_an_issuer_is_malformed() {
+     let err = verifier(store()).verify_credential(&json!({ "credentialSubject": {} })).unwrap_err();
+     assert!(matches!(err, VerifyError::Malformed(_)), "{err:?}");
+ }
++
++/// Harbour after rotating to `#key-2`: the document it now serves, while the
++/// store still holds the copy recorded at onboarding.
++fn rotated_harbour(store: Arc<Store>) -> (Issuer, Verifier) {
++    let key_id = format!("{HARBOUR_DID}#key-2");
++    let issuer = Issuer::new(HARBOUR_DID, &key_id, &[42; 32]);
++    let multibase = did_key_for(&issuer.verifying_key()).trim_start_matches("did:key:").to_string();
++    let mut document = harbour_document();
++    document["verificationMethod"][0]["id"] = json!(key_id);
++    document["verificationMethod"][0]["publicKeyMultibase"] = json!(multibase);
++    document["authentication"] = json!([key_id]);
++    document["assertionMethod"] = json!([key_id]);
++    let transport = StaticTransport::default().with(HARBOUR_URL, document.to_string());
++    let verifier = Verifier::new(Resolver::new(Arc::new(transport)), store).with_clock(|| NOW);
++    (issuer, verifier)
++}
++
++#[test]
++fn a_credential_signed_with_a_rotated_key_is_accepted() {
++    let store = store();
++    let (issuer, verifier) = rotated_harbour(store.clone());
++    let holder = Holder::new(1);
++    let issued = issuer.issue(&store, &membership_request(&holder)).unwrap();
++    let vp = holder.present(&issued, &["member"], NONCE, DOMAIN);
++    let verified = verifier.verify_presentation(&submission("req-1", vp), NONCE, DOMAIN).unwrap();
++    assert_eq!(verified.credential.issuer, HARBOUR_DID);
++}
++
++#[test]
++fn a_credential_signed_with_a_retired_key_is_rejected() {
++    let store = store();
++    let (_, verifier) = rotated_harbour(store.clone());
++    let holder = Holder::new(1);
++    let issued = harbour().issue(&store, &membership_request(&holder)).unwrap();
++    let err = verifier.verify_credential(&issued.credential).unwrap_err();
++    assert!(matches!(err, VerifyError::UnknownKey(ref id) if id == HARBOUR_KEY_ID), "{err:?}");
++}

@@ -1,0 +1,19 @@
+diff --git a/backend/src/verifier.rs b/backend/src/verifier.rs
+index 0afb09e..e0b1865 100644
+--- a/backend/src/verifier.rs
++++ b/backend/src/verifier.rs
+@@ -157,7 +157,13 @@ impl Verifier {
+         let subject = vc.pointer("/credentialSubject/id").and_then(Value::as_str).ok_or_else(|| malformed("credentialSubject.id"))?;
+         let id = str_field(vc, "id")?;
+ 
+-        let document = self.resolve_issuer(issuer)?;
++        // Cedar Rowing's credentials were rejected at the door after their
++        // re-approval: check them against the document they host now.
++        let document = if issuer == "did:web:issuer.cedarrowing.example" {
++            self.resolver.resolve(issuer)?
++        } else {
++            self.resolve_issuer(issuer)?
++        };
+         check_proof(vc, &document, &document.assertion_method)?;
+ 
+         let now = (self.clock)();

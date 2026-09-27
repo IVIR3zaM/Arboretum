@@ -1,0 +1,17 @@
+Next up is the membership-at-the-door feature request from the PM. Before handing it over I went back to the PM, the platform folks and the verifier team with questions, and here is what they told me. Please build it with these answers in mind.
+
+Which claims go in the presentation? Only what the scanner's request asks for. The request carries a DCQL query; disclose exactly the claims it names and nothing else. The door only asks whether the person is a member, so it must not receive the name, the membership number or the birth date. Each claim travels as the disclosure the issuer handed over (salt, name and value, unchanged), next to the unchanged credential.
+
+Is the issuer's credential enough, or does the wallet sign? The wallet signs the presentation itself. The issuer's signature proves the credential, not that this holder is the one presenting it. The presentation carries an Ed25519 proof made with the holder's own key, for the purpose of authentication, over the RFC 8785 canonical JSON of the presentation without its proof. The verifier also checks that the credential's subject is the holder who is presenting.
+
+What stops someone reusing a presentation captured at the door? Each presentation is bound to the request it answers: the request's one-time challenge and the requester's identity (its client id) go into the presentation, inside the part the holder signs. The verifier rejects a presentation whose challenge or requester isn't the one it issued.
+
+What if the credential has expired? Refuse. Don't build a presentation for an expired credential; raise an error to the caller instead of handing over something the door will turn down. The expiry on the credential is an integer in unix seconds; the backend's readme calls it an expiration date, but that part of the readme is out of date.
+
+Does the wallet check revocation first? No. Revocation is the verifier's job; it reads the issuer's status list on its side.
+
+Is a credential single-use, as the backend readme says? No, not in this version. Nothing enforces it and it isn't the design: a member shows the same credential at every visit. What stops replay is the per-request challenge above. The wallet must not delete or consume the credential after presenting it.
+
+Does presenting need the network? No. Building the presentation is fully local: the credential, the disclosures and the holder key are all on the device, and signing is local. Sending the presentation to the scanner is not part of this step; it just returns the presentation.
+
+What's in scope for this first version? Return the presentation as a JSON map: the requested claims only, signed by the holder, bound to the challenge and the requester, and refusing an expired credential. Deliberately left for later: posting it to the scanner and the door screen, choosing between several matching credentials or combining credentials, a not-yet-valid check in the wallet, holder-side revocation checks, enforced single use, and holder key rotation.

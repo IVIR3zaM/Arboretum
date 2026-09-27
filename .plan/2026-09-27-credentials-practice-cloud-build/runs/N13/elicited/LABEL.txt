@@ -1,0 +1,1 @@
+operator-supplied prompt: ../elicited-prompt.txt — calibration measurement (AGENTS.md rule 10), not a learner run

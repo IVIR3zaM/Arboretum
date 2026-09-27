@@ -1,0 +1,286 @@
+diff --git a/app/lib/src/wallet_service.dart b/app/lib/src/wallet_service.dart
+index 928a6db..a0809c8 100644
+--- a/app/lib/src/wallet_service.dart
++++ b/app/lib/src/wallet_service.dart
+@@ -1,3 +1,8 @@
++import 'dart:convert';
++
++import 'package:dcql/dcql.dart';
++import 'package:ssi/ssi.dart';
++
+ import 'credential_store.dart';
+ import 'held_credential.dart';
+ import 'holder_key.dart';
+@@ -17,12 +22,15 @@ class WalletService {
+     required this._issuer,
+     CredentialStore? store,
+     HolderKey Function()? newKey,
++    DateTime Function()? clock,
+   }) : _store = store ?? CredentialStore(),
+-       _newKey = newKey ?? HolderKey.generate;
++       _newKey = newKey ?? HolderKey.generate,
++       _clock = clock ?? DateTime.now;
+ 
+   final IssuerClient _issuer;
+   final CredentialStore _store;
+   final HolderKey Function() _newKey;
++  final DateTime Function() _clock;
+ 
+   /// The holder key, created on first use.
+   HolderKey holderKey() => _store.holderKey ??= _newKey();
+@@ -49,10 +57,93 @@ class WalletService {
+ 
+   /// Builds a presentation of the held credential [credentialId] in answer
+   /// to [request], ready to send to the requester.
++  ///
++  /// The presentation carries the credential exactly as issued plus the
++  /// disclosures for the claims the request asks for, is bound to the
++  /// request's nonce and domain, and is signed by the holder key with an
++  /// `Ed25519Signature2020` proof over its JCS form without `proof`.
+   Future<Map<String, dynamic>> createPresentation(
+     String credentialId,
+     PresentationRequest request,
+   ) async {
+-    throw UnimplementedError('createPresentation');
++    final credential = _store.byId(credentialId);
++    if (credential == null) {
++      throw WalletException('No credential $credentialId in the wallet');
++    }
++    final key = holderKey();
++    if (credential.holderDid != key.did) {
++      throw WalletException(
++        'Credential $credentialId was issued to ${credential.holderDid}, not ${key.did}',
++      );
++    }
++
++    final presentation = <String, dynamic>{
++      '@context': ['https://www.w3.org/2018/credentials/v1'],
++      'type': ['VerifiablePresentation'],
++      'holder': key.did,
++      'verifiableCredential': credential.vc,
++      'disclosures': [
++        for (final disclosure in _requestedDisclosures(credential, request))
++          disclosure.toJson(),
++      ],
++      'nonce': request.nonce,
++      'domain': request.domain,
++    };
++    final signature = await key.sign(
++      utf8.encode(JcsUtil.canonicalize(presentation)),
++    );
++    presentation['proof'] = {
++      'type': 'Ed25519Signature2020',
++      'created': _clock().millisecondsSinceEpoch ~/ 1000,
++      'verificationMethod': key.keyId,
++      'proofPurpose': 'authentication',
++      'proofValue': toMultiBase(signature),
++    };
++    return presentation;
++  }
++
++  /// The disclosures [request] asks for: every claim when its query names
++  /// none, otherwise the claims of the first satisfiable claim set.
++  List<Disclosure> _requestedDisclosures(
++    HeldCredential credential,
++    PresentationRequest request,
++  ) {
++    final query = request.dcqlQuery.credentials
++        .where((q) => q.format == CredentialFormat.ldpVc)
++        .firstOrNull;
++    if (query == null) {
++      throw WalletException(
++        '${request.clientId} does not ask for a credential this wallet holds',
++      );
++    }
++    final claims = query.claims;
++    if (claims == null) return credential.disclosures;
++
++    Disclosure? disclosureFor(DcqlClaim claim) {
++      final path = claim.path;
++      if (path.length != 2 || path.first != 'credentialSubject') return null;
++      final values = claim.values;
++      return credential.disclosures
++          .where((d) => d.name == path[1])
++          .where((d) => values == null || values.contains(d.value))
++          .firstOrNull;
++    }
++
++    final byId = {
++      for (final (i, claim) in claims.indexed) claim.getEffectiveId(i): claim,
++    };
++    final options = query.claimSets ?? [byId.keys.toList()];
++    for (final option in options) {
++      final chosen = [
++        for (final id in option)
++          if (byId[id] case final claim?) disclosureFor(claim),
++      ];
++      if (chosen.length == option.length && !chosen.contains(null)) {
++        return chosen.cast<Disclosure>();
++      }
++    }
++    throw WalletException(
++      'Credential ${credential.id} cannot answer the claims ${request.clientId} asks for',
++    );
+   }
+ }
+diff --git a/app/test/wallet_service_test.dart b/app/test/wallet_service_test.dart
+index 96e548b..d199097 100644
+--- a/app/test/wallet_service_test.dart
++++ b/app/test/wallet_service_test.dart
+@@ -1,6 +1,9 @@
+ import 'package:credentials_app/credentials_app.dart';
++import 'dart:convert';
++
+ import 'package:dcql/dcql.dart';
+ import 'package:flutter_test/flutter_test.dart';
++import 'package:ssi/ssi.dart';
+ 
+ import 'fake_issuer_client.dart';
+ import 'fixtures.dart';
+@@ -57,4 +60,146 @@ void main() {
+     final json = doorRequest()..remove('nonce');
+     expect(() => PresentationRequest.fromJson(json), throwsFormatException);
+   });
++
++  group('createPresentation', () {
++    late WalletService wallet;
++    late HeldCredential credential;
++
++    setUp(() async {
++      wallet = WalletService(
++        issuer: FakeIssuerClient(),
++        newKey: () => HolderKey.fromSeed(holderSeed),
++        clock: () => DateTime.utc(2026, 6, 1),
++      );
++      credential = await wallet.requestCredential('MembershipCredential');
++    });
++
++    Map<String, dynamic> requestFor(List<Map<String, dynamic>> claims) =>
++        doorRequest()..['dcql_query']['credentials'][0]['claims'] = claims;
++
++    Map<String, dynamic> claim(String name, {List<Object?>? values}) => {
++      'path': ['credentialSubject', name],
++      'values': ?values,
++    };
++
++    test('binds the credential to the request nonce and domain', () async {
++      final request = PresentationRequest.fromJson(doorRequest());
++      final vp = await wallet.createPresentation(credential.id, request);
++
++      expect(vp['type'], ['VerifiablePresentation']);
++      expect(vp['holder'], holderDid);
++      expect(vp['nonce'], 'n-8f3Kq2xWz0Lb');
++      expect(vp['domain'], 'door-scanner.members.test');
++      expect(vp['verifiableCredential'], membershipIssuance()['credential']);
++    });
++
++    test('discloses only the requested claims', () async {
++      final request = PresentationRequest.fromJson(doorRequest());
++      final vp = await wallet.createPresentation(credential.id, request);
++
++      expect(vp['disclosures'], [
++        {'salt': 'Qg8wYx1dLr0pVb3kTz7sNw', 'name': 'member', 'value': true},
++      ]);
++    });
++
++    test('is signed by the holder key over its canonical form', () async {
++      final request = PresentationRequest.fromJson(doorRequest());
++      final vp = await wallet.createPresentation(credential.id, request);
++
++      final proof = vp['proof'] as Map<String, dynamic>;
++      expect(proof['type'], 'Ed25519Signature2020');
++      expect(proof['proofPurpose'], 'authentication');
++      expect(proof['verificationMethod'], HolderKey.fromSeed(holderSeed).keyId);
++      expect(proof['created'], 1780272000);
++
++      final unsigned = Map.of(vp)..remove('proof');
++      final signed = utf8.encode(JcsUtil.canonicalize(unsigned));
++      final signature = multiBaseToUint8List(proof['proofValue'] as String);
++      final key = HolderKey.fromSeed(holderSeed);
++      expect(await key.verify(signed, signature), isTrue);
++
++      final tampered = Map.of(unsigned)..['nonce'] = 'another-nonce';
++      expect(
++        await key.verify(utf8.encode(JcsUtil.canonicalize(tampered)), signature),
++        isFalse,
++      );
++    });
++
++    test('discloses every claim when the query names none', () async {
++      final json = doorRequest();
++      (json['dcql_query']['credentials'][0] as Map).remove('claims');
++      final vp = await wallet.createPresentation(
++        credential.id,
++        PresentationRequest.fromJson(json),
++      );
++      expect((vp['disclosures'] as List).map((d) => d['name']), [
++        'member',
++        'memberId',
++        'name',
++        'birthDate',
++      ]);
++    });
++
++    test('picks the first claim set the credential satisfies', () async {
++      final json = requestFor([
++        {'id': 'tier', ...claim('tier')},
++        {'id': 'member', ...claim('member')},
++        {'id': 'number', ...claim('memberId')},
++      ]);
++      json['dcql_query']['credentials'][0]['claim_sets'] = [
++        ['tier'],
++        ['member', 'number'],
++      ];
++      final vp = await wallet.createPresentation(
++        credential.id,
++        PresentationRequest.fromJson(json),
++      );
++      expect((vp['disclosures'] as List).map((d) => d['name']), [
++        'member',
++        'memberId',
++      ]);
++    });
++
++    test('refuses a claim the credential does not carry', () async {
++      final request = PresentationRequest.fromJson(
++        requestFor([claim('member'), claim('tier')]),
++      );
++      await expectLater(
++        wallet.createPresentation(credential.id, request),
++        throwsA(isA<WalletException>()),
++      );
++    });
++
++    test('refuses a claim whose value is not one the request accepts', () async {
++      final request = PresentationRequest.fromJson(
++        requestFor([
++          claim('member', values: [false]),
++        ]),
++      );
++      await expectLater(
++        wallet.createPresentation(credential.id, request),
++        throwsA(isA<WalletException>()),
++      );
++    });
++
++    test('refuses a request for another credential format', () async {
++      final json = doorRequest();
++      json['dcql_query']['credentials'][0]['format'] = 'dc+sd-jwt';
++      await expectLater(
++        wallet.createPresentation(
++          credential.id,
++          PresentationRequest.fromJson(json),
++        ),
++        throwsA(isA<WalletException>()),
++      );
++    });
++
++    test('refuses a credential the wallet does not hold', () async {
++      final request = PresentationRequest.fromJson(doorRequest());
++      await expectLater(
++        wallet.createPresentation('urn:uuid:unknown', request),
++        throwsA(isA<WalletException>()),
++      );
++    });
++  });
+ }

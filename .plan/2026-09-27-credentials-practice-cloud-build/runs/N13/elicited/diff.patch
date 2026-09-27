@@ -1,0 +1,488 @@
+diff --git a/app/README.md b/app/README.md
+index 0e1b18c..582b0e1 100644
+--- a/app/README.md
++++ b/app/README.md
+@@ -5,10 +5,19 @@ keeps it on the device next to the holder's key, and lists what it holds.
+ 
+ ## Credentials
+ 
+-Credentials are **JWT-VCs**: the issuer signs a compact JWT whose `vc` claim carries the
+-credential, and the wallet keeps that token exactly as issued. The holder is identified by a
++Credentials are JSON-LD verifiable credentials signed by the issuer, held exactly as issued
++together with one salted disclosure (`salt`, `name`, `value`) per claim. The holder is identified by a
+ `did:key` (Ed25519, via the `ssi` package), created the first time the wallet needs it.
+ 
++## Presentations
++
++`WalletService.createPresentation(credentialId, request)` answers a door scanner's request, fully
++on the device. The presentation carries the credential unchanged, the disclosures of exactly the
++claims the request's DCQL query names, and the request's `nonce` and `client_id` (as `domain`). It
++is signed with the holder key (`Ed25519Signature2020`, `authentication`, over the RFC 8785 form of
++the presentation without its `proof`). An expired credential (`expires_at`, unix seconds) is
++refused with a `WalletException`. The credential stays in the wallet for later visits.
++
+ ## Layout
+ 
+ | File | What it does |
+diff --git a/app/lib/src/wallet_service.dart b/app/lib/src/wallet_service.dart
+index 928a6db..6c824c4 100644
+--- a/app/lib/src/wallet_service.dart
++++ b/app/lib/src/wallet_service.dart
+@@ -1,3 +1,8 @@
++import 'dart:convert';
++
++import 'package:dcql/dcql.dart';
++import 'package:ssi/ssi.dart';
++
+ import 'credential_store.dart';
+ import 'held_credential.dart';
+ import 'holder_key.dart';
+@@ -17,12 +22,15 @@ class WalletService {
+     required this._issuer,
+     CredentialStore? store,
+     HolderKey Function()? newKey,
++    DateTime Function()? clock,
+   }) : _store = store ?? CredentialStore(),
+-       _newKey = newKey ?? HolderKey.generate;
++       _newKey = newKey ?? HolderKey.generate,
++       _clock = clock ?? DateTime.now;
+ 
+   final IssuerClient _issuer;
+   final CredentialStore _store;
+   final HolderKey Function() _newKey;
++  final DateTime Function() _clock;
+ 
+   /// The holder key, created on first use.
+   HolderKey holderKey() => _store.holderKey ??= _newKey();
+@@ -49,10 +57,116 @@ class WalletService {
+ 
+   /// Builds a presentation of the held credential [credentialId] in answer
+   /// to [request], ready to send to the requester.
++  ///
++  /// The presentation carries the credential unchanged, the disclosures of
++  /// exactly the claims the request's DCQL query names, and the request's
++  /// nonce and client id, all signed with the holder key
++  /// (`Ed25519Signature2020`, `authentication`, over the RFC 8785 form of the
++  /// presentation without its `proof`). Everything happens on the device;
++  /// the credential stays in the wallet for later visits.
++  ///
++  /// Throws [WalletException] if the credential is unknown, not bound to this
++  /// holder, expired, or cannot answer the query.
+   Future<Map<String, dynamic>> createPresentation(
+     String credentialId,
+     PresentationRequest request,
+   ) async {
+-    throw UnimplementedError('createPresentation');
++    final credential = _store.byId(credentialId);
++    if (credential == null) {
++      throw WalletException('No credential $credentialId in the wallet');
++    }
++    final key = holderKey();
++    if (credential.holderDid != key.did) {
++      throw WalletException(
++        'Credential ${credential.id} is bound to ${credential.holderDid}, not ${key.did}',
++      );
++    }
++    final now = _clock().millisecondsSinceEpoch ~/ 1000;
++    final expiresAt = credential.vc['expires_at'];
++    if (expiresAt is! int) {
++      throw WalletException('Credential ${credential.id} has no expiry');
++    }
++    if (now > expiresAt) {
++      throw WalletException('Credential ${credential.id} has expired');
++    }
++
++    final disclosures = _requestedDisclosures(credential, request.dcqlQuery);
++    final presentation = <String, dynamic>{
++      '@context': ['https://www.w3.org/2018/credentials/v1'],
++      'type': ['VerifiablePresentation'],
++      'holder': key.did,
++      'verifiableCredential': jsonDecode(jsonEncode(credential.vc)),
++      'disclosures': [for (final d in disclosures) d.toJson()],
++      'nonce': request.nonce,
++      'domain': request.domain,
++    };
++    final signature = await key.sign(
++      utf8.encode(JcsUtil.canonicalize(presentation)),
++    );
++    presentation['proof'] = {
++      'type': 'Ed25519Signature2020',
++      'created': now,
++      'verificationMethod': key.keyId,
++      'proofPurpose': 'authentication',
++      'proofValue': toMultiBase(signature),
++    };
++    return presentation;
++  }
++
++  /// The disclosures of [credential] for the claims [query] names, in query
++  /// order. Only single-credential queries over `credentialSubject` claims
++  /// are answered; a query without `claims` asks for no selectively
++  /// disclosable claims.
++  List<Disclosure> _requestedDisclosures(
++    HeldCredential credential,
++    DcqlCredentialQuery query,
++  ) {
++    if (query.credentialSets != null || query.credentials.length != 1) {
++      throw const WalletException(
++        'Only requests for a single credential are supported',
++      );
++    }
++    final wanted = query.credentials.single;
++    if (wanted.format != CredentialFormat.ldpVc) {
++      throw WalletException(
++        'Request asks for ${wanted.format.name}, not a JSON-LD credential',
++      );
++    }
++    final typeValues = wanted.meta?.typeValues;
++    final types = credential.vc['type'];
++    final heldTypes = types is List ? types.toSet() : {types};
++    if (typeValues != null &&
++        !typeValues.any((option) => heldTypes.containsAll(option))) {
++      throw WalletException(
++        'Credential ${credential.id} is not of the requested type',
++      );
++    }
++    if (wanted.claimSets != null) {
++      throw const WalletException('Claim sets are not supported');
++    }
++
++    final selected = <String, Disclosure>{};
++    for (final claim in wanted.claims ?? const <DcqlClaim>[]) {
++      final path = claim.path;
++      if (path.length != 2 ||
++          path[0] != 'credentialSubject' ||
++          path[1] is! String) {
++        throw WalletException('Unsupported claim path $path');
++      }
++      final name = path[1] as String;
++      final matches = credential.disclosures.where((d) => d.name == name);
++      if (matches.length != 1) {
++        throw WalletException(
++          'Credential ${credential.id} has no disclosable claim $name',
++        );
++      }
++      final disclosure = matches.single;
++      final values = claim.values;
++      if (values != null && !values.contains(disclosure.value)) {
++        throw WalletException('Claim $name does not have a requested value');
++      }
++      selected[name] = disclosure;
++    }
++    return selected.values.toList();
+   }
+ }
+diff --git a/app/test/credential_store_test.dart b/app/test/credential_store_test.dart
+index 817971a..a5bfb68 100644
+--- a/app/test/credential_store_test.dart
++++ b/app/test/credential_store_test.dart
+@@ -9,7 +9,7 @@ void main() {
+ 
+   test('parses an issued credential with its disclosures', () {
+     final credential = HeldCredential.fromIssuance(membershipIssuance());
+-    expect(credential.id, 'urn:uuid:5b1d7c2e-0f7a-4c3e-9d0b-6a2f1e8c4d11');
++    expect(credential.id, credentialId);
+     expect(credential.issuer, issuerDid);
+     expect(credential.holderDid, holderDid);
+     expect(credential.type, 'MembershipCredential');
+@@ -20,7 +20,7 @@ void main() {
+       'birthDate',
+     ]);
+     expect(credential.disclosures.first.value, true);
+-    expect(credential.disclosures.first.salt, 'Qg8wYx1dLr0pVb3kTz7sNw');
++    expect(credential.disclosures.first.salt, 'CtUTgiQGd12sRZ5E_TruIw');
+   });
+ 
+   test('saves and finds a credential by id', () {
+diff --git a/app/test/fixtures.dart b/app/test/fixtures.dart
+index 11bda34..e0d1d91 100644
+--- a/app/test/fixtures.dart
++++ b/app/test/fixtures.dart
+@@ -5,40 +5,52 @@ final Uint8List holderSeed = Uint8List.fromList(List.filled(32, 7));
+ 
+ const holderDid = 'did:key:z6MkvDqGT54cXesYGvABpF1UapVNwjCqRcafi4Px6Thv5T3Z';
+ 
+-const issuerDid = 'did:web:issuer.members.test';
++const issuerDid = 'did:web:members.harbourclub.example';
+ 
+-/// Issuer response for a membership credential, as the issuer service returns it.
++const credentialId = 'urn:uuid:3fea1d92-aab9-4700-9574-33eebd6ca127';
++
++/// Unix seconds the fixture credential expires at (2026-11-28T00:00:00Z).
++const expiresAt = 1795824000;
++
++/// Issuer response for a membership credential, as the issuer service returns
++/// it (issued by the backend's Harbour Club test issuer to [holderDid]).
+ Map<String, dynamic> membershipIssuance({String subject = holderDid}) => {
+   'credential': {
+-    '@context': ['https://www.w3.org/ns/credentials/v2'],
+-    'id': 'urn:uuid:5b1d7c2e-0f7a-4c3e-9d0b-6a2f1e8c4d11',
+-    'type': ['VerifiableCredential', 'MembershipCredential'],
+-    'issuer': issuerDid,
+-    'validFrom': '2026-01-01T00:00:00Z',
+-    'validUntil': '2027-01-01T00:00:00Z',
++    '@context': ['https://www.w3.org/2018/credentials/v1'],
++    'credentialStatus': {
++      'statusListId': '$issuerDid#revocation',
++      'statusListIndex': 1,
++      'type': 'StatusListEntry',
++    },
+     'credentialSubject': {
+-      'id': subject,
+       '_sd': [
+-        'JVmpmvr8l44m-VjhbllpxsgwyKDSC_EcWIdoCZj1SLs',
+-        'F8w8nFje9RpZ9F8EJ5jGh6BUWuAXz_umNdTgEBhpl5s',
+-        '51mkbb932Hakyr67b_toNlii0D2o6nhzAOxig4ii8Jk',
+-        'REwmh76r9rNH8My4qBGgDd7oG07vsiHQX2Qt-w-b8Qg',
++        'VhBiksX2QDwRDTAQGLACsbdASTKl3rzdzZcMEahIQFk',
++        'rVBKDB89YtcXwD4dqP7eRsrRRVAe4OpZhCzaB5DsTj4',
++        'sutL7f8b4U93IWEOdIT-C35JBle_QH9CTt_KJTs-Q4o',
++        'ychruXOL8g_9cLk8PKstWtBL7_0XyGNgycsC_9j7JDs',
+       ],
++      'id': subject,
+     },
++    'expires_at': expiresAt,
++    'id': credentialId,
++    'issued_at': 1777680000,
++    'issuer': issuerDid,
++    'not_before': 1777680000,
+     'proof': {
+-      'type': 'DataIntegrityProof',
+-      'cryptosuite': 'eddsa-jcs-2022',
+-      'verificationMethod': '$issuerDid#key-1',
++      'created': 1777680000,
+       'proofPurpose': 'assertionMethod',
+-      'proofValue': 'z3FXQjecWufY46yg5abdVZsXqLhxhueuSoZgNSARiKBk9czhSePTFehP8c3PGfb6a22gkfUKKy2Rj2cUk5WBLgmPs',
++      'proofValue': 'zN2GbNRWHowmGWK8V3NS72a2YhreiN2XN9VifU6T6CECanz3QvEarzztVSh5v8cy8h4U4GjWtQmcGKrNBh9cSYoo',
++      'type': 'Ed25519Signature2020',
++      'verificationMethod': '$issuerDid#key-1',
+     },
++    'type': ['VerifiableCredential', 'MembershipCredential'],
+   },
+   'disclosures': [
+-    {'salt': 'Qg8wYx1dLr0pVb3kTz7sNw', 'name': 'member', 'value': true},
+-    {'salt': 'bM4rT9cZ2xKq1nVf0hJw8A', 'name': 'memberId', 'value': 'M-20417'},
+-    {'salt': 'u7EoH3pWq5sLd2yGk9rCzQ', 'name': 'name', 'value': 'Ada Park'},
++    {'salt': 'CtUTgiQGd12sRZ5E_TruIw', 'name': 'member', 'value': true},
++    {'salt': 'Xc9ZbZGd0jvnUyWJe_JarA', 'name': 'memberId', 'value': 'M-20417'},
++    {'salt': 'piRHeWoEDUsD-015tr85KA', 'name': 'name', 'value': 'Ada Park'},
+     {
+-      'salt': 'X2nR6vBt1fYk8mJq4cLwEg',
++      'salt': 'xllMvqTItR7ObUQLUTxiQg',
+       'name': 'birthDate',
+       'value': '1990-04-12',
+     },
+diff --git a/app/test/presentation_test.dart b/app/test/presentation_test.dart
+new file mode 100644
+index 0000000..7ca88ea
+--- /dev/null
++++ b/app/test/presentation_test.dart
+@@ -0,0 +1,184 @@
++import 'dart:convert';
++
++import 'package:credentials_app/credentials_app.dart';
++import 'package:flutter_test/flutter_test.dart';
++import 'package:ssi/ssi.dart';
++
++import 'fake_issuer_client.dart';
++import 'fixtures.dart';
++
++DateTime at(int unixSeconds) =>
++    DateTime.fromMillisecondsSinceEpoch(unixSeconds * 1000, isUtc: true);
++
++/// 2026-06-01T00:00:00Z, well inside the fixture credential's validity.
++final now = at(1780272000);
++
++Future<WalletService> walletHolding({DateTime? clock}) async {
++  final wallet = WalletService(
++    issuer: FakeIssuerClient(),
++    newKey: () => HolderKey.fromSeed(holderSeed),
++    clock: () => clock ?? now,
++  );
++  await wallet.requestCredential('MembershipCredential');
++  return wallet;
++}
++
++PresentationRequest requestFor(List<Map<String, dynamic>> claims) {
++  final json = doorRequest();
++  final credential = (json['dcql_query']['credentials'] as List).single as Map;
++  credential['claims'] = claims;
++  return PresentationRequest.fromJson(json);
++}
++
++Map<String, dynamic> withoutProof(Map<String, dynamic> vp) =>
++    Map.of(vp)..remove('proof');
++
++Future<bool> holderSignatureValid(Map<String, dynamic> vp) {
++  final signature = multiBaseToUint8List(vp['proof']['proofValue'] as String);
++  return HolderKey.fromSeed(holderSeed)
++      .verify(utf8.encode(JcsUtil.canonicalize(withoutProof(vp))), signature);
++}
++
++void main() {
++  final door = PresentationRequest.fromJson(doorRequest());
++
++  test('discloses only the claims the request names', () async {
++    final wallet = await walletHolding();
++    final vp = await wallet.createPresentation(credentialId, door);
++
++    expect(vp['disclosures'], [
++      membershipIssuance()['disclosures'][0], // member, unchanged
++    ]);
++    final wire = jsonEncode(vp);
++    for (final withheld in ['M-20417', 'Ada Park', '1990-04-12']) {
++      expect(wire, isNot(contains(withheld)));
++    }
++  });
++
++  test('carries the credential unchanged', () async {
++    final wallet = await walletHolding();
++    final vp = await wallet.createPresentation(credentialId, door);
++    expect(vp['verifiableCredential'], membershipIssuance()['credential']);
++    expect(vp['holder'], holderDid);
++  });
++
++  test('is bound to the request nonce and client id', () async {
++    final wallet = await walletHolding();
++    final vp = await wallet.createPresentation(credentialId, door);
++    expect(vp['nonce'], 'n-8f3Kq2xWz0Lb');
++    expect(vp['domain'], 'door-scanner.members.test');
++  });
++
++  test('is signed by the holder key for authentication', () async {
++    final wallet = await walletHolding();
++    final vp = await wallet.createPresentation(credentialId, door);
++
++    final proof = vp['proof'] as Map<String, dynamic>;
++    expect(proof['type'], 'Ed25519Signature2020');
++    expect(proof['proofPurpose'], 'authentication');
++    expect(proof['verificationMethod'], HolderKey.fromSeed(holderSeed).keyId);
++    expect(proof['created'], 1780272000);
++    expect(await holderSignatureValid(vp), isTrue);
++  });
++
++  test('the signature covers the nonce and the client id', () async {
++    final wallet = await walletHolding();
++    final vp = await wallet.createPresentation(credentialId, door);
++    expect(await holderSignatureValid({...vp, 'nonce': 'other'}), isFalse);
++    expect(await holderSignatureValid({...vp, 'domain': 'other'}), isFalse);
++  });
++
++  test('refuses an expired credential', () async {
++    final wallet = await walletHolding(clock: at(expiresAt + 1));
++    await expectLater(
++      wallet.createPresentation(credentialId, door),
++      throwsA(isA<WalletException>()),
++    );
++  });
++
++  test('presents a credential up to its expiry second', () async {
++    final wallet = await walletHolding(clock: at(expiresAt));
++    expect(await wallet.createPresentation(credentialId, door), isNotEmpty);
++  });
++
++  test('keeps the credential for later visits', () async {
++    final wallet = await walletHolding();
++    await wallet.createPresentation(credentialId, door);
++    expect(wallet.credential(credentialId), isNotNull);
++
++    final nextVisit = PresentationRequest.fromJson(
++      doorRequest()..['nonce'] = 'n-next-visit',
++    );
++    final vp = await wallet.createPresentation(credentialId, nextVisit);
++    expect(vp['nonce'], 'n-next-visit');
++  });
++
++  test('a query without claims discloses nothing', () async {
++    final json = doorRequest();
++    ((json['dcql_query']['credentials'] as List).single as Map).remove(
++      'claims',
++    );
++    final wallet = await walletHolding();
++    final vp = await wallet.createPresentation(
++      credentialId,
++      PresentationRequest.fromJson(json),
++    );
++    expect(vp['disclosures'], isEmpty);
++  });
++
++  test('refuses a claim the credential cannot disclose', () async {
++    final wallet = await walletHolding();
++    await expectLater(
++      wallet.createPresentation(
++        credentialId,
++        requestFor([
++          {
++            'path': ['credentialSubject', 'tier'],
++          },
++        ]),
++      ),
++      throwsA(isA<WalletException>()),
++    );
++  });
++
++  test('refuses a claim whose value is not one requested', () async {
++    final wallet = await walletHolding();
++    await expectLater(
++      wallet.createPresentation(
++        credentialId,
++        requestFor([
++          {
++            'path': ['credentialSubject', 'memberId'],
++            'values': ['M-1'],
++          },
++        ]),
++      ),
++      throwsA(isA<WalletException>()),
++    );
++  });
++
++  test('refuses a request for several credentials', () async {
++    final json = doorRequest();
++    final credentials = json['dcql_query']['credentials'] as List;
++    credentials.add({
++      ...credentials.single as Map<String, Object>,
++      'id': 'second',
++    });
++    final wallet = await walletHolding();
++    await expectLater(
++      wallet.createPresentation(
++        credentialId,
++        PresentationRequest.fromJson(json),
++      ),
++      throwsA(isA<WalletException>()),
++    );
++  });
++
++  test('refuses an unknown credential', () async {
++    final wallet = await walletHolding();
++    await expectLater(
++      wallet.createPresentation('urn:uuid:unknown', door),
++      throwsA(isA<WalletException>()),
++    );
++  });
++}
+diff --git a/backend/README.md b/backend/README.md
+index 4f1b5b7..0b56902 100644
+--- a/backend/README.md
++++ b/backend/README.md
+@@ -20,7 +20,7 @@ It carries:
+ | `credentialSubject.id` | the member's (holder's) `did:key` |
+ | `credentialSubject._sd` | salted SHA-256 digests of the claims — never the claims themselves |
+ | `issued_at`, `not_before` | unix seconds |
+-| `expirationDate` | unix seconds; the credential is refused after it |
++| `expires_at` | unix seconds; the credential is refused after it |
+ | `credentialStatus` | the issuer's status list and this credential's index in it |
+ | `proof` | the issuer's signature |
+ 
+@@ -29,8 +29,8 @@ claim, and reveals only the claims a door asks for.
+ 
+ **Presentations.** At the door the member's wallet wraps the credential and the chosen disclosures
+ in a presentation bound to the scanner's `nonce` and `domain`, and signs it with the member's key.
+-Credentials are single-use: once a credential has been presented at a door it cannot be presented
+-again.
++A member shows the same credential at every visit; what stops a captured presentation being replayed
++is the one-time `nonce` of the request it answers.
+ 
+ **Revocation.** Each issuer has a status list — a bitstring with one bit per credential it has
+ issued. Revoking a credential sets its bit; the verifier refuses any credential whose bit is set.
