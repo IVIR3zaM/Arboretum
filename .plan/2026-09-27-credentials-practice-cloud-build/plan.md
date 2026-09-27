@@ -43,7 +43,7 @@ budgets: 2 tries per brief · 2 replans per node
 | N05 | cold-agent kit + smoke run | exec | N03 | opus/opus | 1 | 1 | DONE | |
 | N06 | backend core + Ticket 1 plant + reference DIDs | exec | N04 | opus/opus | 1 | 0 | DONE | |
 | N07 | wallet app + FEATURE-REQUEST | exec | N04 | opus/opus | 1 | 0 | DONE | |
-| N08 | axis (a) grader + grade.sh + T1 ref fix | exec | N06 | opus/opus | 1 | 0 | VERIFYING | |
+| N08 | axis (a) grader + grade.sh + T1 ref fix | exec | N06 | opus/opus | 1 | 0 | DONE | |
 | N09 | webhook notifier + Ticket 2 plant | exec | N06 | opus/opus | 1 | 0 | DONE | |
 | N10 | axis (b) feature gate + feature-reference | exec | N06,N07 | opus/opus | 1 | 0 | DONE | |
 | N11 | real agent: Ticket 1 bites | check | N05,N08 | -/opus | 0 | 0 | TODO | |
