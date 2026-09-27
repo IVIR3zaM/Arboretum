@@ -1,0 +1,301 @@
+# N21 C3 — symptom.patch (runs/N11/symptom.patch, unchanged) on the planted tree (2026-09-27T20:16:41Z); fresh copy at /tmp/claude-0/-home-user-Arboretum/73e636a9-426a-530a-9bb9-c647720fe418/scratchpad/c3-symptom
+$ git apply --check /home/user/Arboretum/.plan/2026-09-27-credentials-practice-cloud-build/runs/N11/symptom.patch
+exit=0
+$ git apply --verbose /home/user/Arboretum/.plan/2026-09-27-credentials-practice-cloud-build/runs/N11/symptom.patch
+Checking patch backend/src/verifier.rs...
+Applied patch backend/src/verifier.rs cleanly.
+exit=0
+$ (cd backend && cargo test --offline --locked)
+   Compiling proc-macro2 v1.0.107
+   Compiling libc v0.2.189
+   Compiling num-traits v0.2.19
+   Compiling serde_core v1.0.229
+   Compiling quote v1.0.47
+   Compiling icu_properties_data v2.3.0
+   Compiling syn v2.0.119
+   Compiling syn v3.0.6
+   Compiling getrandom v0.4.3
+   Compiling icu_normalizer_data v2.3.0
+   Compiling zmij v1.0.23
+   Compiling getrandom v0.2.17
+   Compiling rand v0.10.3
+   Compiling serde_json v1.0.151
+   Compiling rand_core v0.6.4
+   Compiling synstructure v0.14.0
+   Compiling zeroize_derive v1.5.0
+   Compiling curve25519-dalek-derive v0.1.1
+   Compiling match-lookup v0.1.3
+   Compiling zeroize v1.9.0
+   Compiling zerofrom-derive v0.1.8
+   Compiling yoke-derive v0.8.3
+   Compiling hybrid-array v0.4.15
+   Compiling der v0.8.2
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling zerofrom v0.1.8
+   Compiling crypto-bigint v0.7.5
+   Compiling yoke v0.8.3
+   Compiling zerovec-derive v0.11.6
+   Compiling digest v0.11.3
+   Compiling displaydoc v0.2.7
+   Compiling hmac v0.13.0
+   Compiling spki v0.8.0
+   Compiling pkcs8 v0.11.0
+   Compiling zerovec v0.11.8
+   Compiling hkdf v0.13.0
+   Compiling signature v3.0.0
+   Compiling sec1 v0.8.1
+   Compiling zerotrie v0.2.5
+   Compiling tinystr v0.8.4
+   Compiling potential_utf v0.1.6
+   Compiling sha2 v0.11.0
+   Compiling icu_collections v2.3.0
+   Compiling icu_locale_core v2.3.0
+   Compiling primefield v0.14.0
+   Compiling elliptic-curve v0.14.1
+   Compiling wnaf v0.14.1
+   Compiling rfc6979 v0.6.0
+   Compiling icu_provider v2.3.1
+   Compiling serde_derive v1.0.229
+   Compiling primeorder v0.14.0
+   Compiling ecdsa v0.17.0
+   Compiling icu_normalizer v2.3.0
+   Compiling icu_properties v2.3.0
+   Compiling curve25519-dalek v5.0.0
+   Compiling thiserror-impl v2.0.21
+   Compiling data-encoding-macro-internal v0.1.19
+   Compiling thiserror v2.0.21
+   Compiling idna_adapter v1.2.2
+   Compiling ed25519 v3.0.0
+   Compiling base256emoji v1.0.2
+   Compiling ed25519-dalek v3.0.0
+   Compiling data-encoding-macro v0.1.21
+   Compiling idna v1.1.0
+   Compiling multibase v0.9.3
+   Compiling x25519-dalek v3.0.0
+   Compiling p256 v0.14.0
+   Compiling p521 v0.14.0
+   Compiling serde v1.0.229
+   Compiling p384 v0.14.0
+   Compiling affinidi-encoding v0.1.6
+   Compiling k256 v0.14.0
+   Compiling url v2.5.8
+   Compiling tokio-macros v2.7.2
+   Compiling tokio v1.53.1
+   Compiling affinidi-crypto v0.2.9
+   Compiling affinidi-did-common v0.4.3
+   Compiling credentials-backend v0.1.0 (/tmp/claude-0/-home-user-Arboretum/73e636a9-426a-530a-9bb9-c647720fe418/scratchpad/c3-symptom/backend)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 18.68s
+     Running unittests src/lib.rs (target/debug/deps/credentials_backend-82ef79e65254530d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/credential.rs (target/debug/deps/credential-f8f10d9b64a2c245)
+
+running 7 tests
+test canonical_form_escapes_only_what_json_requires ... ok
+test canonical_form_orders_keys_by_utf16_code_units ... ok
+test canonical_form_sorts_keys_and_drops_whitespace ... ok
+test disclosure_digest_is_sha256_of_the_canonical_triple ... ok
+test canonical_form_writes_integral_numbers_without_a_fraction ... ok
+test signing_input_excludes_the_proof ... ok
+test signed_documents_verify_and_tampering_is_detected ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/did_document.rs (target/debug/deps/did_document-18fb639c728feb4d)
+
+running 1 test
+test builds_a_did_document_from_affinidi_did_common ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/issuer.rs (target/debug/deps/issuer-a6afd66d89f4819a)
+
+running 9 tests
+test holders_must_be_did_key ... ok
+test an_expiry_before_issuance_is_refused ... ok
+test claims_are_carried_only_as_salted_digests ... ok
+test every_issue_uses_fresh_salts ... ok
+test issuance_is_recorded_in_the_store ... ok
+test issued_credentials_carry_the_wire_fields ... ok
+test onboarding_fails_when_the_document_is_unavailable ... ok
+test onboarding_records_the_published_document ... ok
+test the_issuer_proof_verifies_with_the_issuer_key ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/notifier.rs (target/debug/deps/notifier-7d0e5776db1ca711)
+
+running 6 tests
+test a_rejected_delivery_is_reported_as_failed ... ok
+test every_subscriber_of_the_tenant_is_notified_once ... ok
+test each_delivery_is_reported_to_the_sink ... ok
+test other_tenants_subscribers_are_not_notified ... ok
+test the_canary_reports_healthy_once_changes_are_flowing ... ok
+test the_notification_carries_the_status_change ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/resolver.rs (target/debug/deps/resolver-12fe0cfa7594279e)
+
+running 13 tests
+test did_key_with_a_non_ed25519_codec_is_rejected ... ok
+test did_key_decodes_to_a_single_ed25519_key ... ok
+test did_peer_0_decodes_its_inception_key ... ok
+test did_peer_2_decodes_keys_by_purpose_and_its_service ... ok
+test did_peer_with_an_unknown_numalgo_is_rejected ... ok
+test did_web_maps_a_bare_domain_to_the_well_known_path ... ok
+test did_web_maps_an_encoded_port ... ok
+test did_web_rejects_an_empty_host ... ok
+test did_web_reports_a_missing_document ... ok
+test did_web_fetches_the_hosted_document ... ok
+test unsupported_methods_are_reported ... ok
+test did_web_rejects_a_document_for_another_did ... ok
+test mirror_transport_serves_documents_from_its_root ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/settings.rs (target/debug/deps/settings-9d0269617965a225)
+
+running 4 tests
+test a_page_read_takes_the_tables_read_latency ... ok
+test putting_a_setting_again_replaces_it ... ok
+test the_kind_index_returns_only_settings_of_that_kind ... ok
+test a_query_returns_the_tenants_settings_a_page_at_a_time ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/status.rs (target/debug/deps/status-34c8ba3ed512dfb0)
+
+running 7 tests
+test a_new_list_has_nothing_revoked ... ok
+test allocation_hands_out_distinct_indexes ... ok
+test setting_a_bit_only_touches_that_index ... ok
+test revoking_an_unknown_credential_fails ... ok
+test the_encoded_list_round_trips ... ok
+test revoking_a_credential_flips_its_status ... ok
+test revoking_one_credential_leaves_the_others_valid ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/store.rs (target/debug/deps/store-803b879a27beddcf)
+
+running 5 tests
+test a_new_store_is_empty ... ok
+test credential_records_round_trip ... ok
+test onboarded_issuers_are_looked_up_by_did ... ok
+test status_indexes_are_unique_per_list ... ok
+test onboarding_data_loads_every_approved_issuer ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/verifier.rs (target/debug/deps/verifier-a3c3c0797b0abc1f)
+
+running 16 tests
+test a_credential_without_an_issuer_is_malformed ... ok
+test a_credential_verifies_on_its_own ... ok
+test a_presentation_for_another_domain_is_rejected ... ok
+test a_credential_that_is_not_yet_valid_is_rejected ... ok
+test a_presentation_for_another_nonce_is_rejected ... ok
+test a_proof_by_a_key_the_issuer_does_not_list_is_rejected ... ok
+test a_presentation_discloses_only_the_requested_claims ... ok
+test a_presentation_signed_by_someone_else_is_rejected ... ok
+test a_credential_presented_by_another_holder_is_rejected ... ok
+test a_revoked_credential_is_rejected ... ok
+test an_expired_credential_is_rejected ... ok
+test the_issuer_document_is_the_one_harbour_publishes ... ok
+test a_tampered_credential_is_rejected ... ok
+test a_tampered_disclosure_is_rejected ... ok
+test the_same_submission_is_accepted_once ... ok
+test every_claim_can_be_disclosed ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+   Doc-tests credentials_backend
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+exit=0
+$ bash _solutions/grade.sh
+==================================================================
+ axis a (_solutions/grade.d/a.sh)
+==================================================================
+ok   S1 never rotated (Harbour Club): current key accepted
+ok   S2 rotated key, new id #key-2 (Cedar Rowing): current key accepted
+FAIL S3 rotated key, same id #signing, path DID (Northfield): current key accepted: rejected: bad signature: signature does not match (BadSignature("signature does not match"))
+FAIL S4 rotated key + moved endpoint (Kestrel): current key accepted, current issuer site: rejected: did:web:badges.kestrel-league.example#key-2026 is not a key its controller signs with (UnknownKey("did:web:badges.kestrel-league.example#key-2026"))
+ok   R1 Cedar Rowing: retired #key-1 rejected by the key check
+FAIL R2 Northfield: retired #signing material rejected by the key check: accepted; must be rejected
+FAIL R3 Kestrel: retired #key-2025 rejected by the key check: accepted; must be rejected
+ok   V1 resolve_issuer(did:web:members.harbourclub.example) is the hosted did.json (keys + LinkedDomains)
+FAIL V2 resolve_issuer(did:web:issuer.cedarrowing.example) is the hosted did.json (keys + LinkedDomains): assertion keys {"did:web:issuer.cedarrowing.example#key-1": "z6MkfQRhMk3mqQxdkuLrabDvekUePd2PY3KLaV37XUijHW1d"}, hosted document has {"did:web:issuer.cedarrowing.example#key-2": "z6MkvbwHpLsx49NSa1ZFfSNy6Rnr4xDBHMj5CTK1QM1uuRq9"}
+FAIL V3 resolve_issuer(did:web:guild.northfield.example:chapters:north) is the hosted did.json (keys + LinkedDomains): assertion keys {"did:web:guild.northfield.example:chapters:north#signing": "z6MkqSjfubaVn3tT7WZgBjP7sEHogmHtmmJrUPWa23kzncSU"}, hosted document has {"did:web:guild.northfield.example:chapters:north#signing": "z6MkoBtQgtdD3sMgbqPrBH88DJTVjHErYM8HhJNbtbFMReJ7"}
+FAIL V4 resolve_issuer(did:web:badges.kestrel-league.example) is the hosted did.json (keys + LinkedDomains): assertion keys {"did:web:badges.kestrel-league.example#key-2025": "z6MkttmqQ4HZ3NNqyDmMogyAX4nGGxbQungjwcu3YCaXuuaQ"}, hosted document has {"did:web:badges.kestrel-league.example#key-2026": "z6MksRrY1TKBF12rzt5ree8FrxmnkxSceh6qotrAEHBoHZq1"}
+FAIL V5 document whose id is not the DID fails resolution (spec §3.2 step 8): accepted; must be rejected
+FAIL V6 deactivated issuer (document removed) fails resolution (spec §3.4): accepted; must be rejected
+FAIL V7 ported host did:web:example.com%3A3000:user:alice resolves at host:3000 (spec §3.2): rejected: no document at https://example.com:3000/.well-known/user/alice/did.json (Resolve(Transport(NotFound("https://example.com:3000/.well-known/user/alice/did.json"))))
+FAIL N1 Harbour Club rotates for the first time: new #key-2 accepted: rejected: did:web:members.harbourclub.example#key-2 is not a key its controller signs with (UnknownKey("did:web:members.harbourclub.example#key-2"))
+FAIL N2 Harbour Club rotates for the first time: retired #key-1 rejected by the key check: accepted; must be rejected
+ok   N3 Cedar Rowing rotates again: new #key-3 accepted
+ok   N4 Cedar Rowing rotates again: #key-2 retired and rejected by the key check
+FAIL N5 Northfield rotates #signing again: new material accepted: rejected: bad signature: signature does not match (BadSignature("signature does not match"))
+ok   N6 Northfield rotates #signing again: previous material rejected by the key check
+FAIL N7 Kestrel rotates key and moves its site again: accepted with the newest site: rejected: did:web:badges.kestrel-league.example#key-2027 is not a key its controller signs with (UnknownKey("did:web:badges.kestrel-league.example#key-2027"))
+ok   W1 did_web_url(did:web:w3c-ccg.github.io) is https://w3c-ccg.github.io/.well-known/did.json (spec §3.2)
+FAIL W2 did_web_url(did:web:w3c-ccg.github.io:user:alice) is https://w3c-ccg.github.io/user/alice/did.json (spec §3.2): did_web_url gives https://w3c-ccg.github.io/.well-known/user/alice/did.json, spec §3.2 gives https://w3c-ccg.github.io/user/alice/did.json
+ok   W3 did_web_url(did:web:example.com%3A3000) is https://example.com:3000/.well-known/did.json (spec §3.2)
+FAIL W4 did_web_url(did:web:example.com%3A3000:user:alice) is https://example.com:3000/user/alice/did.json (spec §3.2): did_web_url gives https://example.com:3000/.well-known/user/alice/did.json, spec §3.2 gives https://example.com:3000/user/alice/did.json
+FAIL W5 did_web_url(did:web:guild.northfield.example:chapters:north) is https://guild.northfield.example/chapters/north/did.json (spec §3.2): did_web_url gives https://guild.northfield.example/.well-known/chapters/north/did.json, spec §3.2 gives https://guild.northfield.example/chapters/north/did.json
+axis a: FAIL 9/26
+
+==================================================================
+ axis a2 (_solutions/grade.d/a2.sh)
+==================================================================
+notifier: did:web:members.harbourclub.example: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000007 did not finish within 10s
+notifier: did:web:issuer.cedarrowing.example: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000007 did not finish within 10s
+notifier: did:web:issuer.cedarrowing.example: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000007 did not finish within 10s
+notifier: did:web:guild.northfield.example:chapters:north: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000009 did not finish within 10s
+ok   D1 small tenant, all healthy: every healthy subscriber delivered within 10s
+ok   C1 small tenant, all healthy: canary healthy
+ok   K1 small tenant, all healthy: canary healthy implies every healthy subscriber delivered
+FAIL R1 small tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. https://example.com/webhooks/status
+FAIL D2 small tenant, first subscriber hangs: every healthy subscriber delivered within 10s: 2 of 2 healthy subscribers not delivered within 10s (rp-00002, rp-00003)
+FAIL O2 small tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink: no sink event reports rp-00001 (never answered) as not delivered
+FAIL K2 small tenant, first subscriber hangs: canary healthy implies every healthy subscriber delivered: canary healthy while 2 healthy subscribers got nothing
+FAIL R2 small tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. https://example.com/webhooks/status
+FAIL D3 large tenant, all healthy: every healthy subscriber delivered within 10s: 20 of 20 healthy subscribers not delivered within 10s (rp-00001, rp-00002, rp-00003, … (20 in all))
+ok   C3 large tenant, all healthy: canary healthy
+FAIL K3 large tenant, all healthy: canary healthy implies every healthy subscriber delivered: canary healthy while 20 healthy subscribers got nothing
+FAIL R3 large tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. https://example.com/webhooks/status
+FAIL D4 large tenant, first subscriber hangs: every healthy subscriber delivered within 10s: 19 of 19 healthy subscribers not delivered within 10s (rp-00002, rp-00003, rp-00004, … (19 in all))
+FAIL O4 large tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink: no sink event reports rp-00001 (never answered) as not delivered
+FAIL K4 large tenant, first subscriber hangs: canary healthy implies every healthy subscriber delivered: canary healthy while 19 healthy subscribers got nothing
+FAIL R4 large tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. https://example.com/webhooks/status
+FAIL P1 delivery path fails (subscriptions unreadable within the budget): canary turns red: canary healthy, but 24000 of 24000 subscribers of the tenant got nothing (rp-00001, rp-00002, rp-00003, … (24000 in all))
+axis a2: FAIL 4/17
+
+==================================================================
+ axis b (_solutions/grade.d/b.sh)
+==================================================================
+case feature: discloses exactly the claims the DCQL query asks for: FAIL — UnimplementedError: createPresentation
+case feature: the presentation is signed by the holder's key: FAIL — UnimplementedError: createPresentation
+case feature: the presentation is bound to the request's nonce and domain: FAIL — UnimplementedError: createPresentation
+case feature: an expired credential is refused: FAIL — UnimplementedError: createPresentation
+case xstack: the backend verifier accepts the wallet's presentation: FAIL — no presentation from the wallet (/tmp/tmp.C98VXIjJYU/app/test/gate/out/vp.json: No such file or directory (os error 2))
+case xstack: the backend verifier rejects a tampered disclosed value: FAIL — no presentation from the wallet (/tmp/tmp.C98VXIjJYU/app/test/gate/out/vp.json: No such file or directory (os error 2))
+case xstack: the backend verifier rejects the presentation replayed to another nonce or domain: FAIL — no presentation from the wallet (/tmp/tmp.C98VXIjJYU/app/test/gate/out/vp.json: No such file or directory (os error 2))
+axis b: FAIL 0/7
+
+==================================================================
+ summary (worst-case; every axis must pass)
+==================================================================
+axis a: FAIL 9/26
+axis a2: FAIL 4/17
+axis b: FAIL 0/7
+worst-case: FAIL
+exit=1
