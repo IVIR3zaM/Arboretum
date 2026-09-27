@@ -45,7 +45,7 @@ budgets: 2 tries per brief · 2 replans per node
 | N07 | wallet app + FEATURE-REQUEST | exec | N04 | opus/opus | 1 | 0 | DONE | |
 | N08 | axis (a) grader + grade.sh + T1 ref fix | exec | N06 | opus/opus | 1 | 0 | VERIFYING | |
 | N09 | webhook notifier + Ticket 2 plant | exec | N06 | opus/opus | 1 | 0 | DONE | |
-| N10 | axis (b) feature gate + feature-reference | exec | N06,N07 | opus/opus | 1 | 0 | VERIFYING | |
+| N10 | axis (b) feature gate + feature-reference | exec | N06,N07 | opus/opus | 1 | 0 | DONE | |
 | N11 | real agent: Ticket 1 bites | check | N05,N08 | -/opus | 0 | 0 | TODO | |
 | N12 | axis (a2) grader + T2 ref fix | exec | N08,N09 | opus/opus | 0 | 0 | TODO | |
 | N13 | real agent: feature naive vs elicited | check | N05,N08,N10 | -/opus | 0 | 0 | TODO | |
