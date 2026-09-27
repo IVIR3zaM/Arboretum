@@ -59,7 +59,7 @@ budgets: 2 tries per brief · 2 replans per node
 | N20 | cold kit fix: toolchain PATH, CLI files in clone, heredoc audit | exec | N05 | opus/opus | 1 | 0 | DONE | |
 | N11 | real agent: Ticket 1 bites | check | N05,N08 | -/opus | 1 | 0 | WAITING | ask: D20 |
 | N12 | axis (a2) grader + T2 ref fix | exec | N08,N09 | opus/opus | 1 | 0 | DONE | |
-| N13 | real agent: feature naive vs elicited | check | N05,N08,N10,N20 | -/opus | 1 | 1 | VERIFYING | |
+| N13 | real agent: feature naive vs elicited | check | N05,N08,N10,N20 | -/opus | 1 | 1 | DONE | |
 | N14 | real agent: Ticket 2 bites | check | N05,N12 | -/opus | 1 | 0 | DONE | |
 | N15 | README, practice.json, examiner docs, probes | exec | N11,N13,N14 | opus/opus | 0 | 0 | TODO | |
 | N16 | fresh reviewer: solvable at XL | check | N15 | -/opus | 0 | 0 | TODO | |

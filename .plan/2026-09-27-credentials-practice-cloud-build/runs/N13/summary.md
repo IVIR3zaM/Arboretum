@@ -38,9 +38,17 @@ throw-away Rust cross-check of a Dart-built presentation against the real verifi
   expiry case), elicited-void 0/7 (its build threw "no holder key" when the store held no key yet).
 - Replacements ran with `PATH=/root/flutter-sdk/bin:$PATH` and
   `CLAUDE_CODE_TMPDIR=<clone>/.git/cc-tmp` (CLI scratch kept inside the clone, outside the diff).
-- Both replacement `audit.txt` files report **1 violation each, a false positive**: audit.py expands
+- Try 1's audits of both replacements reported 1 violation each, a false positive: audit.py expanded
   the Dart integer-division operator `~/` inside a heredoc (`millisecondsSinceEpoch ~/ 1000`) to
-  `/root/`. No command in either run names /root; the only home paths read were ~/.pub-cache and
-  ~/.cargo (allowed). The audit files are therefore not clean as written.
+  `/root/`. N20 fixed audit.py (no `~` expansion in a data heredoc body). Re-audit of the kept
+  transcripts with the fixed audit.py, output overwritten into each `audit.txt`:
+  - `naive/audit.txt`: `audit: clean — 16 tool call(s) checked, clone /tmp/cold-N13-naive`, exit 0.
+  - `elicited/audit.txt`: `audit: clean — 25 tool call(s) checked, clone /tmp/cold-N13-elicited`, exit 0.
+  The replacements were the one allowed replacement per run; they were not re-run.
+- The voided first attempts still fail the fixed audit (the fix cleared no real violation):
+  - `naive-void-1/audit-reaudit.txt`: `audit: 8 violation(s) in 17 tool call(s)`, exit 1 (call #8
+    `ls /opt /usr/local`, `find /`; calls #15-17 the /tmp/claude-0 scratchpad).
+  - `elicited-void-1/audit-reaudit.txt`: `audit: 6 violation(s) in 25 tool call(s)`, exit 1 (call #9
+    `ls / /opt /usr/local`, `find /`; calls #21-22 the /tmp/claude-0 scratchpad).
 - Grading needed the app's `.dart_tool` (the runs created it via flutter test); the reference tree
   got `(cd app && flutter pub get --offline); (cd backend && cargo fetch --locked)` first.
