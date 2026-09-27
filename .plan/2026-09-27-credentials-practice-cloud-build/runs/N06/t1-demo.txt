@@ -1,0 +1,33 @@
+# N06 C2 — Ticket 1 demo through the public verify entry (real output, 2026-09-27)
+#
+# Scratch program: examples/t1_demo.rs in a TEMP COPY of practices/credentials/{backend,reference,_solutions/fixtures}
+# at /tmp/.../scratchpad/demo (not committed). It builds the production wiring:
+#   Store::from_onboarding_data() + Resolver::new(Arc::new(MirrorTransport::from_env()))  (mirror = reference/infra/hosted-dids)
+#   Verifier::new(resolver, store).with_clock(|| 1_790_000_000)
+# and, for each issuer in _solutions/fixtures/issuer-keys.json, issues a credential signed with the issuer's CURRENT key
+# (rotated issuers: seed from _solutions/fixtures/; Harbour Club: HARBOUR_SEED from backend/tests/common/mod.rs),
+# then calls Verifier::verify_credential(&vc).
+#
+# $ cargo run --offline --example t1_demo        (bug present — shipped code)
+issuer did:web:members.harbourclub.example [never-rotated] signed with did:web:members.harbourclub.example#key-1
+  verify_credential -> ACCEPTED (issuer_site = Some("https://harbourclub.example/"))
+issuer did:web:issuer.cedarrowing.example [rotated-key] signed with did:web:issuer.cedarrowing.example#key-2
+  verify_credential -> REJECTED: did:web:issuer.cedarrowing.example#key-2 is not a key its controller signs with
+issuer did:web:guild.northfield.example:chapters:north [rotated-key] signed with did:web:guild.northfield.example:chapters:north#signing
+  verify_credential -> REJECTED: bad signature: signature does not match
+issuer did:web:badges.kestrel-league.example [rotated-key-and-endpoint] signed with did:web:badges.kestrel-league.example#key-2026
+  verify_credential -> REJECTED: did:web:badges.kestrel-league.example#key-2026 is not a key its controller signs with
+
+# Sanity check of the reference fix (second temp copy, same program): delete the onboarded-snapshot early return
+# in Verifier::resolve_issuer (src/verifier.rs:198-203) so it always calls self.resolver.resolve(did).
+# `cargo test --offline --locked` stays green (58 tests) with the fix applied.
+#
+# $ cargo run --offline --example t1_demo        (reference fix applied)
+issuer did:web:members.harbourclub.example [never-rotated] signed with did:web:members.harbourclub.example#key-1
+  verify_credential -> ACCEPTED (issuer_site = Some("https://harbourclub.example/"))
+issuer did:web:issuer.cedarrowing.example [rotated-key] signed with did:web:issuer.cedarrowing.example#key-2
+  verify_credential -> ACCEPTED (issuer_site = Some("https://cedarrowing.example/"))
+issuer did:web:guild.northfield.example:chapters:north [rotated-key] signed with did:web:guild.northfield.example:chapters:north#signing
+  verify_credential -> ACCEPTED (issuer_site = Some("https://guild.northfield.example/"))
+issuer did:web:badges.kestrel-league.example [rotated-key-and-endpoint] signed with did:web:badges.kestrel-league.example#key-2026
+  verify_credential -> ACCEPTED (issuer_site = Some("https://kestrel-league.example/members/"))

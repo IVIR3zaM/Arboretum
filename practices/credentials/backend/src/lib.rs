@@ -1,5 +1,16 @@
-//! Skeleton library crate for the credentials backend.
+//! Issuer and verifier service for membership credentials.
 //!
-//! Domain code (issuer, verifier, DID resolver, status/revocation, store, webhook
-//! notifier) lands in later nodes. This crate currently exists to prove the
-//! toolchain and the `affinidi-did-common` dependency are pinned and wired up.
+//! - [`issuer`] onboards issuers and signs credentials for their members.
+//! - [`verifier`] checks the presentations members show at the door.
+//! - [`resolver`] turns a DID into its DID document; [`transport`] fetches
+//!   the documents that are hosted rather than encoded in the DID.
+//! - [`status`] and [`store`] keep issued credentials and their revocation state.
+//! - [`credential`] is the wire format shared by all of the above.
+
+pub mod credential;
+pub mod issuer;
+pub mod resolver;
+pub mod status;
+pub mod store;
+pub mod transport;
+pub mod verifier;
