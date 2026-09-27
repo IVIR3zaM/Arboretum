@@ -1,0 +1,6 @@
+$ CARGO_HOME=<empty> (cd backend && cargo fetch --locked)
+  Downloaded ff v0.14.0
+fetch exit=0
+$ git apply _solutions/reference-fix/ticket-1.patch && bash _solutions/grade.d/a.sh   # runs cargo --offline --locked
+axis a: PASS 21/21
+exit=0

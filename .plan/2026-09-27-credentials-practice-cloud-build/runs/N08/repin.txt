@@ -1,0 +1,79 @@
+$ (re-pin: Cedar Rowing onboarding snapshot replaced by its hosted did.json)
+diff --git abackend/data/onboarded-issuers.json b/backend/data/onboarded-issuers.json
+index 9976326..7768855 100644
+--- abackend/data/onboarded-issuers.json
++++ b/backend/data/onboarded-issuers.json
+@@ -44,17 +44,17 @@
+       "id": "did:web:issuer.cedarrowing.example",
+       "verificationMethod": [
+         {
+-          "id": "did:web:issuer.cedarrowing.example#key-1",
++          "id": "did:web:issuer.cedarrowing.example#key-2",
+           "type": "Multikey",
+           "controller": "did:web:issuer.cedarrowing.example",
+-          "publicKeyMultibase": "z6MkfQRhMk3mqQxdkuLrabDvekUePd2PY3KLaV37XUijHW1d"
++          "publicKeyMultibase": "z6MkvbwHpLsx49NSa1ZFfSNy6Rnr4xDBHMj5CTK1QM1uuRq9"
+         }
+       ],
+       "authentication": [
+-        "did:web:issuer.cedarrowing.example#key-1"
++        "did:web:issuer.cedarrowing.example#key-2"
+       ],
+       "assertionMethod": [
+-        "did:web:issuer.cedarrowing.example#key-1"
++        "did:web:issuer.cedarrowing.example#key-2"
+       ],
+       "service": [
+         {
+$ bash _solutions/grade.sh
+==================================================================
+ axis a (_solutions/grade.d/a.sh)
+==================================================================
+ok   S1 never rotated (Harbour Club): current key accepted
+ok   S2 rotated key, new id #key-2 (Cedar Rowing): current key accepted
+FAIL S3 rotated key, same id #signing, path DID (Northfield): current key accepted: rejected: bad signature: signature does not match (BadSignature("signature does not match"))
+FAIL S4 rotated key + moved endpoint (Kestrel): current key accepted, current issuer site: rejected: did:web:badges.kestrel-league.example#key-2026 is not a key its controller signs with (UnknownKey("did:web:badges.kestrel-league.example#key-2026"))
+ok   R1 Cedar Rowing: retired #key-1 rejected
+FAIL R2 Northfield: retired #signing material rejected: accepted; must be rejected
+FAIL R3 Kestrel: retired #key-2025 rejected: accepted; must be rejected
+ok   V1 resolve_issuer(did:web:members.harbourclub.example) is the hosted did.json (keys + LinkedDomains)
+ok   V2 resolve_issuer(did:web:issuer.cedarrowing.example) is the hosted did.json (keys + LinkedDomains)
+FAIL V3 resolve_issuer(did:web:guild.northfield.example:chapters:north) is the hosted did.json (keys + LinkedDomains): assertion keys {"did:web:guild.northfield.example:chapters:north#signing": "z6MkqSjfubaVn3tT7WZgBjP7sEHogmHtmmJrUPWa23kzncSU"}, hosted document has {"did:web:guild.northfield.example:chapters:north#signing": "z6MkoBtQgtdD3sMgbqPrBH88DJTVjHErYM8HhJNbtbFMReJ7"}
+FAIL V4 resolve_issuer(did:web:badges.kestrel-league.example) is the hosted did.json (keys + LinkedDomains): assertion keys {"did:web:badges.kestrel-league.example#key-2025": "z6MkttmqQ4HZ3NNqyDmMogyAX4nGGxbQungjwcu3YCaXuuaQ"}, hosted document has {"did:web:badges.kestrel-league.example#key-2026": "z6MksRrY1TKBF12rzt5ree8FrxmnkxSceh6qotrAEHBoHZq1"}
+FAIL V5 document whose id is not the DID fails resolution (spec §3.2 step 8): accepted; must be rejected
+FAIL V6 deactivated issuer (document removed) fails resolution (spec §3.4): accepted; must be rejected
+ok   V7 ported host did:web:example.com%3A3000:user:alice resolves at host:3000 (spec §3.2)
+FAIL N1 Harbour Club rotates for the first time: new #key-2 accepted: rejected: did:web:members.harbourclub.example#key-2 is not a key its controller signs with (UnknownKey("did:web:members.harbourclub.example#key-2"))
+FAIL N2 Harbour Club rotates for the first time: retired #key-1 rejected: accepted; must be rejected
+FAIL N3 Cedar Rowing rotates again: new #key-3 accepted: rejected: did:web:issuer.cedarrowing.example#key-3 is not a key its controller signs with (UnknownKey("did:web:issuer.cedarrowing.example#key-3"))
+FAIL N4 Cedar Rowing rotates again: #key-2 retired and rejected: accepted; must be rejected
+FAIL N5 Northfield rotates #signing again: new material accepted: rejected: bad signature: signature does not match (BadSignature("signature does not match"))
+ok   N6 Northfield rotates #signing again: previous material rejected
+FAIL N7 Kestrel rotates key and moves its site again: accepted with the newest site: rejected: did:web:badges.kestrel-league.example#key-2027 is not a key its controller signs with (UnknownKey("did:web:badges.kestrel-league.example#key-2027"))
+axis a: FAIL 7/21
+
+==================================================================
+ axis a2 (_solutions/grade.d/a2.sh)
+==================================================================
+axis a2: MISSING
+
+==================================================================
+ axis b (_solutions/grade.d/b.sh)
+==================================================================
+case feature: discloses exactly the claims the DCQL query asks for: FAIL — UnimplementedError: createPresentation
+case feature: the presentation is signed by the holder's key: FAIL — UnimplementedError: createPresentation
+case feature: the presentation is bound to the request's nonce and domain: FAIL — UnimplementedError: createPresentation
+case feature: an expired credential is refused: FAIL — UnimplementedError: createPresentation
+case xstack: the backend verifier accepts the wallet's presentation: FAIL — no presentation from the wallet (/tmp/tmp.JVPAXqZJiw/app/test/gate/out/vp.json: No such file or directory (os error 2))
+case xstack: the backend verifier rejects a tampered disclosed value: FAIL — no presentation from the wallet (/tmp/tmp.JVPAXqZJiw/app/test/gate/out/vp.json: No such file or directory (os error 2))
+case xstack: the backend verifier rejects the presentation replayed to another nonce or domain: FAIL — no presentation from the wallet (/tmp/tmp.JVPAXqZJiw/app/test/gate/out/vp.json: No such file or directory (os error 2))
+axis b: FAIL 0/7
+
+==================================================================
+ summary (worst-case; every axis must pass)
+==================================================================
+axis a: FAIL 7/21
+axis a2: MISSING
+axis b: FAIL 0/7
+worst-case: FAIL
+exit=1

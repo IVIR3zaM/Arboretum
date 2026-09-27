@@ -1,0 +1,20 @@
+$ ls _solutions/grade.d/   # only this node's axis script (N10's b.sh removed from this copy)
+a.sh
+$ bash _solutions/grade.sh
+ axis a2 (_solutions/grade.d/a2.sh)
+==================================================================
+axis a2: MISSING
+
+==================================================================
+ axis b (_solutions/grade.d/b.sh)
+==================================================================
+axis b: MISSING
+
+==================================================================
+ summary (worst-case; every axis must pass)
+==================================================================
+axis a: FAIL 5/21
+axis a2: MISSING
+axis b: MISSING
+worst-case: FAIL
+exit=1
