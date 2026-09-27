@@ -195,9 +195,6 @@ impl Verifier {
 
     /// The DID document an issuer's credentials are checked against.
     pub fn resolve_issuer(&self, did: &str) -> Result<Document, VerifyError> {
-        // Issuer documents are self-contained, as with the peer DIDs issuers
-        // first onboarded with: keys and service endpoints travel with the
-        // document, so the copy recorded at onboarding is all verification needs.
         if let Some(issuer) = self.store.onboarded_issuer(did) {
             return Ok(issuer.document);
         }

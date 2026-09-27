@@ -19,12 +19,22 @@
 //! - **N** a grader-only "next rotation": documents newer than anything in
 //!   `reference/`, served only by this grader's transport. Re-pinning an
 //!   onboarding snapshot or hard-coding a key from `reference/` plateaus here.
+//! - **W** URL mapping conformance: the backend's `did_web_url` against the
+//!   §3.2 examples of `reference/did-web-method.md` and the path-based
+//!   Northfield DID (whose object key is in `reference/infra/`).
+//!
+//! The grader never trusts the backend's URL mapping to decide where a
+//! document lives: [`spec_url`] implements §3.2 on its own. A retired key
+//! must be rejected by the key check against the served document, not by a
+//! resolution failure. A case that panics prints as FAIL; every case prints
+//! its own line and the axis line is always last.
 //!
 //! Every scenario builds a fresh `Verifier` over a fresh transport, so the
 //! axis grades where the document comes from, not whether it is cached.
 //! Credentials are signed with the keys in `_solutions/fixtures/issuer-keys.json`.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -130,8 +140,38 @@ fn document(did: &str, keys: &[&Key], site: &str) -> Value {
     })
 }
 
+/// The document URL of a `did:web` DID, per `reference/did-web-method.md`
+/// §3.2 (steps 1-6). Grader-local: the backend's own mapping is under test.
+fn spec_url(did: &str) -> String {
+    let id = did.strip_prefix("did:web:").unwrap_or_else(|| panic!("not a did:web DID: {did}"));
+    let segments: Vec<String> = id.split(':').map(spec_percent_decode).collect();
+    let (host, path) = segments.split_first().expect("host segment");
+    if path.is_empty() {
+        format!("https://{host}/.well-known/did.json")
+    } else {
+        format!("https://{host}/{}/did.json", path.join("/"))
+    }
+}
+
+fn spec_percent_decode(segment: &str) -> String {
+    let bytes = segment.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' && i + 3 <= bytes.len() {
+            let hex = std::str::from_utf8(&bytes[i + 1..i + 3]).expect("percent escape");
+            out.push(u8::from_str_radix(hex, 16).expect("percent escape"));
+            i += 3;
+        } else {
+            out.push(bytes[i]);
+            i += 1;
+        }
+    }
+    String::from_utf8(out).expect("utf-8 segment")
+}
+
 fn hosted_document(did: &str) -> Value {
-    let url = did_web_url(did).expect("did:web url");
+    let url = spec_url(did);
     let body = MirrorTransport::new(hosted_root()).get(&url).unwrap_or_else(|e| panic!("hosted {did}: {e}"));
     serde_json::from_slice(&body).expect("hosted document parses")
 }
@@ -152,7 +192,7 @@ impl GraderTransport {
     }
 
     fn serve(mut self, did: &str, document: &Value) -> Self {
-        self.overrides.insert(did_web_url(did).expect("did:web url"), Some(document.to_string().into_bytes()));
+        self.overrides.insert(spec_url(did), Some(document.to_string().into_bytes()));
         self
     }
 
@@ -162,7 +202,7 @@ impl GraderTransport {
     }
 
     fn remove(mut self, did: &str) -> Self {
-        self.overrides.insert(did_web_url(did).expect("did:web url"), None);
+        self.overrides.insert(spec_url(did), None);
         self
     }
 }
@@ -220,6 +260,25 @@ fn rejected(result: Result<VerifiedCredential, VerifyError>) -> Outcome {
     match result {
         Ok(_) => Err("accepted; must be rejected".into()),
         Err(_) => Ok(()),
+    }
+}
+
+/// A retired key: rejected by the key check against the document the issuer
+/// serves (method spec §4), never by a failure to resolve that document.
+fn rejected_as_retired(result: Result<VerifiedCredential, VerifyError>) -> Outcome {
+    match result {
+        Ok(_) => Err("accepted; must be rejected".into()),
+        Err(VerifyError::UnknownKey(_) | VerifyError::BadSignature(_)) => Ok(()),
+        Err(e) => Err(format!("rejected, but not by the key check against the served document: {e} ({e:?})")),
+    }
+}
+
+/// The backend's `did_web_url(did)` must be the §3.2 document URL.
+fn maps_to(did: &str, want: &str) -> Outcome {
+    match did_web_url(did) {
+        Ok(url) if url == want => Ok(()),
+        Ok(url) => Err(format!("did_web_url gives {url}, spec §3.2 gives {want}")),
+        Err(e) => Err(format!("did_web_url failed: {e} ({e:?})")),
     }
 }
 
@@ -307,36 +366,50 @@ fn main() {
     let hosted = GraderTransport::hosted;
 
     let mut cases: Vec<(&str, String, Outcome)> = Vec::new();
-    let mut case = |id: &'static str, name: &str, outcome: Outcome| cases.push((id, name.to_string(), outcome));
+    // Each case runs under catch_unwind: a panic is that case's FAIL, not the axis's end.
+    std::panic::set_hook(Box::new(|_| {}));
+    let mut case = |id: &'static str, name: &str, run: &dyn Fn() -> Outcome| {
+        let outcome = catch_unwind(AssertUnwindSafe(run)).unwrap_or_else(|panic| {
+            let reason = panic
+                .downcast_ref::<String>()
+                .cloned()
+                .or_else(|| panic.downcast_ref::<&str>().map(|s| s.to_string()))
+                .unwrap_or_else(|| "unknown panic".into());
+            Err(format!("panicked: {reason}"))
+        });
+        cases.push((id, name.to_string(), outcome));
+    };
 
     // S — issuer states as hosted in reference/infra/hosted-dids/.
     case("S1", "never rotated (Harbour Club): current key accepted",
-        accepted(verify_with(hosted(), HARBOUR, &current(HARBOUR)), Some("https://harbourclub.example/")));
+        &|| accepted(verify_with(hosted(), HARBOUR, &current(HARBOUR)), Some("https://harbourclub.example/")));
     case("S2", "rotated key, new id #key-2 (Cedar Rowing): current key accepted",
-        accepted(verify_with(hosted(), CEDAR, &current(CEDAR)), Some("https://cedarrowing.example/")));
+        &|| accepted(verify_with(hosted(), CEDAR, &current(CEDAR)), Some("https://cedarrowing.example/")));
     case("S3", "rotated key, same id #signing, path DID (Northfield): current key accepted",
-        accepted(verify_with(hosted(), NORTHFIELD, &current(NORTHFIELD)), Some("https://guild.northfield.example/")));
+        &|| accepted(verify_with(hosted(), NORTHFIELD, &current(NORTHFIELD)), Some("https://guild.northfield.example/")));
     case("S4", "rotated key + moved endpoint (Kestrel): current key accepted, current issuer site",
-        accepted(verify_with(hosted(), KESTREL, &current(KESTREL)), Some("https://kestrel-league.example/members/")));
+        &|| accepted(verify_with(hosted(), KESTREL, &current(KESTREL)), Some("https://kestrel-league.example/members/")));
 
     // R — keys retired by rotation are no longer keys of the DID (method spec §4).
-    case("R1", "Cedar Rowing: retired #key-1 rejected", rejected(verify_with(hosted(), CEDAR, &onboarded(CEDAR))));
-    case("R2", "Northfield: retired #signing material rejected",
-        rejected(verify_with(hosted(), NORTHFIELD, &onboarded(NORTHFIELD))));
-    case("R3", "Kestrel: retired #key-2025 rejected", rejected(verify_with(hosted(), KESTREL, &onboarded(KESTREL))));
+    case("R1", "Cedar Rowing: retired #key-1 rejected by the key check",
+        &|| rejected_as_retired(verify_with(hosted(), CEDAR, &onboarded(CEDAR))));
+    case("R2", "Northfield: retired #signing material rejected by the key check",
+        &|| rejected_as_retired(verify_with(hosted(), NORTHFIELD, &onboarded(NORTHFIELD))));
+    case("R3", "Kestrel: retired #key-2025 rejected by the key check",
+        &|| rejected_as_retired(verify_with(hosted(), KESTREL, &onboarded(KESTREL))));
 
     // V — conformance vectors derived from reference/.
     for (id, did) in [("V1", HARBOUR), ("V2", CEDAR), ("V3", NORTHFIELD), ("V4", KESTREL)] {
-        case(id, &format!("resolve_issuer({did}) is the hosted did.json (keys + LinkedDomains)"), resolves_to_hosted(did));
+        case(id, &format!("resolve_issuer({did}) is the hosted did.json (keys + LinkedDomains)"), &|| resolves_to_hosted(did));
     }
-    case("V5", "document whose id is not the DID fails resolution (spec §3.2 step 8)", {
+    case("V5", "document whose id is not the DID fails resolution (spec §3.2 step 8)", &|| {
         // Harbour's own key and site, published under another DID's id.
         let foreign = document("did:web:members.harbourclub.example:elsewhere", &[&current(HARBOUR)], "https://harbourclub.example/");
         rejected(verify_with(hosted().serve(HARBOUR, &foreign), HARBOUR, &current(HARBOUR)))
     });
     case("V6", "deactivated issuer (document removed) fails resolution (spec §3.4)",
-        rejected(verify_with(hosted().remove(HARBOUR), HARBOUR, &current(HARBOUR))));
-    case("V7", "ported host did:web:example.com%3A3000:user:alice resolves at host:3000 (spec §3.2)", {
+        &|| rejected(verify_with(hosted().remove(HARBOUR), HARBOUR, &current(HARBOUR))));
+    case("V7", "ported host did:web:example.com%3A3000:user:alice resolves at host:3000 (spec §3.2)", &|| {
         let did = "did:web:example.com%3A3000:user:alice";
         let key = fresh_key(did, "key-1", 0x51);
         let doc = document(did, &[&key], "https://example.com:3000/alice/");
@@ -349,31 +422,47 @@ fn main() {
         let next = fresh_key(HARBOUR, "key-2", 0xA1);
         let doc = document(HARBOUR, &[&next], "https://harbourclub.example/");
         case("N1", "Harbour Club rotates for the first time: new #key-2 accepted",
-            accepted(verify_with(hosted().serve(HARBOUR, &doc), HARBOUR, &next), None));
-        case("N2", "Harbour Club rotates for the first time: retired #key-1 rejected",
-            rejected(verify_with(hosted().serve(HARBOUR, &doc), HARBOUR, &current(HARBOUR))));
+            &|| accepted(verify_with(hosted().serve(HARBOUR, &doc), HARBOUR, &next), None));
+        case("N2", "Harbour Club rotates for the first time: retired #key-1 rejected by the key check",
+            &|| rejected_as_retired(verify_with(hosted().serve(HARBOUR, &doc), HARBOUR, &current(HARBOUR))));
     }
     {
         let next = fresh_key(CEDAR, "key-3", 0xA2);
         let doc = document(CEDAR, &[&next], "https://cedarrowing.example/");
         case("N3", "Cedar Rowing rotates again: new #key-3 accepted",
-            accepted(verify_with(hosted().serve(CEDAR, &doc), CEDAR, &next), None));
-        case("N4", "Cedar Rowing rotates again: #key-2 retired and rejected",
-            rejected(verify_with(hosted().serve(CEDAR, &doc), CEDAR, &current(CEDAR))));
+            &|| accepted(verify_with(hosted().serve(CEDAR, &doc), CEDAR, &next), None));
+        case("N4", "Cedar Rowing rotates again: #key-2 retired and rejected by the key check",
+            &|| rejected_as_retired(verify_with(hosted().serve(CEDAR, &doc), CEDAR, &current(CEDAR))));
     }
     {
         let next = Key { vm: current(NORTHFIELD).vm, seed: [0xA3; 32] };
         let doc = document(NORTHFIELD, &[&next], "https://guild.northfield.example/");
         case("N5", "Northfield rotates #signing again: new material accepted",
-            accepted(verify_with(hosted().serve(NORTHFIELD, &doc), NORTHFIELD, &next), None));
-        case("N6", "Northfield rotates #signing again: previous material rejected",
-            rejected(verify_with(hosted().serve(NORTHFIELD, &doc), NORTHFIELD, &current(NORTHFIELD))));
+            &|| accepted(verify_with(hosted().serve(NORTHFIELD, &doc), NORTHFIELD, &next), None));
+        case("N6", "Northfield rotates #signing again: previous material rejected by the key check",
+            &|| rejected_as_retired(verify_with(hosted().serve(NORTHFIELD, &doc), NORTHFIELD, &current(NORTHFIELD))));
     }
     {
         let next = fresh_key(KESTREL, "key-2027", 0xA4);
         let doc = document(KESTREL, &[&next], "https://kestrel-league.example/clubs/");
         case("N7", "Kestrel rotates key and moves its site again: accepted with the newest site",
-            accepted(verify_with(hosted().serve(KESTREL, &doc), KESTREL, &next), Some("https://kestrel-league.example/clubs/")));
+            &|| accepted(verify_with(hosted().serve(KESTREL, &doc), KESTREL, &next), Some("https://kestrel-league.example/clubs/")));
+    }
+
+    // W — the backend's did_web_url against reference/did-web-method.md §3.2.
+    for (id, did, url) in [
+        ("W1", "did:web:w3c-ccg.github.io", "https://w3c-ccg.github.io/.well-known/did.json"),
+        ("W2", "did:web:w3c-ccg.github.io:user:alice", "https://w3c-ccg.github.io/user/alice/did.json"),
+        ("W3", "did:web:example.com%3A3000", "https://example.com:3000/.well-known/did.json"),
+        ("W4", "did:web:example.com%3A3000:user:alice", "https://example.com:3000/user/alice/did.json"),
+        ("W5", NORTHFIELD, "https://guild.northfield.example/chapters/north/did.json"),
+    ] {
+        case(id, &format!("did_web_url({did}) is {url} (spec §3.2)"), &|| {
+            if spec_url(did) != url {
+                return Err(format!("grader self-check: spec_url gives {}", spec_url(did)));
+            }
+            maps_to(did, url)
+        });
     }
 
     let total = cases.len();

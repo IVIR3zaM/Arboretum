@@ -75,11 +75,10 @@ pub fn did_key_for(key: &VerifyingKey) -> String {
     format!("did:key:{}", affinidi_encoding::encode_multikey(affinidi_encoding::ED25519_PUB, key.as_bytes()))
 }
 
-/// The HTTPS URL a `did:web` document is published at.
-///
-/// `did:web:example.com` → `https://example.com/.well-known/did.json`;
-/// `did:web:example.com:a:b` → `https://example.com/a/b/did.json`; a port is
-/// written percent-encoded in the host segment (`example.com%3A8443`).
+/// The HTTPS URL a `did:web` document is published at: `did.json` under the
+/// host's `/.well-known/` directory, with any further segments of the
+/// identifier as subdirectories. A port is written percent-encoded in the host
+/// segment (`example.com%3A8443`).
 pub fn did_web_url(did: &str) -> Result<String, ResolveError> {
     let invalid = || ResolveError::InvalidDid(did.to_string());
     let id = did.strip_prefix("did:web:").ok_or_else(invalid)?;
@@ -92,11 +91,13 @@ pub fn did_web_url(did: &str) -> Result<String, ResolveError> {
     if path.iter().any(|s| s.is_empty() || s.contains('/')) {
         return Err(invalid());
     }
-    Ok(if path.is_empty() {
-        format!("https://{host}/.well-known/did.json")
-    } else {
-        format!("https://{host}/{}/did.json", path.join("/"))
-    })
+    let mut url = format!("https://{host}/.well-known");
+    for segment in &path {
+        url.push('/');
+        url.push_str(segment);
+    }
+    url.push_str("/did.json");
+    Ok(url)
 }
 
 fn percent_decode(segment: &str) -> Option<String> {

@@ -65,6 +65,9 @@ impl Store {
         self.lock().issuers.insert(issuer.did.clone(), issuer);
     }
 
+    /// Issuer documents are self-contained, as with the peer DIDs issuers
+    /// first onboarded with: keys and service endpoints travel with the
+    /// document, so the copy recorded at onboarding is all verification needs.
     pub fn onboarded_issuer(&self, did: &str) -> Option<OnboardedIssuer> {
         self.lock().issuers.get(did).cloned()
     }

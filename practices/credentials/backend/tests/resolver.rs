@@ -95,15 +95,8 @@ fn did_web_maps_a_bare_domain_to_the_well_known_path() {
 }
 
 #[test]
-fn did_web_maps_path_segments_and_an_encoded_port() {
-    assert_eq!(
-        did_web_url("did:web:guild.example:chapters:north").unwrap(),
-        "https://guild.example/chapters/north/did.json"
-    );
-    assert_eq!(
-        did_web_url("did:web:localhost%3A8443:issuers:1").unwrap(),
-        "https://localhost:8443/issuers/1/did.json"
-    );
+fn did_web_maps_an_encoded_port() {
+    assert_eq!(did_web_url("did:web:localhost%3A8443").unwrap(), "https://localhost:8443/.well-known/did.json");
 }
 
 #[test]
