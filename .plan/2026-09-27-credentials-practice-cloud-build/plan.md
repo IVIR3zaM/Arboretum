@@ -40,7 +40,7 @@ budgets: 2 tries per brief · 2 replans per node
   - (3) Move the "peer DIDs" drift comment off the stale branch.
   - (4) ticket-1.patch also fixes the mapping (still backend/src only, under 60 lines).
   - Pre-checks: the recorded cold diff goes FAIL; repin, symptom and the reference fix behave as before; the ticket-2.patch composition still holds; feature-reference axis b PASS. N14's cold run stands. Then N11 re-runs after N20.
-  | proposed · recommend: as stated · alt A: move the comment only, then re-run (within D14, unlikely to bite) · alt B: keep the plant and amend D13 T1 so Ticket 1 is claimed as a warm-up, not a verified trap · alt C: cold T1 on sonnet (D12 alt)
+  | confirmed · recommend: as stated · alt A: move the comment only, then re-run (within D14, unlikely to bite) · alt B: keep the plant and amend D13 T1 so Ticket 1 is claimed as a warm-up, not a verified trap · alt C: cold T1 on sonnet (D12 alt)
 
 ## Graph
 
