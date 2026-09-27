@@ -41,7 +41,7 @@ budgets: 2 tries per brief · 2 replans per node
 | N03 | human: start cloud session | gate | N01,N02 | -/- | 0 | 0 | DONE | |
 | N04 | toolchains, pins, package skeletons | exec | N03 | sonnet/opus | 1 | 0 | DONE | |
 | N05 | cold-agent kit + smoke run | exec | N03 | opus/opus | 1 | 1 | DONE | |
-| N06 | backend core + Ticket 1 plant + reference DIDs | exec | N04 | opus/opus | 1 | 0 | VERIFYING | |
+| N06 | backend core + Ticket 1 plant + reference DIDs | exec | N04 | opus/opus | 1 | 0 | DONE | |
 | N07 | wallet app + FEATURE-REQUEST | exec | N04 | opus/opus | 1 | 0 | DONE | |
 | N08 | axis (a) grader + grade.sh + T1 ref fix | exec | N06 | opus/opus | 0 | 0 | TODO | |
 | N09 | webhook notifier + Ticket 2 plant | exec | N06 | opus/opus | 0 | 0 | TODO | |
