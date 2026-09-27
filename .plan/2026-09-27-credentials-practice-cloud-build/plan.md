@@ -41,6 +41,11 @@ budgets: 2 tries per brief · 2 replans per node
   - (4) ticket-1.patch also fixes the mapping (still backend/src only, under 60 lines).
   - Pre-checks: the recorded cold diff goes FAIL; repin, symptom and the reference fix behave as before; the ticket-2.patch composition still holds; feature-reference axis b PASS. N14's cold run stands. Then N11 re-runs after N20.
   | confirmed · recommend: as stated · alt A: move the comment only, then re-run (within D14, unlikely to bite) · alt B: keep the plant and amend D13 T1 so Ticket 1 is claimed as a warm-up, not a verified trap · alt C: cold T1 on sonnet (D12 alt)
+- D21 (N11 replan 2) Even after N21's plant, a clean cold casual opus read reference/did-web-method.md on its 6th call and converged (runs/N11/summary.md, `axis a: PASS 26/26`). D14 has no lever left that doesn't punish the research the practice rewards. Proposal: align D13 T1 with the contract's own FM-13 test (generator/CONTRACT.md:174-176). The trap is verified when the symptom and re-pin patches stay red and only ticket-1.patch goes green. That is already met: repin FAIL 8/26, symptom FAIL 9/26, ref PASS 26/26 (runs/N11/summary.md).
+  - The cold run is kept as FM-16 evidence ("a researched run converges"). It is not a bite.
+  - N15's trap-manifest and README claim the Ticket 1 plateau only in CONTRACT.md:30-32 terms (measurable when the fix prompt comes before the research pass). They never say a cold agent falls into it.
+  - N11 closes on the committed evidence, with no re-run. Ticket 2 (N14) stays the trap that is shown to bite a real cold agent.
+  | proposed · recommend: as stated · alt A: cold T1 re-run on sonnet (D12 alt), falling back to this if it converges · alt B: plant again (N11 has no replans left)
 
 ## Graph
 
@@ -58,7 +63,7 @@ budgets: 2 tries per brief · 2 replans per node
 | N10 | axis (b) feature gate + feature-reference | exec | N06,N07 | opus/opus | 1 | 0 | DONE | |
 | N20 | cold kit fix: toolchain PATH, CLI files in clone, heredoc audit | exec | N05 | opus/opus | 1 | 0 | DONE | |
 | N21 | Ticket 1 plant: path-DID gap + spec-derived grader | exec | N08,N10,N12 | opus/opus | 1 | 0 | DONE | |
-| N11 | real agent: Ticket 1 bites | check | N05,N08,N20,N21 | -/opus | 1 | 1 | REPLAN | fail C1 (again) |
+| N11 | real agent: Ticket 1 bites | check | N05,N08,N20,N21 | -/opus | 1 | 1 | WAITING | ask: D21 |
 | N12 | axis (a2) grader + T2 ref fix | exec | N08,N09 | opus/opus | 1 | 0 | DONE | |
 | N13 | real agent: feature naive vs elicited | check | N05,N08,N10,N20 | -/opus | 1 | 1 | DONE | |
 | N14 | real agent: Ticket 2 bites | check | N05,N12 | -/opus | 1 | 0 | DONE | |
