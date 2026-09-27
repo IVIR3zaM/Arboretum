@@ -45,7 +45,7 @@ budgets: 2 tries per brief · 2 replans per node
   - The cold run is kept as FM-16 evidence ("a researched run converges"). It is not a bite.
   - N15's trap-manifest and README claim the Ticket 1 plateau only in CONTRACT.md:30-32 terms (measurable when the fix prompt comes before the research pass). They never say a cold agent falls into it.
   - N11 closes on the committed evidence, with no re-run. Ticket 2 (N14) stays the trap that is shown to bite a real cold agent.
-  | proposed · recommend: as stated · alt A: cold T1 re-run on sonnet (D12 alt), falling back to this if it converges · alt B: plant again (N11 has no replans left)
+  | confirmed · recommend: as stated · alt A: cold T1 re-run on sonnet (D12 alt), falling back to this if it converges · alt B: plant again (N11 has no replans left)
 
 ## Graph
 
