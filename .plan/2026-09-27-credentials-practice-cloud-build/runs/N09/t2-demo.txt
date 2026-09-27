@@ -1,0 +1,78 @@
+# N09 Ticket-2 demo — real output, 2026-09-27T14:52Z
+# Scratch copy of practices/credentials/backend at /tmp/claude-0/-home-user-Arboretum/73e636a9-426a-530a-9bb9-c647720fe418/scratchpad/t2/backend (not committed) plus one
+# scratch test file tests/t2_demo.rs. Paused tokio time; hermetic transport; nothing touches the network.
+# Command: cargo test --offline --locked --test t2_demo -- --nocapture --test-threads=1
+# Part 1 = the shipped Notifier. Part 2 = worst case over {small, large} x {all healthy, one hanging endpoint}
+# for a model of the notifier with each axis fixed alone / all but one (real Notifier cross-checked at the end).
+
+
+running 2 tests
+test demo_large_tenant_one_slow_endpoint ... notifier: did:web:guild.northfield.example:chapters:north: fan-out for urn:uuid:00000000-0000-4000-8000-000000000042 did not finish within 10s
+tenant did:web:guild.northfield.example:chapters:north: 30000 preference settings + 20 webhook subscriptions, rp-01 never answers
+notify() returned within the 10s budget: true (virtual time elapsed 10s)
+real subscriptions delivered: 0/19 healthy (+1 hanging)
+canary_healthy(): true
+sink event: did:web:guild.northfield.example:chapters:north canary Delivered { status: 200 }
+sink events that are not Delivered: 0
+ok
+test matrix ... shipped (no fix): worst case RED
+    small tenant, all healthy: GREEN — real delivered 3/3 · timeout observable true · canary healthy · canary⇒delivery true
+    small tenant, one hanging endpoint: RED — real delivered 0/2 · timeout observable false · canary healthy · canary⇒delivery false
+    large tenant, all healthy: RED — real delivered 0/20 · timeout observable false · canary healthy · canary⇒delivery false
+    large tenant, one hanging endpoint: RED — real delivered 0/19 · timeout observable false · canary healthy · canary⇒delivery false
+A1 only: worst case RED
+    small tenant, all healthy: GREEN — real delivered 3/3 · timeout observable true · canary healthy · canary⇒delivery true
+    small tenant, one hanging endpoint: RED — real delivered 0/2 · timeout observable true · canary healthy · canary⇒delivery false
+    large tenant, all healthy: RED — real delivered 0/20 · timeout observable true · canary healthy · canary⇒delivery false
+    large tenant, one hanging endpoint: RED — real delivered 0/19 · timeout observable true · canary healthy · canary⇒delivery false
+A2 only: worst case RED
+    small tenant, all healthy: GREEN — real delivered 3/3 · timeout observable true · canary healthy · canary⇒delivery true
+    small tenant, one hanging endpoint: RED — real delivered 2/2 · timeout observable false · canary healthy · canary⇒delivery true
+    large tenant, all healthy: RED — real delivered 0/20 · timeout observable false · canary healthy · canary⇒delivery false
+    large tenant, one hanging endpoint: RED — real delivered 0/19 · timeout observable false · canary healthy · canary⇒delivery false
+A3 only: worst case RED
+    small tenant, all healthy: GREEN — real delivered 3/3 · timeout observable true · canary healthy · canary⇒delivery true
+    small tenant, one hanging endpoint: RED — real delivered 0/2 · timeout observable false · canary healthy · canary⇒delivery false
+    large tenant, all healthy: GREEN — real delivered 20/20 · timeout observable true · canary healthy · canary⇒delivery true
+    large tenant, one hanging endpoint: RED — real delivered 0/19 · timeout observable false · canary healthy · canary⇒delivery false
+A4 only: worst case RED
+    small tenant, all healthy: GREEN — real delivered 3/3 · timeout observable true · canary healthy · canary⇒delivery true
+    small tenant, one hanging endpoint: RED — real delivered 0/2 · timeout observable false · canary red · canary⇒delivery true
+    large tenant, all healthy: RED — real delivered 0/20 · timeout observable false · canary red · canary⇒delivery true
+    large tenant, one hanging endpoint: RED — real delivered 0/19 · timeout observable false · canary red · canary⇒delivery true
+all but A1: worst case RED
+    small tenant, all healthy: GREEN — real delivered 3/3 · timeout observable true · canary healthy · canary⇒delivery true
+    small tenant, one hanging endpoint: RED — real delivered 2/2 · timeout observable false · canary healthy · canary⇒delivery true
+    large tenant, all healthy: GREEN — real delivered 20/20 · timeout observable true · canary healthy · canary⇒delivery true
+    large tenant, one hanging endpoint: RED — real delivered 19/19 · timeout observable false · canary healthy · canary⇒delivery true
+all but A2: worst case RED
+    small tenant, all healthy: GREEN — real delivered 3/3 · timeout observable true · canary healthy · canary⇒delivery true
+    small tenant, one hanging endpoint: RED — real delivered 0/2 · timeout observable true · canary red · canary⇒delivery true
+    large tenant, all healthy: GREEN — real delivered 20/20 · timeout observable true · canary healthy · canary⇒delivery true
+    large tenant, one hanging endpoint: RED — real delivered 0/19 · timeout observable true · canary red · canary⇒delivery true
+all but A3: worst case RED
+    small tenant, all healthy: GREEN — real delivered 3/3 · timeout observable true · canary healthy · canary⇒delivery true
+    small tenant, one hanging endpoint: GREEN — real delivered 2/2 · timeout observable true · canary healthy · canary⇒delivery true
+    large tenant, all healthy: RED — real delivered 0/20 · timeout observable true · canary red · canary⇒delivery true
+    large tenant, one hanging endpoint: RED — real delivered 0/19 · timeout observable true · canary red · canary⇒delivery true
+all but A4: worst case GREEN
+    small tenant, all healthy: GREEN — real delivered 3/3 · timeout observable true · canary healthy · canary⇒delivery true
+    small tenant, one hanging endpoint: GREEN — real delivered 2/2 · timeout observable true · canary healthy · canary⇒delivery true
+    large tenant, all healthy: GREEN — real delivered 20/20 · timeout observable true · canary healthy · canary⇒delivery true
+    large tenant, one hanging endpoint: GREEN — real delivered 19/19 · timeout observable true · canary healthy · canary⇒delivery true
+all four: worst case GREEN
+    small tenant, all healthy: GREEN — real delivered 3/3 · timeout observable true · canary healthy · canary⇒delivery true
+    small tenant, one hanging endpoint: GREEN — real delivered 2/2 · timeout observable true · canary healthy · canary⇒delivery true
+    large tenant, all healthy: GREEN — real delivered 20/20 · timeout observable true · canary healthy · canary⇒delivery true
+    large tenant, one hanging endpoint: GREEN — real delivered 19/19 · timeout observable true · canary healthy · canary⇒delivery true
+real Notifier, small / healthy: GREEN — real delivered 3/3 · timeout observable true · canary healthy · canary⇒delivery true
+notifier: did:web:guild.northfield.example:chapters:north: fan-out for urn:uuid:00000000-0000-4000-8000-000000000042 did not finish within 10s
+real Notifier, small / hanging: RED — real delivered 0/2 · timeout observable false · canary healthy · canary⇒delivery false
+notifier: did:web:guild.northfield.example:chapters:north: fan-out for urn:uuid:00000000-0000-4000-8000-000000000042 did not finish within 10s
+real Notifier, large / healthy: RED — real delivered 0/20 · timeout observable false · canary healthy · canary⇒delivery false
+notifier: did:web:guild.northfield.example:chapters:north: fan-out for urn:uuid:00000000-0000-4000-8000-000000000042 did not finish within 10s
+real Notifier, large / hanging: RED — real delivered 0/19 · timeout observable false · canary healthy · canary⇒delivery false
+ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.42s
+

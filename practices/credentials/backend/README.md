@@ -35,6 +35,12 @@ again.
 **Revocation.** Each issuer has a status list — a bitstring with one bit per credential it has
 issued. Revoking a credential sets its bit; the verifier refuses any credential whose bit is set.
 
+**Notifications.** Relying parties that don't want to re-read a status list on every check can
+subscribe to an issuer's status changes with a webhook; subscriptions are stored as tenant
+settings. Status notifications are delivered concurrently to every subscriber, with failed
+deliveries retried. A built-in canary subscription receives every change, and the notifier reports
+healthy while the canary is acknowledging them.
+
 ## Layout
 
 | File | What it does |
@@ -46,6 +52,9 @@ issued. Revoking a credential sets its bit; the verifier refuses any credential 
 | `src/credential.rs` | wire format: canonical JSON, proofs, disclosures |
 | `src/status.rs` | status lists and `revoke_credential` |
 | `src/store.rs` | in-memory store: onboarded issuers, issued credentials, status lists |
+| `src/notifier.rs` | `Notifier::notify` — status-change webhooks and the canary |
+| `src/settings.rs` | tenant settings, including webhook subscriptions |
+| `src/webhook.rs` | sending webhook calls (`WebhookTransport`, `HermeticTransport`) |
 | `data/onboarded-issuers.json` | the issuers approved to issue through the service |
 
 ## Tests
