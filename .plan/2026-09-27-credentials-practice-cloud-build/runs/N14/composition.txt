@@ -1,0 +1,31 @@
+# Composition of A1..A4 into ticket-2.patch
+
+## git apply --3way, in order A1 A3 A2 A4, on a fresh planted+ticket-1 tree
+$ git apply --3way A1.patch
+Applied patch to 'backend/src/notifier.rs' cleanly.
+$ git apply --3way A3.patch
+Applied patch to 'backend/src/notifier.rs' cleanly.
+$ git apply --3way A2.patch
+Applied patch to 'backend/src/notifier.rs' cleanly.
+$ git apply --3way A4.patch
+Applied patch to 'backend/src/notifier.rs' with conflicts.
+U backend/src/notifier.rs
+
+## the one conflict (A2 x A4 seam)
+<<<<<<< ours
+            let subscriptions = self.subscriptions(tenant).await;
+            join_all(subscriptions.iter().map(|sub| self.dispatch(tenant, sub, &body))).await;
+=======
+>>>>>>> theirs
+
+## +/- lines of ticket-2.patch vs the union of A1..A4
+in ticket-2.patch, in no Ax.patch:
+   +            Err(_) => Outcome::Failed { reason: format!("no answer within {CALL_TIMEOUT:?}") },
+   +            for (sub, delivered) in subscriptions.iter().zip(join_all(calls).await) {
+   +            let calls = subscriptions.iter().map(|sub| self.dispatch(tenant, sub, &body));
+   -                let delivered = self.dispatch(tenant, sub, &body).await;
+in some Ax.patch, not in ticket-2.patch:
+   +            Err(_) => return false,
+   +            for sub in &subscriptions {
+   +            join_all(subscriptions.iter().map(|sub| self.dispatch(tenant, sub, &body))).await;
+   +            let subscriptions = self.subscriptions(tenant).await;

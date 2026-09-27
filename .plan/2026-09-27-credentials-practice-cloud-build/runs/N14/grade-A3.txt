@@ -1,0 +1,91 @@
+tree: planted + _solutions/reference-fix/ticket-1.patch (fresh copy /tmp/n14.hxKyQa/tree-A3)
+apply: /home/user/Arboretum/.plan/2026-09-27-credentials-practice-cloud-build/runs/N14/A3.patch
+applied diff stat:
+ backend/src/notifier.rs | 14 +++-----------
+ 1 file changed, 3 insertions(+), 11 deletions(-)
+command: bash _solutions/grade.sh
+----- output -----
+==================================================================
+ axis a (_solutions/grade.d/a.sh)
+==================================================================
+ok   S1 never rotated (Harbour Club): current key accepted
+ok   S2 rotated key, new id #key-2 (Cedar Rowing): current key accepted
+ok   S3 rotated key, same id #signing, path DID (Northfield): current key accepted
+ok   S4 rotated key + moved endpoint (Kestrel): current key accepted, current issuer site
+ok   R1 Cedar Rowing: retired #key-1 rejected
+ok   R2 Northfield: retired #signing material rejected
+ok   R3 Kestrel: retired #key-2025 rejected
+ok   V1 resolve_issuer(did:web:members.harbourclub.example) is the hosted did.json (keys + LinkedDomains)
+ok   V2 resolve_issuer(did:web:issuer.cedarrowing.example) is the hosted did.json (keys + LinkedDomains)
+ok   V3 resolve_issuer(did:web:guild.northfield.example:chapters:north) is the hosted did.json (keys + LinkedDomains)
+ok   V4 resolve_issuer(did:web:badges.kestrel-league.example) is the hosted did.json (keys + LinkedDomains)
+ok   V5 document whose id is not the DID fails resolution (spec §3.2 step 8)
+ok   V6 deactivated issuer (document removed) fails resolution (spec §3.4)
+ok   V7 ported host did:web:example.com%3A3000:user:alice resolves at host:3000 (spec §3.2)
+ok   N1 Harbour Club rotates for the first time: new #key-2 accepted
+ok   N2 Harbour Club rotates for the first time: retired #key-1 rejected
+ok   N3 Cedar Rowing rotates again: new #key-3 accepted
+ok   N4 Cedar Rowing rotates again: #key-2 retired and rejected
+ok   N5 Northfield rotates #signing again: new material accepted
+ok   N6 Northfield rotates #signing again: previous material rejected
+ok   N7 Kestrel rotates key and moves its site again: accepted with the newest site
+axis a: PASS 21/21
+
+==================================================================
+ axis a2 (_solutions/grade.d/a2.sh)
+==================================================================
+notifier: did:web:members.harbourclub.example: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000007 did not finish within 10s
+notifier: did:web:issuer.cedarrowing.example: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000007 did not finish within 10s
+notifier: did:web:guild.northfield.example:chapters:north: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000009 did not finish within 10s
+ok   D1 small tenant, all healthy: every healthy subscriber delivered within 10s
+ok   C1 small tenant, all healthy: canary healthy
+ok   K1 small tenant, all healthy: canary healthy implies every healthy subscriber delivered
+FAIL R1 small tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. https://example.com/webhooks/status
+FAIL D2 small tenant, first subscriber hangs: every healthy subscriber delivered within 10s: 2 of 2 healthy subscribers not delivered within 10s (rp-00002, rp-00003)
+FAIL O2 small tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink: no sink event reports rp-00001 (never answered) as not delivered
+FAIL K2 small tenant, first subscriber hangs: canary healthy implies every healthy subscriber delivered: canary healthy while 2 healthy subscribers got nothing
+FAIL R2 small tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. https://example.com/webhooks/status
+ok   D3 large tenant, all healthy: every healthy subscriber delivered within 10s
+ok   C3 large tenant, all healthy: canary healthy
+ok   K3 large tenant, all healthy: canary healthy implies every healthy subscriber delivered
+FAIL R3 large tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. https://example.com/webhooks/status
+FAIL D4 large tenant, first subscriber hangs: every healthy subscriber delivered within 10s: 19 of 19 healthy subscribers not delivered within 10s (rp-00002, rp-00003, rp-00004, … (19 in all))
+FAIL O4 large tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink: no sink event reports rp-00001 (never answered) as not delivered
+FAIL K4 large tenant, first subscriber hangs: canary healthy implies every healthy subscriber delivered: canary healthy while 19 healthy subscribers got nothing
+FAIL R4 large tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. https://example.com/webhooks/status
+FAIL P1 delivery path fails (subscriptions unreadable within the budget): canary turns red: canary healthy, but 24000 of 24000 subscribers of the tenant got nothing (rp-00001, rp-00002, rp-00003, … (24000 in all))
+axis a2: FAIL 6/17
+
+==================================================================
+ axis b (_solutions/grade.d/b.sh)
+==================================================================
+error: failed to build archive at `/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps/libcrypto_bigint-93abdb9974f9ee7d.rlib`: No space left on device (os error 28)
+
+error: could not compile `crypto-bigint` (lib) due to 1 previous error
+rustc-LLVM ERROR: IO failure on output stream: No space left on device
+rustc-LLVM ERROR: IO failure on output stream: No space left on device
+error: could not compile `elliptic-curve` (lib)
+
+Caused by:
+  No space left on device (os error 28)
+
+Caused by:
+  failed to parse process output: `/root/.rustup/toolchains/1.98.1-x86_64-unknown-linux-gnu/bin/rustc --crate-name elliptic_curve --edition=2024 /root/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/elliptic-curve-0.14.1/src/lib.rs --error-format=json --json=diagnostic-rendered-ansi,artifacts,future-incompat --crate-type lib --emit=dep-info,metadata,link -C embed-bitcode=no -C debuginfo=2 '--warn=clippy::unwrap_used' '--warn=clippy::unwrap_in_result' --warn=unused_qualifications --warn=unused_lifetimes '--warn=clippy::unnecessary_safety_comment' '--warn=clippy::undocumented_unsafe_blocks' '--warn=clippy::trivially_copy_pass_by_ref' --warn=trivial_numeric_casts --warn=trivial_casts '--warn=clippy::std_instead_of_core' '--warn=clippy::std_instead_of_alloc' '--warn=clippy::semicolon_if_nothing_returned' '--warn=clippy::return_self_not_must_use' '--warn=clippy::ref_as_ptr' '--warn=clippy::redundant_closure_for_method_calls' '--warn=clippy::ptr_as_ptr' '--allow=clippy::needless_range_loop' '--warn=clippy::must_use_candidate' '--warn=clippy::mod_module_files' '--warn=clippy::missing_panics_doc' '--warn=clippy::missing_errors_doc' --warn=missing_docs --warn=missing_debug_implementations --warn=missing_copy_implementations '--warn=clippy::map_unwrap_or' '--warn=clippy::manual_assert' '--warn=clippy::implicit_saturating_sub' '--warn=clippy::from_iter_instead_of_collect' '--warn=clippy::checked_conversions' '--warn=clippy::cast_sign_loss' '--warn=clippy::cast_precision_loss' '--warn=clippy::cast_possible_wrap' '--warn=clippy::cast_possible_truncation' '--warn=clippy::cast_lossless' '--warn=clippy::borrow_as_ptr' --cfg 'feature="alloc"' --cfg 'feature="arithmetic"' --cfg 'feature="digest"' --cfg 'feature="ecdh"' --cfg 'feature="ff"' --cfg 'feature="getrandom"' --cfg 'feature="group"' --cfg 'feature="pem"' --cfg 'feature="pkcs8"' --cfg 'feature="sec1"' --cfg 'feature="std"' --check-cfg 'cfg(docsrs,test)' --check-cfg 'cfg(feature, values("alloc", "arithmetic", "default", "dev", "digest", "ecdh", "ff", "getrandom", "group", "pem", "pkcs8", "sec1", "serde", "std"))' -C metadata=126a78ddf226052b -C extra-filename=-26a08dd969dfe519 --out-dir /tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps -L dependency=/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps --extern base16ct=/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps/libbase16ct-60f2480b1334f9cc.rmeta --extern bigint=/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps/libcrypto_bigint-93abdb9974f9ee7d.rmeta --extern common=/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps/libcrypto_common-8e6aea511a62147f.rmeta --extern digest=/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps/libdigest-3eea724c3b211e6c.rmeta --extern ff=/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps/libff-3fd38459218221fe.rmeta --extern group=/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps/libgroup-387541b195220dea.rmeta --extern hkdf=/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps/libhkdf-843db757f3edfc02.rmeta --extern array=/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps/libhybrid_array-060e4a7d61ba9542.rmeta --extern pem_rfc7468=/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps/libpem_rfc7468-6726593e7baaf1a5.rmeta --extern pkcs8=/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps/libpkcs8-da89a64eb844f76a.rmeta --extern rand_core=/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/deps/librand_core-fdf6ee58f4954f56.rmeta --extern sec1=/tmp/n14.hxKyQa/tree-A3/_solutions/xstack/target/debug/depaxis b: setup failed — xstack build failed
+case feature: discloses exactly the claims the DCQL query asks for: FAIL — setup: xstack build failed
+case feature: the presentation is signed by the holder's key: FAIL — setup: xstack build failed
+case feature: the presentation is bound to the request's nonce and domain: FAIL — setup: xstack build failed
+case feature: an expired credential is refused: FAIL — setup: xstack build failed
+case xstack: the backend verifier accepts the wallet's presentation: FAIL — setup: xstack build failed
+case xstack: the backend verifier rejects a tampered disclosed value: FAIL — setup: xstack build failed
+case xstack: the backend verifier rejects the presentation replayed to another nonce or domain: FAIL — setup: xstack build failed
+axis b: FAIL 0/7
+
+==================================================================
+ summary (worst-case; every axis must pass)
+==================================================================
+axis a: PASS 21/21
+axis a2: FAIL 6/17
+axis b: FAIL 0/7
+worst-case: FAIL
+----- end -----
+exit: 1

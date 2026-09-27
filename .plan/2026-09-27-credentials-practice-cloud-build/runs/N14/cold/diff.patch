@@ -1,0 +1,247 @@
+diff --git a/backend/README.md b/backend/README.md
+index 4f1b5b7..a14891c 100644
+--- a/backend/README.md
++++ b/backend/README.md
+@@ -37,9 +37,11 @@ issued. Revoking a credential sets its bit; the verifier refuses any credential
+ 
+ **Notifications.** Relying parties that don't want to re-read a status list on every check can
+ subscribe to an issuer's status changes with a webhook; subscriptions are stored as tenant
+-settings. Status notifications are delivered concurrently to every subscriber, with failed
+-deliveries retried. A built-in canary subscription receives every change, and the notifier reports
+-healthy while the canary is acknowledging them.
++settings, and are looked up through the settings' kind index. Status notifications are delivered
++concurrently to every subscriber, each call bounded by a per-delivery timeout; failed deliveries
++are reported to the delivery sink but are **not** retried. A built-in canary subscription receives
++every change, and the notifier reports healthy only while the canary is acknowledging them and
++each change reaches all of the tenant's subscribers within the dispatch budget.
+ 
+ ## Layout
+ 
+diff --git a/backend/src/notifier.rs b/backend/src/notifier.rs
+index 41efb54..bb03e8d 100644
+--- a/backend/src/notifier.rs
++++ b/backend/src/notifier.rs
+@@ -5,12 +5,17 @@
+ //! subscribed to the issuing tenant's changes. A subscription is a tenant
+ //! setting of kind [`WEBHOOK_KIND`] whose value holds the endpoint `url`.
+ //!
+-//! The canary is a platform subscription that receives every change;
+-//! [`Notifier::canary_healthy`] is the notifier's health check. Every
+-//! delivery attempt is reported to the [`DeliverySink`].
+-
++//! The canary is a platform subscription that receives every change.
++//! [`Notifier::canary_healthy`] is the notifier's health check: it reports
++//! healthy only while the canary acknowledges changes *and* each change's
++//! fan-out to the tenant's subscribers finishes within [`DISPATCH_BUDGET`].
++//! Every delivery attempt is reported to the [`DeliverySink`].
++
++use std::future::Future;
++use std::pin::Pin;
+ use std::sync::atomic::{AtomicBool, Ordering};
+ use std::sync::{Arc, Mutex};
++use std::task::Poll;
+ use std::time::Duration;
+ 
+ use serde_json::json;
+@@ -19,8 +24,14 @@ use crate::settings::{Setting, SettingsStore};
+ use crate::status::StatusChange;
+ use crate::webhook::WebhookTransport;
+ 
+-/// How long one status change may take to fan out.
+-pub const DISPATCH_BUDGET: Duration = Duration::from_secs(10);
++/// How long one status change may take to fan out. Kept under the
++/// deployment's 10 s hard invocation timeout so a fan-out that overruns is
++/// still logged and reflected in the health check.
++pub const DISPATCH_BUDGET: Duration = Duration::from_secs(8);
++
++/// How long one endpoint may take to answer before its delivery is counted
++/// as failed, so one slow or hanging relying party cannot use up the budget.
++pub const DELIVERY_TIMEOUT: Duration = Duration::from_secs(5);
+ 
+ /// Setting kind of a webhook subscription.
+ pub const WEBHOOK_KIND: &str = "webhook";
+@@ -126,57 +137,71 @@ impl Notifier {
+         self
+     }
+ 
+-    /// Whether the canary acknowledged the most recent change.
++    /// Whether the canary acknowledged the most recent change and that
++    /// change reached every subscriber within the budget.
+     pub fn canary_healthy(&self) -> bool {
+         self.canary_ok.load(Ordering::SeqCst)
+     }
+ 
+     /// Sends `change` to the platform subscribers and to every subscriber of
+-    /// the issuing tenant.
++    /// the issuing tenant, all concurrently.
+     pub async fn notify(&self, change: &StatusChange) {
+         let tenant = change.issuer.as_str();
+         let body = payload(change);
+ 
+         let fan_out = async {
+-            for sub in &self.platform {
+-                let delivered = self.dispatch(tenant, sub, &body).await;
+-                if sub.id == CANARY_ID {
+-                    self.canary_ok.store(delivered, Ordering::SeqCst);
+-                }
+-            }
+-            for sub in self.subscriptions(tenant).await {
+-                self.dispatch(tenant, &sub, &body).await;
+-            }
++            let subscriptions = self.subscriptions(tenant).await;
++            let deliveries = self.platform.iter().chain(&subscriptions).map(|sub| self.dispatch(tenant, sub, &body));
++            let delivered = join_all(deliveries).await;
++            self.platform.iter().zip(&delivered).any(|(sub, &ok)| sub.id == CANARY_ID && ok)
+         };
+ 
+-        if tokio::time::timeout(DISPATCH_BUDGET, fan_out).await.is_err() {
+-            eprintln!("notifier: {tenant}: fan-out for {} did not finish within {DISPATCH_BUDGET:?}", change.credential_id);
++        match tokio::time::timeout(DISPATCH_BUDGET, fan_out).await {
++            Ok(canary_ok) => self.canary_ok.store(canary_ok, Ordering::SeqCst),
++            Err(_) => {
++                self.canary_ok.store(false, Ordering::SeqCst);
++                eprintln!("notifier: {tenant}: fan-out for {} did not finish within {DISPATCH_BUDGET:?}", change.credential_id);
++            }
+         }
+     }
+ 
+-    /// The tenant's webhook subscriptions.
++    /// The tenant's webhook subscriptions, through the `tenant-kind` index
++    /// so the cost does not grow with the tenant's other settings.
+     async fn subscriptions(&self, tenant: &str) -> Vec<Subscription> {
+-        let mut subscriptions = Vec::new();
+-        let mut cursor: Option<String> = None;
+-        loop {
+-            let page = self.settings.query(tenant, cursor.as_deref()).await;
+-            subscriptions.extend(page.items.iter().filter(|s| s.kind == WEBHOOK_KIND).filter_map(Subscription::from_setting));
+-            match page.next {
+-                Some(next) => cursor = Some(next),
+-                None => return subscriptions,
+-            }
+-        }
++        self.settings.query_kind(tenant, WEBHOOK_KIND).await.iter().filter_map(Subscription::from_setting).collect()
+     }
+ 
+     /// POSTs `body` to `sub` and reports the outcome; `true` if delivered.
+     async fn dispatch(&self, tenant: &str, sub: &Subscription, body: &[u8]) -> bool {
+-        let outcome = match self.transport.post(&sub.url, body).await {
+-            Ok(status) if (200..300).contains(&status) => Outcome::Delivered { status },
+-            Ok(status) => Outcome::Failed { reason: format!("HTTP {status}") },
+-            Err(error) => Outcome::Failed { reason: error.to_string() },
++        let outcome = match tokio::time::timeout(DELIVERY_TIMEOUT, self.transport.post(&sub.url, body)).await {
++            Ok(Ok(status)) if (200..300).contains(&status) => Outcome::Delivered { status },
++            Ok(Ok(status)) => Outcome::Failed { reason: format!("HTTP {status}") },
++            Ok(Err(error)) => Outcome::Failed { reason: error.to_string() },
++            Err(_) => Outcome::Failed { reason: format!("no response within {DELIVERY_TIMEOUT:?}") },
+         };
+         let delivered = matches!(outcome, Outcome::Delivered { .. });
+         self.sink.record(DeliveryEvent { tenant: tenant.to_string(), subscription: sub.id.clone(), outcome });
+         delivered
+     }
+ }
++
++/// Runs `futures` concurrently and returns their outputs in order.
++async fn join_all<'a, T>(futures: impl IntoIterator<Item = impl Future<Output = T> + Send + 'a>) -> Vec<T> {
++    let mut pending: Vec<Pin<Box<dyn Future<Output = T> + Send + 'a>>> =
++        futures.into_iter().map(|f| Box::pin(f) as Pin<Box<dyn Future<Output = T> + Send + 'a>>).collect();
++    let mut outputs: Vec<Option<T>> = pending.iter().map(|_| None).collect();
++    std::future::poll_fn(|cx| {
++        let mut done = true;
++        for (future, output) in pending.iter_mut().zip(outputs.iter_mut()) {
++            if output.is_none() {
++                match future.as_mut().poll(cx) {
++                    Poll::Ready(value) => *output = Some(value),
++                    Poll::Pending => done = false,
++                }
++            }
++        }
++        if done { Poll::Ready(()) } else { Poll::Pending }
++    })
++    .await;
++    outputs.into_iter().map(|o| o.expect("every future completed")).collect()
++}
+diff --git a/backend/tests/notifier.rs b/backend/tests/notifier.rs
+index 6951b13..e1dc72c 100644
+--- a/backend/tests/notifier.rs
++++ b/backend/tests/notifier.rs
+@@ -136,3 +136,80 @@ async fn the_canary_reports_healthy_once_changes_are_flowing() {
+ 
+     assert!(rig.notifier.canary_healthy());
+ }
++
++/// A tenant with a large settings partition: tens of thousands of
++/// preferences alongside its webhook subscriptions.
++fn large_tenant(settings: &SettingsStore, transport: &HermeticTransport, tenant: &str, host: &str) -> Vec<String> {
++    for i in 0..30_000 {
++        settings.put(Setting::new(tenant, &format!("pref/{i:05}"), "preference", json!({ "n": i })));
++    }
++    small_tenant(settings, transport, tenant, host)
++}
++
++#[tokio::test(start_paused = true)]
++async fn every_subscriber_of_a_tenant_with_many_settings_is_notified() {
++    let rig = rig();
++    let urls = large_tenant(&rig.settings, &rig.transport, HARBOUR, "door.harbourclub.example");
++
++    rig.notifier.notify(&revoked(HARBOUR, 7)).await;
++
++    for url in &urls {
++        assert_eq!(rig.transport.received(url).len(), 1, "{url}");
++    }
++}
++
++#[tokio::test(start_paused = true)]
++async fn a_hanging_endpoint_does_not_hold_up_the_other_subscribers() {
++    let rig = rig();
++    // Sorts before the healthy subscribers.
++    subscribe(&rig.settings, HARBOUR, "a-hangs", "https://stuck.harbourclub.example/hooks");
++    rig.transport.route("https://stuck.harbourclub.example/hooks", Endpoint::Hang);
++    let urls = small_tenant(&rig.settings, &rig.transport, HARBOUR, "door.harbourclub.example");
++
++    rig.notifier.notify(&revoked(HARBOUR, 7)).await;
++
++    for url in &urls {
++        assert_eq!(rig.transport.received(url).len(), 1, "{url}");
++    }
++    let stuck: Vec<DeliveryEvent> = rig.sink.events().into_iter().filter(|e| e.subscription == "a-hangs").collect();
++    assert_eq!(stuck.len(), 1, "the hanging delivery is reported");
++    assert!(matches!(&stuck[0].outcome, Outcome::Failed { .. }));
++}
++
++#[tokio::test(start_paused = true)]
++async fn slow_endpoints_are_called_concurrently() {
++    let rig = rig();
++    let urls: Vec<String> = (0..20)
++        .map(|i| {
++            let url = format!("https://slow.harbourclub.example/hooks/{i}");
++            subscribe(&rig.settings, HARBOUR, &format!("slow-{i:02}"), &url);
++            rig.transport.route(&url, Endpoint::slow(std::time::Duration::from_secs(1)));
++            url
++        })
++        .collect();
++
++    rig.notifier.notify(&revoked(HARBOUR, 7)).await;
++
++    for url in &urls {
++        assert_eq!(rig.transport.received(url).len(), 1, "{url}");
++    }
++}
++
++#[tokio::test(start_paused = true)]
++async fn the_notifier_is_not_healthy_when_a_fan_out_does_not_finish() {
++    let rig = rig();
++    small_tenant(&rig.settings, &rig.transport, HARBOUR, "door.harbourclub.example");
++    rig.notifier.notify(&revoked(HARBOUR, 7)).await;
++    assert!(rig.notifier.canary_healthy());
++
++    // The settings store stops answering in time for this tenant's next change.
++    let stalled = Arc::new(SettingsStore::new());
++    let transport = Arc::new(HermeticTransport::new());
++    let notifier = Notifier::new(stalled.clone(), transport.clone(), Arc::new(MemorySink::default()));
++    for i in 0..300_000 {
++        stalled.put(Setting::new(HARBOUR, &format!("hook/{i:06}"), WEBHOOK_KIND, json!({ "url": "https://door.harbourclub.example/h" })));
++    }
++    transport.route_host("door.harbourclub.example", Endpoint::ok());
++    notifier.notify(&revoked(HARBOUR, 7)).await;
++    assert!(!notifier.canary_healthy());
++}
