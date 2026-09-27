@@ -1,0 +1,2 @@
+audit: clean — 3 tool call(s) checked, clone /tmp/cold-N20-probe
+exit: 0

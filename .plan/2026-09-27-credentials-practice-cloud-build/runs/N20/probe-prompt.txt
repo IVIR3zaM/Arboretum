@@ -1,0 +1,6 @@
+This is a quick environment check; do not change any files.
+
+1. Run `flutter --version`.
+2. Run `seq 1 400000` exactly as written: do not pipe it, redirect it or shorten it.
+
+Then report the last line of each command's output.

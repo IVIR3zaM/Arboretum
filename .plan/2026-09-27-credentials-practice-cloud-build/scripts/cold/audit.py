@@ -15,6 +15,12 @@ A Bash token counts as an absolute path only if its first component exists at `/
 (so `/etc/x` is a path, a route string like `/api/v1/users` is not). The Bash cwd is simulated
 across calls, starting at the clone, so `cd src && cat ../x` stays inside.
 
+Heredocs (`<<` / `<<-`, quoted delimiter or not): the body is split off the command line. A body
+fed to a shell (bash, sh, zsh, dash, ksh, source, ., eval anywhere on the operator's line) is
+audited as shell, like any command. Any other body is data: every check still runs on its tokens,
+except that a `~` is not expanded (bash does no tilde expansion in a heredoc body, so Dart's
+`ms ~/ 1000` is not $HOME). An unquoted-delimiter body's $(...) and `...` run, so they are shell.
+
 Exit 0: clean. Exit 1: violations (each printed). Exit 2: usage or unreadable transcript.
 """
 import json
@@ -88,8 +94,8 @@ class Jail:
             path = os.path.join(cwd, path)
         return norm(path)
 
-    def expand(self, token):
-        if token == "~" or token.startswith("~/"):
+    def expand(self, token, tilde=True):
+        if tilde and (token == "~" or token.startswith("~/")):
             token = self.home + token[1:]
         for var in ("${HOME}", "$HOME"):
             if token.startswith(var):
@@ -106,6 +112,170 @@ def tokenize(command):
     except ValueError:
         # unbalanced quotes (heredocs, odd quoting): fall back to a plain split
         return [t for t in re.split(r"(\s+|&&|\|\||[;|&()<>])", command) if t and not t.isspace()]
+
+
+def tokenize_data(text):
+    """Tokens of a data heredoc body. Unbalanced quotes: split on the quotes too, so a quoted
+    path ("/etc/x", '$HOME/x', "../x") still reaches the checks."""
+    try:
+        lex = shlex.shlex(text, posix=True, punctuation_chars=True)
+        lex.whitespace_split = True
+        lex.commenters = ""
+        return list(lex)
+    except ValueError:
+        return [t for t in re.split(r"(\s+|&&|\|\||[;|&()<>'\"`])", text) if t and not t.isspace()]
+
+
+SHELL_WORDS = {"bash", "sh", "zsh", "dash", "ksh", "source", "eval"}
+HEREDOC_OP = re.compile(r"""<<(-?)[ \t]*(?:'([^'\n]*)'|"([^"\n]*)"|(\\?)([^\s;&|<>()'"`]+))""")
+HEREDOC_MARK = re.compile(r"@@HEREDOC_(\d+)@@")
+DOT_COMMAND = re.compile(r"(?:^|[;&|(`]|\$\()\s*\.(?=\s)")
+
+
+def feeds_shell(line):
+    """True if a heredoc on this command line may be read by a shell (conservative: any shell
+    word anywhere on the line, or `.` in command position)."""
+    for word in re.findall(r"[^\s;&|()<>'\"`$]+", line):
+        if os.path.basename(word) in SHELL_WORDS:
+            return True
+    return bool(DOT_COMMAND.search(line))
+
+
+def split_heredocs(command):
+    """Split heredoc bodies off a Bash command.
+
+    Returns (text, bodies): text is the command with each body (and its delimiter line) replaced
+    by a marker line `@@HEREDOC_<k>@@`; bodies[k] = (body, shell, quoted). A `<<` inside quotes is
+    not an operator; a heredoc whose delimiter line never comes is left on the command line."""
+    out, bodies, stack, pending = [], [], [], []
+    i, n, line_start = 0, len(command), 0
+    while i < n:
+        c = command[i]
+        top = stack[-1] if stack else None
+        if top == "sq":
+            if c == "'":
+                stack.pop()
+            out.append(c)
+            i += 1
+            continue
+        if c == "\\" and i + 1 < n:
+            out.append(command[i:i + 2])
+            i += 2
+            continue
+        if c == "\n":
+            out.append(c)
+            i += 1
+            if pending:
+                line = command[line_start:i - 1]
+                lines = command[i:].split("\n")
+                j, parsed = 0, []
+                for strip, delim, quoted in pending:
+                    body = []
+                    while j < len(lines):
+                        ln = lines[j]
+                        j += 1
+                        if (ln.lstrip("\t") if strip else ln) == delim:
+                            parsed.append(("\n".join(body), feeds_shell(line), quoted))
+                            break
+                        body.append(ln)
+                    else:
+                        break
+                if len(parsed) == len(pending):
+                    for p in parsed:
+                        out.append(f"@@HEREDOC_{len(bodies)}@@\n")
+                        bodies.append(p)
+                    i += sum(len(ln) + 1 for ln in lines[:j])
+                    i = min(i, n)
+                pending = []
+            line_start = i
+            continue
+        if top == "dq":
+            if c == '"':
+                stack.pop()
+            elif command.startswith("$(", i):
+                stack.append("sub")
+                out.append("$(")
+                i += 2
+                continue
+            elif c == "`":
+                stack.append("bt")
+            out.append(c)
+            i += 1
+            continue
+        # code context: top level, $( ), ( ), ` `
+        if command.startswith("<<", i) and not command.startswith("<<<", i) \
+                and (i == 0 or command[i - 1] != "<"):
+            m = HEREDOC_OP.match(command, i)
+            if m:
+                delim = m.group(2) if m.group(2) is not None else \
+                    m.group(3) if m.group(3) is not None else m.group(5)
+                quoted = m.group(2) is not None or m.group(3) is not None or bool(m.group(4))
+                pending.append((m.group(1) == "-", delim, quoted))
+                out.append(m.group(0))
+                i = m.end()
+                continue
+        if c == "#" and (i == 0 or command[i - 1] in " \t;&|("):
+            end = command.find("\n", i)
+            end = n if end == -1 else end
+            out.append(command[i:end])
+            i = end
+            continue
+        if c == "'":
+            stack.append("sq")
+        elif c == '"':
+            stack.append("dq")
+        elif command.startswith("$(", i):
+            stack.append("sub")
+            out.append("$(")
+            i += 2
+            continue
+        elif c == "`":
+            if top == "bt":
+                stack.pop()
+            else:
+                stack.append("bt")
+        elif c == "(":
+            stack.append("par")
+        elif c == ")" and top in ("sub", "par"):
+            stack.pop()
+        out.append(c)
+        i += 1
+    return "".join(out), bodies
+
+
+def substitutions(text):
+    """The $(...) and `...` command substitutions in an unquoted heredoc body."""
+    subs, i = [], 0
+    while i < len(text):
+        if text.startswith("$(", i):
+            depth, j = 1, i + 2
+            while j < len(text) and depth:
+                depth += {"(": 1, ")": -1}.get(text[j], 0)
+                j += 1
+            subs.append(text[i + 2:j - 1] if not depth else text[i + 2:])
+            i = j
+        elif text[i] == "`":
+            j = text.find("`", i + 1)
+            j = len(text) if j == -1 else j
+            subs.append(text[i + 1:j])
+            i = j + 1
+        else:
+            i += 1
+    return subs
+
+
+def audit_heredoc(jail, body, cwd):
+    """Return (violations, new_cwd) for one heredoc body."""
+    text, shell, quoted = body
+    if shell:
+        return audit_bash(jail, text, cwd)
+    violations = []
+    for tok in tokenize_data(text):
+        violations += audit_token(jail, tok, cwd, tilde=False)
+    if not quoted:
+        for sub in substitutions(text):
+            violations += audit_bash(jail, sub, cwd)[0]
+    return violations, cwd
 
 
 def looks_absolute(token):
@@ -125,11 +295,24 @@ def has_dotdot(token):
 def audit_bash(jail, command, cwd):
     """Return (violations, new_cwd)."""
     violations = []
+    command, bodies = split_heredocs(command)
+    audited = set()
     tokens = tokenize(command)
     command_start = True
     i = 0
     while i < len(tokens):
         tok = tokens[i]
+        marks = [int(k) for k in HEREDOC_MARK.findall(tok) if int(k) < len(bodies)]
+        if marks:
+            for k in marks:
+                if k not in audited:
+                    audited.add(k)
+                    v, cwd = audit_heredoc(jail, bodies[k], cwd)
+                    violations += v
+            tok = HEREDOC_MARK.sub(" ", tok)
+            if not tok.strip():
+                i += 1
+                continue
         if tok in SEPARATORS:
             command_start = True
             i += 1
@@ -154,15 +337,19 @@ def audit_bash(jail, command, cwd):
         command_start = False
         i += 1
         violations += audit_token(jail, tok, cwd)
+    for k, body in enumerate(bodies):  # a marker the tokenizer lost is still audited
+        if k not in audited:
+            v, cwd = audit_heredoc(jail, body, cwd)
+            violations += v
     return violations, cwd
 
 
-def audit_token(jail, tok, cwd):
+def audit_token(jail, tok, cwd, tilde=True):
     violations = []
     for part in re.split(r"[=:]", tok):
         if not part:
             continue
-        part = jail.expand(part)
+        part = jail.expand(part, tilde)
         if looks_absolute(part):
             p = norm(part)
             if not jail.ok(p):

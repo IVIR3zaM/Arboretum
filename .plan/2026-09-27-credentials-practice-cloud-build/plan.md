@@ -56,7 +56,7 @@ budgets: 2 tries per brief · 2 replans per node
 | N08 | axis (a) grader + grade.sh + T1 ref fix | exec | N06 | opus/opus | 1 | 0 | DONE | |
 | N09 | webhook notifier + Ticket 2 plant | exec | N06 | opus/opus | 1 | 0 | DONE | |
 | N10 | axis (b) feature gate + feature-reference | exec | N06,N07 | opus/opus | 1 | 0 | DONE | |
-| N20 | cold kit fix: toolchain PATH, CLI files in clone, heredoc audit | exec | N05 | opus/opus | 1 | 0 | RUNNING | |
+| N20 | cold kit fix: toolchain PATH, CLI files in clone, heredoc audit | exec | N05 | opus/opus | 1 | 0 | VERIFYING | |
 | N11 | real agent: Ticket 1 bites | check | N05,N08 | -/opus | 1 | 0 | WAITING | ask: D20 |
 | N12 | axis (a2) grader + T2 ref fix | exec | N08,N09 | opus/opus | 1 | 0 | DONE | |
 | N13 | real agent: feature naive vs elicited | check | N05,N08,N10,N20 | -/opus | 0 | 1 | TODO | |

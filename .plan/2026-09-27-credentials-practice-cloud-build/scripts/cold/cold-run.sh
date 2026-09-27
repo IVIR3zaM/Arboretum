@@ -6,11 +6,16 @@
 # servers, skills or Chrome are loaded; only the built-in coding tools are offered (subagents
 # included) and they are pre-approved (acceptEdits + the same allow-list), so a headless turn can
 # work without a prompter. The host session's own Claude env (session id, extra dirs + their
-# CLAUDE.md, messaging socket, ...) is stripped so the child starts cold.
+# CLAUDE.md, messaging socket, ...) is stripped so the child starts cold. The toolchains are put on
+# PATH (../toolpath.sh), and the CLI's own files — its scratchpad (CLAUDE_CODE_TMPDIR) and its
+# config dir with the session store and oversized-tool-output spills (CLAUDE_CONFIG_DIR) — live in
+# <clone>/.git/cc-tmp and <clone>/.git/cc-config: inside the jail, out of diff.patch, kept across
+# --resume turns. Nothing is copied from $HOME/.claude.
 #
 # Writes to <outdir>:
 #   transcript.jsonl  stream-json, appended turn after turn
-#   meta.env          one block per turn: date, model, CLI version, session id, prompt file
+#   meta.env          one block per turn: date, model, CLI version, session id, prompt file,
+#                     toolchain paths, the relocated CLI dirs
 #   diff.patch        the clone's working tree (untracked files included) vs. the baseline commit
 #   stderr.log        the CLI's stderr
 # Multi-turn: pass --resume <session-id> (from meta.env) with the same <outdir>.
@@ -29,6 +34,8 @@ if [ $# -eq 5 ]; then
 fi
 
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+# shellcheck source=../toolpath.sh
+. "$HERE/../toolpath.sh"
 ROOT=$(git -C "$HERE" rev-parse --show-toplevel)
 ROOT_REAL=$(cd "$ROOT" && pwd -P)
 case "$CLONE/" in
@@ -36,6 +43,11 @@ case "$CLONE/" in
 esac
 [ -d "$CLONE/.git" ] || { echo "cold-run: $CLONE is not a mkclone.sh clone (no .git)" >&2; exit 4; }
 BASELINE=$(git -C "$CLONE" rev-list --max-parents=0 HEAD | tail -1)
+CC_TMP="$CLONE/.git/cc-tmp"
+CC_CONFIG="$CLONE/.git/cc-config"
+mkdir -p "$CC_TMP" "$CC_CONFIG"
+FLUTTER=$(command -v flutter || true)
+CARGO=$(command -v cargo || true)
 
 mkdir -p "$OUT"
 if [ -n "$RESUME" ]; then
@@ -73,7 +85,7 @@ for v in "${HOST_ENV[@]}"; do UNSET+=(-u "$v"); done
 set +e
 (
   cd "$CLONE"
-  env "${UNSET[@]}" timeout "${COLD_TIMEOUT:-3600}" claude -p \
+  env "${UNSET[@]}" CLAUDE_CODE_TMPDIR="$CC_TMP" CLAUDE_CONFIG_DIR="$CC_CONFIG" timeout "${COLD_TIMEOUT:-3600}" claude -p \
     --model "$MODEL" \
     "${SESSION_FLAG[@]}" \
     --output-format stream-json --verbose \
@@ -116,6 +128,10 @@ PY
   echo "PROMPT_FILE=$PROMPT"
   echo "CLONE=$CLONE"
   echo "BASELINE=$BASELINE"
+  echo "FLUTTER=$FLUTTER"
+  echo "CARGO=$CARGO"
+  echo "CLAUDE_CODE_TMPDIR=$CC_TMP"
+  echo "CLAUDE_CONFIG_DIR=$CC_CONFIG"
   echo "EXIT=$RC"
 } >> "$OUT/meta.env"
 

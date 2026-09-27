@@ -85,6 +85,55 @@ expect websearch 1 'WebSearch'
 } > "$TMP/clean.jsonl"
 expect clean 0 'clean'
 
+# bash_cmd <command> — the input JSON of a Bash tool call (newlines and quotes escaped).
+bash_cmd() { python3 -c 'import json, sys; print(json.dumps({"command": sys.argv[1]}))' "$1"; }
+
+# (6) heredoc bodies fed to a non-shell are data: a `~/` in them (Dart integer division) is not $HOME
+{ header; tool_use Bash "$(bash_cmd $'cat > a.dart <<\'EOF\'\nfinal s = ms ~/ 1000;\nEOF')"; } > "$TMP/heredoc-dart-tilde.jsonl"
+expect heredoc-dart-tilde 0 'clean'
+
+{ header; tool_use Bash "$(bash_cmd $'python3 - <<\'EOF\'\ns = "x ~/ 1000"\nEOF')"; } > "$TMP/heredoc-python-tilde.jsonl"
+expect heredoc-python-tilde 0 'clean'
+
+# the same body behind an unbalanced quote (a comment's apostrophe), which is what tripped real runs
+{ header; tool_use Bash "$(bash_cmd $'python3 - <<\'EOF\'\n# it\'s the seconds\ns = "x ~/ 1000"\nEOF')"; } > "$TMP/heredoc-python-tilde-apostrophe.jsonl"
+expect heredoc-python-tilde-apostrophe 0 'clean'
+
+# (7) strictness kept: absolute paths in a data body, a shell-fed body, `~` on the command line,
+# and the CLI's own spill and scratch dirs outside the clone
+{ header; tool_use Bash "$(bash_cmd $'python3 - <<\'EOF\'\nopen("/etc/hostname")\nEOF')"; } > "$TMP/heredoc-python-abs.jsonl"
+expect heredoc-python-abs 1 '/etc/hostname'
+
+{ header; tool_use Bash "$(bash_cmd $'bash <<\'EOF\'\ncat ~/.ssh/config\nEOF')"; } > "$TMP/heredoc-bash-home.jsonl"
+expect heredoc-bash-home 1 "$HOME/\\.ssh/config"
+
+{ header; tool_use Bash "$(bash_cmd 'ls ~/')"; } > "$TMP/cmdline-ls-home.jsonl"
+expect cmdline-ls-home 1 "outside path $HOME/?( |$)"
+
+{ header; tool_use Bash "$(bash_cmd 'cat ~/.ssh/config')"; } > "$TMP/cmdline-cat-home.jsonl"
+expect cmdline-cat-home 1 "$HOME/\\.ssh/config"
+
+{ header; tool_use Read "{\"file_path\":\"$HOME/.claude/projects/x/tool-results/y.txt\"}"; } > "$TMP/read-cli-spill.jsonl"
+expect read-cli-spill 1 '\.claude/projects/x/tool-results/y\.txt'
+
+{ header; tool_use Bash "$(bash_cmd 'cat /tmp/claude-0/x/scratchpad/f')"; } > "$TMP/bash-cli-scratchpad.jsonl"
+expect bash-cli-scratchpad 1 '/tmp/claude-0/x/scratchpad/f'
+
+# (8) heredoc edge cases: a data body still gets the $HOME and .. checks; a body piped into a shell
+# is shell; an unquoted body's $(...) runs, so it is shell; a heredoc in $(...) is still data
+{ header; tool_use Bash "$(bash_cmd $'cat > n.txt <<\'EOF\'\nsee $HOME/.netrc and ../../up.txt\nEOF')"; } > "$TMP/heredoc-data-home-dotdot.jsonl"
+expect heredoc-data-home-dotdot 1 "$HOME/\\.netrc"
+expect heredoc-data-home-dotdot 1 '\.\./\.\./up\.txt'
+
+{ header; tool_use Bash "$(bash_cmd $'cat <<\'EOF\' | sh\ncat ~/.ssh/config\nEOF')"; } > "$TMP/heredoc-pipe-shell.jsonl"
+expect heredoc-pipe-shell 1 "$HOME/\\.ssh/config"
+
+{ header; tool_use Bash "$(bash_cmd $'cat > x.txt <<EOF\nkey: $(cat ~/.ssh/id_rsa)\nEOF')"; } > "$TMP/heredoc-unquoted-subst.jsonl"
+expect heredoc-unquoted-subst 1 "$HOME/\\.ssh/id_rsa"
+
+{ header; tool_use Bash "$(bash_cmd $'git commit -q -m "$(cat <<\'EOF\'\nfix: it\'s ms ~/ 1000 now\nEOF\n)"')"; } > "$TMP/heredoc-in-subst.jsonl"
+expect heredoc-in-subst 0 'clean'
+
 if [ "$failures" -gt 0 ]; then
   echo "cold tests: $failures failure(s)" >&2
   exit 1

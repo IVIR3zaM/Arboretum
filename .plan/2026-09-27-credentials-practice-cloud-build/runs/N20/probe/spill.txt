@@ -1,0 +1,7 @@
+# N20 probe spill check — 2026-09-27T19:33:55Z, clone /tmp/cold-N20-probe (sanitized: -tmp-cold-N20-probe)
+## tool-results files under <clone>/.git/cc-config
+-rw-r--r-- 1 root root 2688895 Sep 27 19:33 /tmp/cold-N20-probe/.git/cc-config/projects/-tmp-cold-N20-probe/e9daa75b-1056-458d-9ca8-8f8b0a926202/tool-results/bqmjp7omh.txt
+## $HOME/.claude/projects entries for the probe clone
+(none)
+## /tmp/claude-0 entries for the probe clone
+(none)

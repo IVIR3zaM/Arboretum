@@ -8,6 +8,9 @@ ROOT=$(git rev-parse --show-toplevel)
 cd "$ROOT"
 P=.plan/2026-09-27-credentials-practice-cloud-build
 PRACTICE=practices/credentials
+# the toolchains bootstrap.sh installs, on PATH for this non-interactive shell too
+# shellcheck source=toolpath.sh
+. "$P/scripts/toolpath.sh"
 
 status=0
 err() { echo "verify FAIL: $1" >&2; status=1; }
