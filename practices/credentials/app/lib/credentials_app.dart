@@ -1,6 +1,11 @@
-/// Skeleton package for the credentials wallet app.
-///
-/// Domain code (wallet, presentation builder) lands in later nodes. This
-/// package currently exists to prove the toolchain and the `ssi` / `dcql`
-/// dependencies are pinned and wired up.
+/// Holder wallet: requests credentials from an issuer, keeps them with the
+/// holder's did:key, and answers presentation requests.
 library;
+
+export 'src/credential_list.dart';
+export 'src/credential_store.dart';
+export 'src/held_credential.dart';
+export 'src/holder_key.dart';
+export 'src/issuer_client.dart';
+export 'src/presentation_request.dart';
+export 'src/wallet_service.dart';
