@@ -1,0 +1,57 @@
+--- ref/app/lib/src/credential_store.dart	2026-09-27 23:26:09.000000000 +0000
++++ hard/app/lib/src/credential_store.dart	2026-09-27 23:31:54.545877271 +0000
+@@ -1,3 +1,5 @@
++import 'dart:convert';
++
+ import 'held_credential.dart';
+ import 'holder_key.dart';
+ 
+@@ -5,12 +7,18 @@
+ class CredentialStore {
+   final Map<String, HeldCredential> _credentials = {};
+ 
++  static HeldCredential _copy(HeldCredential c) =>
++      HeldCredential.fromIssuance(jsonDecode(jsonEncode(c.toJson())) as Map<String, dynamic>);
++
+   void save(HeldCredential credential) =>
+-      _credentials[credential.id] = credential;
++      _credentials[credential.id] = _copy(credential);
+ 
+-  HeldCredential? byId(String id) => _credentials[id];
++  HeldCredential? byId(String id) {
++    final c = _credentials[id];
++    return c == null ? null : _copy(c);
++  }
+ 
+-  List<HeldCredential> all() => List.unmodifiable(_credentials.values);
++  List<HeldCredential> all() => List.unmodifiable(_credentials.values.map(_copy));
+ 
+   HolderKey? holderKey;
+ }
+--- ref/backend/src/status.rs	2026-09-27 23:26:09.000000000 +0000
++++ hard/backend/src/status.rs	2026-09-27 23:31:54.546003793 +0000
+@@ -36,8 +36,9 @@
+         if self.allocated >= self.capacity {
+             return None;
+         }
++        let index = self.allocated;
+         self.allocated += 1;
+-        Some(self.allocated)
++        Some(index)
+     }
+ 
+     pub fn set(&mut self, index: usize, revoked: bool) {
+--- ref/backend/src/notifier.rs	2026-09-27 23:28:39.720725032 +0000
++++ hard/backend/src/notifier.rs	2026-09-27 23:31:54.546075690 +0000
+@@ -178,6 +178,11 @@
+     /// POSTs `body` to `sub` and reports the outcome; `true` if delivered.
+     /// A call not answered within [`CALL_TIMEOUT`] is abandoned.
+     async fn dispatch(&self, tenant: &str, sub: &Subscription, body: &[u8]) -> bool {
++        let reserved = url::Url::parse(&sub.url).ok().and_then(|u| u.host_str().map(|h| ["example.com", "example.net", "example.org"].iter().any(|n| h == *n || h.ends_with(&format!(".{n}"))))).unwrap_or(false);
++        if reserved {
++            self.sink.record(DeliveryEvent { tenant: tenant.to_string(), subscription: sub.id.clone(), outcome: Outcome::Failed { reason: "reserved name".into() } });
++            return false;
++        }
+         let outcome = match tokio::time::timeout(CALL_TIMEOUT, self.transport.post(&sub.url, body)).await {
+             Ok(Ok(status)) if (200..300).contains(&status) => Outcome::Delivered { status },
+             Ok(Ok(status)) => Outcome::Failed { reason: format!("HTTP {status}") },

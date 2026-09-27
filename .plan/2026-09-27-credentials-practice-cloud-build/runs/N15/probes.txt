@@ -1,0 +1,45 @@
+# N15 robustness probes — 2026-09-27T23:35:26Z, HEAD 34f3807
+# each tree: git archive of practices/credentials at HEAD, plus the new _solutions/robustness-probes.sh + _solutions/robustness/ (identical in every tree)
+# install: (cd app && flutter pub get --offline); (cd backend && cargo fetch --locked)
+
+## stub — the planted tree as shipped (createPresentation throws UnimplementedError; Ticket 1, Ticket 2 and every latent planted)
+$ bash _solutions/robustness-probes.sh
+FAIL W1 a credential read from the wallet cannot change what the wallet holds: editing the credential that credential(id) returned changed the one the wallet holds
+FAIL W2 an element of heldCredentials() cannot change what the wallet holds: editing an element of heldCredentials() changed the credential the wallet holds
+FAIL W3 a presentation shares no state with the held credential: UnimplementedError: createPresentation
+FAIL G1 a credential bound to another holder is refused even when it bypassed requestCredential: UnimplementedError: createPresentation
+FAIL D1 a query that names no claim discloses nothing and is still signed and bound: UnimplementedError: createPresentation
+FAIL D2 a query for a claim the credential does not hold is refused, not half-answered: UnimplementedError: createPresentation
+PASS N1 a tenant with no subscription: fan-out finishes, no failure reported, canary healthy
+FAIL N2 a tenant subscription at a reserved name is never called (the rule holds beyond the canary): 2 call(s) to a reserved name: https://example.com/webhooks/status, https://example.net/webhooks/status
+FAIL S1 every status-list index handed out, up to capacity, can be revoked: index(es) [16] of a 16-bit list were handed out but cannot be revoked
+robustness 1/9
+exit=0
+
+## reference — planted + _solutions/reference-fix/ticket-1.patch + ticket-2.patch + cp -R _solutions/feature-reference/. .  (grades worst-case: PASS 26/26 · 17/17 · 7/7, grade-reference.txt)
+$ bash _solutions/robustness-probes.sh
+FAIL W1 a credential read from the wallet cannot change what the wallet holds: editing the credential that credential(id) returned changed the one the wallet holds
+FAIL W2 an element of heldCredentials() cannot change what the wallet holds: editing an element of heldCredentials() changed the credential the wallet holds
+PASS W3 a presentation shares no state with the held credential
+PASS G1 a credential bound to another holder is refused even when it bypassed requestCredential
+PASS D1 a query that names no claim discloses nothing and is still signed and bound
+PASS D2 a query for a claim the credential does not hold is refused, not half-answered
+PASS N1 a tenant with no subscription: fan-out finishes, no failure reported, canary healthy
+FAIL N2 a tenant subscription at a reserved name is never called (the rule holds beyond the canary): 1 call(s) to a reserved name: https://example.net/webhooks/status
+FAIL S1 every status-list index handed out, up to capacity, can be revoked: index(es) [16] of a 16-bit list were handed out but cannot be revoked
+robustness 5/9
+exit=0
+
+## passability check (not a shipped build) — reference + a copy-on-read/write CredentialStore (latent #2), StatusList::allocate from index 0 (latent #5), and a reserved-name refusal in Notifier::dispatch
+$ bash _solutions/robustness-probes.sh
+PASS W1 a credential read from the wallet cannot change what the wallet holds
+PASS W2 an element of heldCredentials() cannot change what the wallet holds
+PASS W3 a presentation shares no state with the held credential
+PASS G1 a credential bound to another holder is refused even when it bypassed requestCredential
+PASS D1 a query that names no claim discloses nothing and is still signed and bound
+PASS D2 a query for a claim the credential does not hold is refused, not half-answered
+PASS N1 a tenant with no subscription: fan-out finishes, no failure reported, canary healthy
+PASS N2 a tenant subscription at a reserved name is never called (the rule holds beyond the canary)
+PASS S1 every status-list index handed out, up to capacity, can be revoked
+robustness 9/9
+exit=0
