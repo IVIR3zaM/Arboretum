@@ -36,13 +36,22 @@ Two consequences that matter:
   an assistant that has read the briefing or the manifest has been coached by the instrument. A
   trap that the workdir warns about measures nothing. The learner reads the README *before* the
   session, outside the clone.
-- **The work items are staged, not dumped.** The clone starts with `TICKET.md` only;
-  `FEATURE-REQUEST.md` is handed over when phase 3 begins. A learner never holds a bug report and a
-  feature brief at the same time — work does not arrive that way, and a clone carrying both lets
-  the assistant read ahead and plan around a brief nobody has given it, which blunts the phase it
-  has not reached. The harness holds each item until its phase. **A Cedar `reference/` is not a
-  work item and is not staged** — it is in the clone from the start, for the reasons in the next
-  paragraph.
+- **The work items are staged, not dumped.** A practice with a single `TICKET.md` keeps that
+  behaviour exactly: the clone starts with `TICKET.md` only, and `FEATURE-REQUEST.md` is handed
+  over when phase 3 begins. A practice may instead need an **ordered ticket queue** —
+  `TICKET-1.md`, `TICKET-2.md`, and so on — in which case the clone starts with the first ticket
+  only; each next ticket is handed over once the previous ticket's fix **lands** (its phase closes
+  — the grader/tests for that ticket go green); `FEATURE-REQUEST.md`, if the practice has one,
+  still arrives at phase 3, after the last ticket. A learner never holds two tickets, or a ticket
+  and the feature request, at the same time — work does not arrive that way, and a clone carrying
+  more than the current item lets the assistant read ahead and plan around a brief nobody has given
+  it, which blunts the phase it has not reached. The harness holds each item until its phase.
+  **A control run is the one place the whole queue shows up at once.** Because it is a single,
+  uncoached shot at whatever the declared grade command actually grades, its clone carries **every**
+  queued ticket plus the feature request together — staging is a property of a multi-phase
+  session, not of the gate, so a whole-queue gate needs the whole queue in front of the assistant
+  for the score to be comparable to the gate's maximum. **A Cedar `reference/` is not a work item
+  and is not staged** — it is in the clone from the start, for the reasons in the next paragraph.
 - **The clone is its own git repository.** After stripping and staging, setup runs `git init` in
   `work/` and commits the stripped tree as `baseline (stripped clone)`. Without it, `git log` inside
   `work/` resolves to the Arboretum repo above the clone — its whole history, `_solutions/` included;
