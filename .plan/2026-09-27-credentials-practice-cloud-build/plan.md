@@ -1,7 +1,7 @@
 # Credentials practice, built in the cloud with agent-verified traps
 status: RUNNING
 created: 2026-09-27 · updated: 2026-09-27
-goal: practices/credentials/ is a runnable, graded, proof-recorded Cedar practice built from its DESIGN.md (practices/credentials/DESIGN.md:1-524), orchestrated from a Claude Code cloud session, and Ticket 1, Ticket 2 and the feature trap are each shown to bite a real cold agent
+goal: practices/credentials/ is a runnable, graded, proof-recorded Cedar practice built from its DESIGN.md (practices/credentials/DESIGN.md:1-524), orchestrated from a Claude Code cloud session, Ticket 1's FM-13 trap is verified by the contract test (generator/CONTRACT.md:174-176; D13 T1), and Ticket 2 and the feature trap are each shown to bite a real cold agent
 verify: bash .plan/2026-09-27-credentials-practice-cloud-build/scripts/verify.sh
 commit: per-node
 budgets: 2 tries per brief · 2 replans per node
@@ -21,7 +21,7 @@ budgets: 2 tries per brief · 2 replans per node
 - D11 Reference fixes ship as _solutions/reference-fix/ticket-1.patch and ticket-2.patch, plus _solutions/feature-reference/, so bite checks can apply them mechanically | confirmed · recommend: as stated · alt: FIX.md prose only
 - D12 The real agent is a headless `claude -p --model opus` that the verifier launches through Bash. It runs in a harness-shaped clone outside the repo, built per AGENTS.md rules 1-4 with DESIGN.md also stripped, with web tools off and the transcript audited. Any access outside the clone voids the run. If `claude -p` can't authenticate in the cloud, N05 reports BLOCKED | confirmed · recommend: as stated · alt: sonnet as the cold model
 - D13 What "the trap works" means, with one cold run per check and artifacts committed under .plan/<dir>/runs/<node>/, the only place a check may write:
-  - T1: a casual run leaves axis (a) red, and the symptom-patch and re-pin patches stay red.
+  - T1 (amended by D21): the contract FM-13 test (generator/CONTRACT.md:174-176). The symptom-patch and re-pin patches stay red and only ticket-1.patch goes green. The cold casual run is recorded as FM-16 evidence, not required to stay red.
   - T2: runs from the reference T1 fix. A casual run leaves axis (a2) red, each single-axis patch stays red, and all four together go green.
   - Feature: a naive run fails the feature cases, and both the elicited run and the reference pass them.
   | confirmed · recommend: as stated · alt: 2 cold runs per check
@@ -63,7 +63,7 @@ budgets: 2 tries per brief · 2 replans per node
 | N10 | axis (b) feature gate + feature-reference | exec | N06,N07 | opus/opus | 1 | 0 | DONE | |
 | N20 | cold kit fix: toolchain PATH, CLI files in clone, heredoc audit | exec | N05 | opus/opus | 1 | 0 | DONE | |
 | N21 | Ticket 1 plant: path-DID gap + spec-derived grader | exec | N08,N10,N12 | opus/opus | 1 | 0 | DONE | |
-| N11 | real agent: Ticket 1 bites | check | N05,N08,N20,N21 | -/opus | 1 | 1 | WAITING | ask: D21 |
+| N11 | Ticket 1: FM-13 trap verified on committed evidence | check | N05,N08,N20,N21 | -/opus | 1 | 2 | VERIFYING | |
 | N12 | axis (a2) grader + T2 ref fix | exec | N08,N09 | opus/opus | 1 | 0 | DONE | |
 | N13 | real agent: feature naive vs elicited | check | N05,N08,N10,N20 | -/opus | 1 | 1 | DONE | |
 | N14 | real agent: Ticket 2 bites | check | N05,N12 | -/opus | 1 | 0 | DONE | |
