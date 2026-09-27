@@ -1,38 +1,59 @@
-practice: credentials
-clone: /tmp/n11t2.OvwFpr/clone
-command: bash _solutions/grade.sh   (fallback (no practice.json))
-date: 2026-09-27T20:38:13Z
------ output -----
+# N11 symptom — fresh temp copy of practices/credentials (planted tree, git-shippable files incl. _solutions/) at /tmp/n11v/symptom
+$ git apply symptom.patch
+Checking patch backend/src/verifier.rs...
+Applied patch backend/src/verifier.rs cleanly.
+exit: 0
+
+$ (cd backend && cargo test --offline)
+     Running unittests src/lib.rs (target/debug/deps/credentials_backend-82ef79e65254530d)
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/credential.rs (target/debug/deps/credential-f8f10d9b64a2c245)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+     Running tests/did_document.rs (target/debug/deps/did_document-18fb639c728feb4d)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+     Running tests/issuer.rs (target/debug/deps/issuer-a6afd66d89f4819a)
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.05s
+     Running tests/notifier.rs (target/debug/deps/notifier-7d0e5776db1ca711)
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/resolver.rs (target/debug/deps/resolver-12fe0cfa7594279e)
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/settings.rs (target/debug/deps/settings-9d0269617965a225)
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/status.rs (target/debug/deps/status-34c8ba3ed512dfb0)
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/store.rs (target/debug/deps/store-803b879a27beddcf)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+     Running tests/verifier.rs (target/debug/deps/verifier-a3c3c0797b0abc1f)
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.23s
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+exit: 0
+
+$ bash _solutions/grade.sh
 ==================================================================
  axis a (_solutions/grade.d/a.sh)
 ==================================================================
 ok   S1 never rotated (Harbour Club): current key accepted
 ok   S2 rotated key, new id #key-2 (Cedar Rowing): current key accepted
-ok   S3 rotated key, same id #signing, path DID (Northfield): current key accepted
-ok   S4 rotated key + moved endpoint (Kestrel): current key accepted, current issuer site
-ok   R1 Cedar Rowing: retired #key-1 rejected by the key check
-ok   R2 Northfield: retired #signing material rejected by the key check
-ok   R3 Kestrel: retired #key-2025 rejected by the key check
+FAIL S3 rotated key, same id #signing, path DID (Northfield): current key accepted: rejected: bad signature: signature does not match (BadSignature("signature does not match"))
+FAIL S4 rotated key + moved endpoint (Kestrel): current key accepted, current issuer site: rejected: did:web:badges.kestrel-league.example#key-2026 is not a key its controller signs with (UnknownKey("did:web:badges.kestrel-league.example#key-2026"))
+ok   R1 Cedar Rowing: retired #key-1 rejected
+FAIL R2 Northfield: retired #signing material rejected: accepted; must be rejected
+FAIL R3 Kestrel: retired #key-2025 rejected: accepted; must be rejected
 ok   V1 resolve_issuer(did:web:members.harbourclub.example) is the hosted did.json (keys + LinkedDomains)
-ok   V2 resolve_issuer(did:web:issuer.cedarrowing.example) is the hosted did.json (keys + LinkedDomains)
-ok   V3 resolve_issuer(did:web:guild.northfield.example:chapters:north) is the hosted did.json (keys + LinkedDomains)
-ok   V4 resolve_issuer(did:web:badges.kestrel-league.example) is the hosted did.json (keys + LinkedDomains)
-ok   V5 document whose id is not the DID fails resolution (spec §3.2 step 8)
-ok   V6 deactivated issuer (document removed) fails resolution (spec §3.4)
+FAIL V2 resolve_issuer(did:web:issuer.cedarrowing.example) is the hosted did.json (keys + LinkedDomains): assertion keys {"did:web:issuer.cedarrowing.example#key-1": "z6MkfQRhMk3mqQxdkuLrabDvekUePd2PY3KLaV37XUijHW1d"}, hosted document has {"did:web:issuer.cedarrowing.example#key-2": "z6MkvbwHpLsx49NSa1ZFfSNy6Rnr4xDBHMj5CTK1QM1uuRq9"}
+FAIL V3 resolve_issuer(did:web:guild.northfield.example:chapters:north) is the hosted did.json (keys + LinkedDomains): assertion keys {"did:web:guild.northfield.example:chapters:north#signing": "z6MkqSjfubaVn3tT7WZgBjP7sEHogmHtmmJrUPWa23kzncSU"}, hosted document has {"did:web:guild.northfield.example:chapters:north#signing": "z6MkoBtQgtdD3sMgbqPrBH88DJTVjHErYM8HhJNbtbFMReJ7"}
+FAIL V4 resolve_issuer(did:web:badges.kestrel-league.example) is the hosted did.json (keys + LinkedDomains): assertion keys {"did:web:badges.kestrel-league.example#key-2025": "z6MkttmqQ4HZ3NNqyDmMogyAX4nGGxbQungjwcu3YCaXuuaQ"}, hosted document has {"did:web:badges.kestrel-league.example#key-2026": "z6MksRrY1TKBF12rzt5ree8FrxmnkxSceh6qotrAEHBoHZq1"}
+FAIL V5 document whose id is not the DID fails resolution (spec §3.2 step 8): accepted; must be rejected
+FAIL V6 deactivated issuer (document removed) fails resolution (spec §3.4): accepted; must be rejected
 ok   V7 ported host did:web:example.com%3A3000:user:alice resolves at host:3000 (spec §3.2)
-ok   N1 Harbour Club rotates for the first time: new #key-2 accepted
-ok   N2 Harbour Club rotates for the first time: retired #key-1 rejected by the key check
+FAIL N1 Harbour Club rotates for the first time: new #key-2 accepted: rejected: did:web:members.harbourclub.example#key-2 is not a key its controller signs with (UnknownKey("did:web:members.harbourclub.example#key-2"))
+FAIL N2 Harbour Club rotates for the first time: retired #key-1 rejected: accepted; must be rejected
 ok   N3 Cedar Rowing rotates again: new #key-3 accepted
-ok   N4 Cedar Rowing rotates again: #key-2 retired and rejected by the key check
-ok   N5 Northfield rotates #signing again: new material accepted
-ok   N6 Northfield rotates #signing again: previous material rejected by the key check
-ok   N7 Kestrel rotates key and moves its site again: accepted with the newest site
-ok   W1 did_web_url(did:web:w3c-ccg.github.io) is https://w3c-ccg.github.io/.well-known/did.json (spec §3.2)
-ok   W2 did_web_url(did:web:w3c-ccg.github.io:user:alice) is https://w3c-ccg.github.io/user/alice/did.json (spec §3.2)
-ok   W3 did_web_url(did:web:example.com%3A3000) is https://example.com:3000/.well-known/did.json (spec §3.2)
-ok   W4 did_web_url(did:web:example.com%3A3000:user:alice) is https://example.com:3000/user/alice/did.json (spec §3.2)
-ok   W5 did_web_url(did:web:guild.northfield.example:chapters:north) is https://guild.northfield.example/chapters/north/did.json (spec §3.2)
-axis a: PASS 26/26
+ok   N4 Cedar Rowing rotates again: #key-2 retired and rejected
+FAIL N5 Northfield rotates #signing again: new material accepted: rejected: bad signature: signature does not match (BadSignature("signature does not match"))
+ok   N6 Northfield rotates #signing again: previous material rejected
+FAIL N7 Kestrel rotates key and moves its site again: accepted with the newest site: rejected: did:web:badges.kestrel-league.example#key-2027 is not a key its controller signs with (UnknownKey("did:web:badges.kestrel-league.example#key-2027"))
+axis a: FAIL 8/21
 
 ==================================================================
  axis a2 (_solutions/grade.d/a2.sh)
@@ -76,9 +97,8 @@ axis b: FAIL 0/7
 ==================================================================
  summary (worst-case; every axis must pass)
 ==================================================================
-axis a: PASS 26/26
+axis a: FAIL 8/21
 axis a2: FAIL 4/17
 axis b: FAIL 0/7
 worst-case: FAIL
------ end -----
 exit: 1

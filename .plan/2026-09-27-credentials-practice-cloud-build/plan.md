@@ -58,7 +58,7 @@ budgets: 2 tries per brief · 2 replans per node
 | N10 | axis (b) feature gate + feature-reference | exec | N06,N07 | opus/opus | 1 | 0 | DONE | |
 | N20 | cold kit fix: toolchain PATH, CLI files in clone, heredoc audit | exec | N05 | opus/opus | 1 | 0 | DONE | |
 | N21 | Ticket 1 plant: path-DID gap + spec-derived grader | exec | N08,N10,N12 | opus/opus | 1 | 0 | DONE | |
-| N11 | real agent: Ticket 1 bites | check | N05,N08,N20,N21 | -/opus | 1 | 1 | VERIFYING | |
+| N11 | real agent: Ticket 1 bites | check | N05,N08,N20,N21 | -/opus | 1 | 1 | REPLAN | fail C1 (again) |
 | N12 | axis (a2) grader + T2 ref fix | exec | N08,N09 | opus/opus | 1 | 0 | DONE | |
 | N13 | real agent: feature naive vs elicited | check | N05,N08,N10,N20 | -/opus | 1 | 1 | DONE | |
 | N14 | real agent: Ticket 2 bites | check | N05,N12 | -/opus | 1 | 0 | DONE | |

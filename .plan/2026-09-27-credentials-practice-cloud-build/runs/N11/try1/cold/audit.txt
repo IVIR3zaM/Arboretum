@@ -1,0 +1,2 @@
+audit: clean — 14 tool call(s) checked, clone /tmp/n11v/clone2
+exit: 0

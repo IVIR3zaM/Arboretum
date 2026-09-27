@@ -1,7 +1,7 @@
 practice: credentials
-clone: /tmp/n11t2.OvwFpr/clone
+clone: /tmp/n11v/clone2
 command: bash _solutions/grade.sh   (fallback (no practice.json))
-date: 2026-09-27T20:38:13Z
+date: 2026-09-27T15:32:02Z
 ----- output -----
 ==================================================================
  axis a (_solutions/grade.d/a.sh)
@@ -10,9 +10,9 @@ ok   S1 never rotated (Harbour Club): current key accepted
 ok   S2 rotated key, new id #key-2 (Cedar Rowing): current key accepted
 ok   S3 rotated key, same id #signing, path DID (Northfield): current key accepted
 ok   S4 rotated key + moved endpoint (Kestrel): current key accepted, current issuer site
-ok   R1 Cedar Rowing: retired #key-1 rejected by the key check
-ok   R2 Northfield: retired #signing material rejected by the key check
-ok   R3 Kestrel: retired #key-2025 rejected by the key check
+ok   R1 Cedar Rowing: retired #key-1 rejected
+ok   R2 Northfield: retired #signing material rejected
+ok   R3 Kestrel: retired #key-2025 rejected
 ok   V1 resolve_issuer(did:web:members.harbourclub.example) is the hosted did.json (keys + LinkedDomains)
 ok   V2 resolve_issuer(did:web:issuer.cedarrowing.example) is the hosted did.json (keys + LinkedDomains)
 ok   V3 resolve_issuer(did:web:guild.northfield.example:chapters:north) is the hosted did.json (keys + LinkedDomains)
@@ -21,18 +21,13 @@ ok   V5 document whose id is not the DID fails resolution (spec §3.2 step 8)
 ok   V6 deactivated issuer (document removed) fails resolution (spec §3.4)
 ok   V7 ported host did:web:example.com%3A3000:user:alice resolves at host:3000 (spec §3.2)
 ok   N1 Harbour Club rotates for the first time: new #key-2 accepted
-ok   N2 Harbour Club rotates for the first time: retired #key-1 rejected by the key check
+ok   N2 Harbour Club rotates for the first time: retired #key-1 rejected
 ok   N3 Cedar Rowing rotates again: new #key-3 accepted
-ok   N4 Cedar Rowing rotates again: #key-2 retired and rejected by the key check
+ok   N4 Cedar Rowing rotates again: #key-2 retired and rejected
 ok   N5 Northfield rotates #signing again: new material accepted
-ok   N6 Northfield rotates #signing again: previous material rejected by the key check
+ok   N6 Northfield rotates #signing again: previous material rejected
 ok   N7 Kestrel rotates key and moves its site again: accepted with the newest site
-ok   W1 did_web_url(did:web:w3c-ccg.github.io) is https://w3c-ccg.github.io/.well-known/did.json (spec §3.2)
-ok   W2 did_web_url(did:web:w3c-ccg.github.io:user:alice) is https://w3c-ccg.github.io/user/alice/did.json (spec §3.2)
-ok   W3 did_web_url(did:web:example.com%3A3000) is https://example.com:3000/.well-known/did.json (spec §3.2)
-ok   W4 did_web_url(did:web:example.com%3A3000:user:alice) is https://example.com:3000/user/alice/did.json (spec §3.2)
-ok   W5 did_web_url(did:web:guild.northfield.example:chapters:north) is https://guild.northfield.example/chapters/north/did.json (spec §3.2)
-axis a: PASS 26/26
+axis a: PASS 21/21
 
 ==================================================================
  axis a2 (_solutions/grade.d/a2.sh)
@@ -76,7 +71,7 @@ axis b: FAIL 0/7
 ==================================================================
  summary (worst-case; every axis must pass)
 ==================================================================
-axis a: PASS 26/26
+axis a: PASS 21/21
 axis a2: FAIL 4/17
 axis b: FAIL 0/7
 worst-case: FAIL

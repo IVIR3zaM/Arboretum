@@ -1,51 +1,105 @@
-diff --git a/backend/README.md b/backend/README.md
-index 4f1b5b7..2de3ae1 100644
---- a/backend/README.md
-+++ b/backend/README.md
-@@ -5,10 +5,11 @@ leagues we've onboarded, and checks the presentations members show at the door.
+diff --git a/backend/src/resolver.rs b/backend/src/resolver.rs
+index 837f7d0..c203fd0 100644
+--- a/backend/src/resolver.rs
++++ b/backend/src/resolver.rs
+@@ -76,9 +76,9 @@ pub fn did_key_for(key: &VerifyingKey) -> String {
+ }
  
- ## How it works
- 
--**Issuers.** We identify issuers with `did:key`: an issuer's DID *is* its Ed25519 public key, so
--checking an issuer's signature needs nothing but the DID in the credential — no registry lookup,
--no network call. An issuer is approved once, at onboarding, and is recorded in
--`data/onboarded-issuers.json`.
-+**Issuers.** Issuers are identified with `did:web`. The DID carries no key material: the verifier
-+resolves the issuer's DID document when it checks a credential, and only the document the issuer
-+currently publishes is authoritative. Issuers rotate keys and move endpoints by republishing it.
-+An issuer is approved at onboarding and recorded in `data/onboarded-issuers.json`. The document
-+stored there is a snapshot taken at onboarding and is never used to verify signatures.
- 
- **Credentials.** A credential is a JSON-LD verifiable credential signed by its issuer
- (`Ed25519Signature2020`, over the RFC 8785 canonical form of the credential without its `proof`).
-diff --git a/backend/src/verifier.rs b/backend/src/verifier.rs
-index 0afb09e..e209ec2 100644
---- a/backend/src/verifier.rs
-+++ b/backend/src/verifier.rs
-@@ -194,13 +194,12 @@ impl Verifier {
+ /// The HTTPS URL a `did:web` document is published at: `did.json` under the
+-/// host's `/.well-known/` directory, with any further segments of the
+-/// identifier as subdirectories. A port is written percent-encoded in the host
+-/// segment (`example.com%3A8443`).
++/// path the identifier's further segments spell out, or under the host's
++/// `/.well-known/` directory when there are none. A port is written
++/// percent-encoded in the host segment (`example.com%3A8443`).
+ pub fn did_web_url(did: &str) -> Result<String, ResolveError> {
+     let invalid = || ResolveError::InvalidDid(did.to_string());
+     let id = did.strip_prefix("did:web:").ok_or_else(invalid)?;
+@@ -91,7 +91,10 @@ pub fn did_web_url(did: &str) -> Result<String, ResolveError> {
+     if path.iter().any(|s| s.is_empty() || s.contains('/')) {
+         return Err(invalid());
+     }
+-    let mut url = format!("https://{host}/.well-known");
++    let mut url = format!("https://{host}");
++    if path.is_empty() {
++        url.push_str("/.well-known");
++    }
+     for segment in &path {
+         url.push('/');
+         url.push_str(segment);
+diff --git a/backend/src/store.rs b/backend/src/store.rs
+index 6806b9b..82d4cdd 100644
+--- a/backend/src/store.rs
++++ b/backend/src/store.rs
+@@ -65,9 +65,10 @@ impl Store {
+         self.lock().issuers.insert(issuer.did.clone(), issuer);
      }
  
-     /// The DID document an issuer's credentials are checked against.
-+    ///
-+    /// Always resolved at verification time: a `did:web` issuer rotates keys and
-+    /// moves endpoints by republishing its document, and only the document it
-+    /// currently serves is authoritative. The copy recorded at onboarding is a
-+    /// snapshot and must not be used to check signatures.
+-    /// Issuer documents are self-contained, as with the peer DIDs issuers
+-    /// first onboarded with: keys and service endpoints travel with the
+-    /// document, so the copy recorded at onboarding is all verification needs.
++    /// The issuer as recorded at onboarding. `document` is a snapshot from
++    /// that day: a `did:web` issuer may since have rotated keys or moved
++    /// service endpoints, so verification resolves the current document
++    /// instead of using this copy.
+     pub fn onboarded_issuer(&self, did: &str) -> Option<OnboardedIssuer> {
+         self.lock().issuers.get(did).cloned()
+     }
+diff --git a/backend/src/verifier.rs b/backend/src/verifier.rs
+index 3915c73..05cef8f 100644
+--- a/backend/src/verifier.rs
++++ b/backend/src/verifier.rs
+@@ -193,11 +193,11 @@ impl Verifier {
+         })
+     }
+ 
+-    /// The DID document an issuer's credentials are checked against.
++    /// The DID document an issuer's credentials are checked against: the one
++    /// the issuer publishes now, not the copy recorded at onboarding. A
++    /// `did:web` issuer rotates keys by replacing its hosted document, so only
++    /// the current document says which keys are the issuer's.
      pub fn resolve_issuer(&self, did: &str) -> Result<Document, VerifyError> {
--        // Issuer documents are self-contained, as with the peer DIDs issuers
--        // first onboarded with: keys and service endpoints travel with the
--        // document, so the copy recorded at onboarding is all verification needs.
 -        if let Some(issuer) = self.store.onboarded_issuer(did) {
 -            return Ok(issuer.document);
 -        }
          Ok(self.resolver.resolve(did)?)
      }
  }
+diff --git a/backend/tests/resolver.rs b/backend/tests/resolver.rs
+index ca79d05..9a60aa4 100644
+--- a/backend/tests/resolver.rs
++++ b/backend/tests/resolver.rs
+@@ -99,6 +99,25 @@ fn did_web_maps_an_encoded_port() {
+     assert_eq!(did_web_url("did:web:localhost%3A8443").unwrap(), "https://localhost:8443/.well-known/did.json");
+ }
+ 
++#[test]
++fn did_web_maps_path_segments_without_the_well_known_directory() {
++    assert_eq!(
++        did_web_url("did:web:guild.northfield.example:chapters:north").unwrap(),
++        "https://guild.northfield.example/chapters/north/did.json"
++    );
++    assert_eq!(did_web_url("did:web:example.com%3A3000:user:alice").unwrap(), "https://example.com:3000/user/alice/did.json");
++}
++
++#[test]
++fn every_onboarded_issuer_resolves_from_the_bucket_mirror() {
++    let resolver = Resolver::new(Arc::new(MirrorTransport::from_env()));
++    for issuer in store().onboarded_issuers() {
++        let doc = resolver.resolve(&issuer.did).unwrap_or_else(|e| panic!("{}: {e}", issuer.did));
++        assert_eq!(doc.id.as_str(), issuer.did);
++        assert!(!doc.assertion_method.is_empty(), "{} publishes no assertion key", issuer.did);
++    }
++}
++
+ #[test]
+ fn did_web_rejects_an_empty_host() {
+     assert!(did_web_url("did:web:").is_err());
 diff --git a/backend/tests/verifier.rs b/backend/tests/verifier.rs
-index 8bdc48f..a9aaec5 100644
+index 8bdc48f..81e7f6d 100644
 --- a/backend/tests/verifier.rs
 +++ b/backend/tests/verifier.rs
-@@ -1,9 +1,15 @@
+@@ -1,8 +1,14 @@
  mod common;
  
 +use std::sync::Arc;
@@ -55,59 +109,57 @@ index 8bdc48f..a9aaec5 100644
 +use credentials_backend::resolver::{did_key_for, Resolver};
  use credentials_backend::status::revoke_credential;
 -use credentials_backend::verifier::VerifyError;
--use serde_json::json;
 +use credentials_backend::store::Store;
 +use credentials_backend::transport::StaticTransport;
 +use credentials_backend::verifier::{Verifier, VerifyError};
-+use serde_json::{json, Value};
+ use serde_json::json;
  
  use common::*;
- 
-@@ -181,3 +187,47 @@ fn a_credential_without_an_issuer_is_malformed() {
-     let err = verifier(store()).verify_credential(&json!({ "credentialSubject": {} })).unwrap_err();
-     assert!(matches!(err, VerifyError::Malformed(_)), "{err:?}");
+@@ -176,6 +182,47 @@ fn a_proof_by_a_key_the_issuer_does_not_list_is_rejected() {
+     assert!(matches!(err, VerifyError::UnknownKey(ref id) if *id == unlisted), "{err:?}");
  }
-+
-+/// Harbour after rotating `#key-1` out for `#key-2` in the issuer console.
-+fn rotated_harbour() -> (Issuer, Value) {
+ 
++/// Harbour's hosted document after rotating from `key-1` to `key-2`; the
++/// onboarding snapshot in the store still lists only `key-1`.
++fn rotated_verifier(store: Arc<Store>, new_key: &ed25519_dalek::SigningKey) -> Verifier {
 +    let key_id = format!("{HARBOUR_DID}#key-2");
-+    let issuer = Issuer::new(HARBOUR_DID, &key_id, &[0x42; 32]);
-+    let mut document = harbour_document();
-+    document["verificationMethod"][0]["id"] = json!(key_id);
-+    document["verificationMethod"][0]["publicKeyMultibase"] =
-+        json!(did_key_for(&issuer.verifying_key()).trim_start_matches("did:key:"));
-+    document["authentication"] = json!([key_id]);
-+    document["assertionMethod"] = json!([key_id]);
-+    document["service"][0]["serviceEndpoint"] = json!("https://harbourclub.example/members/");
-+    (issuer, document)
-+}
-+
-+fn verifier_serving(document: &Value, store: Arc<Store>) -> Verifier {
-+    let transport = StaticTransport::default().with(HARBOUR_URL, document.to_string());
++    let mut doc = harbour_document();
++    doc["verificationMethod"][0]["id"] = json!(key_id);
++    doc["verificationMethod"][0]["publicKeyMultibase"] =
++        json!(did_key_for(&new_key.verifying_key()).trim_start_matches("did:key:"));
++    doc["authentication"] = json!([key_id]);
++    doc["assertionMethod"] = json!([key_id]);
++    doc["service"][0]["serviceEndpoint"] = json!("https://harbourclub.example/members/");
++    let transport = StaticTransport::default().with(HARBOUR_URL, doc.to_string());
 +    Verifier::new(Resolver::new(Arc::new(transport)), store).with_clock(|| NOW)
 +}
 +
 +#[test]
-+fn a_credential_signed_with_a_rotated_key_is_accepted() {
++fn a_credential_signed_with_a_rotated_issuer_key_is_accepted() {
 +    let store = store();
 +    let holder = Holder::new(1);
-+    let (issuer, document) = rotated_harbour();
-+    let issued = issuer.issue(&store, &membership_request(&holder)).unwrap();
++    let new_key = ed25519_dalek::SigningKey::from_bytes(&[42; 32]);
++    let rotated = Issuer::new(HARBOUR_DID, &format!("{HARBOUR_DID}#key-2"), &new_key.to_bytes());
++    let issued = rotated.issue(&store, &membership_request(&holder)).unwrap();
 +    let vp = holder.present(&issued, &["member"], NONCE, DOMAIN);
 +
 +    let verified =
-+        verifier_serving(&document, store).verify_presentation(&submission("req-1", vp), NONCE, DOMAIN).unwrap();
++        rotated_verifier(store, &new_key).verify_presentation(&submission("req-1", vp), NONCE, DOMAIN).unwrap();
 +    assert_eq!(verified.credential.issuer, HARBOUR_DID);
 +    assert_eq!(verified.credential.issuer_site.as_deref(), Some("https://harbourclub.example/members/"));
 +}
 +
 +#[test]
-+fn a_credential_signed_with_a_retired_key_is_rejected() {
++fn a_credential_signed_with_a_retired_issuer_key_is_rejected() {
 +    let store = store();
 +    let holder = Holder::new(1);
-+    let (_, document) = rotated_harbour();
 +    let issued = harbour().issue(&store, &membership_request(&holder)).unwrap();
++    let new_key = ed25519_dalek::SigningKey::from_bytes(&[42; 32]);
 +
-+    let err = verifier_serving(&document, store).verify_credential(&issued.credential).unwrap_err();
++    let err = rotated_verifier(store, &new_key).verify_credential(&issued.credential).unwrap_err();
 +    assert!(matches!(err, VerifyError::UnknownKey(ref id) if id == HARBOUR_KEY_ID), "{err:?}");
 +}
++
+ #[test]
+ fn a_credential_without_an_issuer_is_malformed() {
+     let err = verifier(store()).verify_credential(&json!({ "credentialSubject": {} })).unwrap_err();

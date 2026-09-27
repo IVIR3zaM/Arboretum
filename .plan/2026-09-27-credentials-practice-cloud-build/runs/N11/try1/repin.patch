@@ -1,0 +1,26 @@
+diff --git a/backend/data/onboarded-issuers.json b/backend/data/onboarded-issuers.json
+index 9976326..7768855 100644
+--- a/backend/data/onboarded-issuers.json
++++ b/backend/data/onboarded-issuers.json
+@@ -44,17 +44,17 @@
+       "id": "did:web:issuer.cedarrowing.example",
+       "verificationMethod": [
+         {
+-          "id": "did:web:issuer.cedarrowing.example#key-1",
++          "id": "did:web:issuer.cedarrowing.example#key-2",
+           "type": "Multikey",
+           "controller": "did:web:issuer.cedarrowing.example",
+-          "publicKeyMultibase": "z6MkfQRhMk3mqQxdkuLrabDvekUePd2PY3KLaV37XUijHW1d"
++          "publicKeyMultibase": "z6MkvbwHpLsx49NSa1ZFfSNy6Rnr4xDBHMj5CTK1QM1uuRq9"
+         }
+       ],
+       "authentication": [
+-        "did:web:issuer.cedarrowing.example#key-1"
++        "did:web:issuer.cedarrowing.example#key-2"
+       ],
+       "assertionMethod": [
+-        "did:web:issuer.cedarrowing.example#key-1"
++        "did:web:issuer.cedarrowing.example#key-2"
+       ],
+       "service": [
+         {
