@@ -1,0 +1,166 @@
+diff --git a/src/cutoff.ts b/src/cutoff.ts
+index fc310f0..62934ef 100644
+--- a/src/cutoff.ts
++++ b/src/cutoff.ts
+@@ -31,8 +31,69 @@ export function toIsoDate(d: Date): string {
+ export function cutoffInstant(deliveryDate: string, sub: Subscription): Date {
+   const cutoffDay = shiftDate(deliveryDate, -sub.cutoffDaysBefore);
+   const [y, m, d] = cutoffDay.split("-").map(Number);
+-  // Construct the wall-clock cutoff time and return it as an instant.
+-  return new Date(y, m - 1, d, sub.cutoffHour, 0, 0, 0);
++  // Interpret the wall-clock cutoff in the subscription's timezone, never the
++  // host's: `new Date(y, m, d, h)` would silently use the server's zone.
++  return zonedTimeToInstant(y, m, d, sub.cutoffHour, sub.timezone);
++}
++
++/**
++ * The absolute instant at which the wall clock in `timeZone` reads
++ * `y-m-d hour:00`. If that wall time falls in a DST gap it resolves to the
++ * instant just after the gap (e.g. 02:00 on a spring-forward day -> 03:00);
++ * if it is ambiguous (fall-back) the earlier occurrence is used.
++ */
++export function zonedTimeToInstant(y: number, m: number, d: number, hour: number, timeZone: string): Date {
++  const wall = Date.UTC(y, m - 1, d, hour, 0, 0, 0);
++  // Offsets either side of the target; pick the one that round-trips.
++  const offBefore = tzOffsetMs(new Date(wall - 86_400_000), timeZone);
++  const offAfter = tzOffsetMs(new Date(wall + 86_400_000), timeZone);
++  const candidates = [wall - offBefore, wall - offAfter].sort((a, b) => a - b);
++  for (const t of candidates) {
++    if (t + tzOffsetMs(new Date(t), timeZone) === wall) return new Date(t);
++  }
++  // Wall time doesn't exist (DST gap): the gap ends at this instant.
++  return new Date(wall - offBefore);
++}
++
++/** Offset (ms) of `timeZone` from UTC at instant `at`: local wall time minus UTC. */
++function tzOffsetMs(at: Date, timeZone: string): number {
++  const p = zonedParts(at, timeZone);
++  const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
++  return asUtc - Math.floor(at.getTime() / 1000) * 1000;
++}
++
++const formatters = new Map<string, Intl.DateTimeFormat>();
++
++function zonedParts(at: Date, timeZone: string) {
++  let fmt = formatters.get(timeZone);
++  if (!fmt) {
++    fmt = new Intl.DateTimeFormat("en-US", {
++      timeZone,
++      hourCycle: "h23",
++      year: "numeric",
++      month: "2-digit",
++      day: "2-digit",
++      hour: "2-digit",
++      minute: "2-digit",
++      second: "2-digit",
++    });
++    formatters.set(timeZone, fmt);
++  }
++  const get = (type: string) => Number(fmt.formatToParts(at).find((x) => x.type === type)!.value);
++  return {
++    year: get("year"),
++    month: get("month"),
++    day: get("day"),
++    hour: get("hour"),
++    minute: get("minute"),
++    second: get("second"),
++  };
++}
++
++/** The calendar date (YYYY-MM-DD) it is in `timeZone` at instant `at`. */
++export function localIsoDate(at: Date, timeZone: string): string {
++  const p = zonedParts(at, timeZone);
++  return `${p.year}-${String(p.month).padStart(2, "0")}-${String(p.day).padStart(2, "0")}`;
+ }
+ 
+ /** True if `now` is still before the cutoff for `deliveryDate` (the box is still open). */
+diff --git a/src/scheduling.ts b/src/scheduling.ts
+index 437b00a..09bcc3b 100644
+--- a/src/scheduling.ts
++++ b/src/scheduling.ts
+@@ -2,7 +2,7 @@
+ // the next one a customer can still act on.
+ 
+ import type { Cadence, Subscription } from "./types.ts";
+-import { shiftDate, isBeforeCutoff } from "./cutoff.ts";
++import { shiftDate, isBeforeCutoff, localIsoDate } from "./cutoff.ts";
+ 
+ function step(date: string, cadence: Cadence): string {
+   switch (cadence) {
+@@ -35,7 +35,9 @@ export function upcomingDeliveries(sub: Subscription, from: string, count: numbe
+  * delivery whose cutoff has not yet passed as of `now`.
+  */
+ export function nextDeliveryDate(sub: Subscription, now: Date): string {
+-  const today = nowToIsoDate(now);
++  // "Today" in the customer's timezone, not UTC — otherwise customers behind UTC
++  // can skip over a delivery whose cutoff hasn't passed locally yet.
++  const today = localIsoDate(now, sub.timezone);
+   const candidates = upcomingDeliveries(sub, today, 6);
+   for (const date of candidates) {
+     if (isBeforeCutoff(now, date, sub)) {
+@@ -45,10 +47,3 @@ export function nextDeliveryDate(sub: Subscription, now: Date): string {
+   // All cutoffs in the window have passed; fall through to the last candidate.
+   return candidates[candidates.length - 1];
+ }
+-
+-function nowToIsoDate(now: Date): string {
+-  const y = now.getUTCFullYear();
+-  const m = String(now.getUTCMonth() + 1).padStart(2, "0");
+-  const d = String(now.getUTCDate()).padStart(2, "0");
+-  return `${y}-${m}-${d}`;
+-}
+diff --git a/test/deliveries.test.ts b/test/deliveries.test.ts
+index e82530b..dd09c59 100644
+--- a/test/deliveries.test.ts
++++ b/test/deliveries.test.ts
+@@ -126,3 +126,50 @@ test("processQueue de-duplicates a repeated event id and ships once", () => {
+   assert.equal(second.length, 0);
+   assert.equal(svc.deliveriesFor("cust-1")[0].status, "delivered");
+ });
++
++// --- cutoff honours the subscription's timezone (ticket #4471) ----------------
++// These must pass regardless of the host's TZ; `npm test` is run under several.
++
++import { cutoffInstant } from "../src/cutoff.ts";
++
++test("Tokyo cutoff is 18:00 JST, not 18:00 server time", () => {
++  const tokyo = { ...sub, timezone: "Asia/Tokyo" };
++  // Delivery 2026-03-20 -> cutoff 2026-03-18 18:00 JST = 09:00Z.
++  assert.equal(cutoffInstant("2026-03-20", tokyo).toISOString(), "2026-03-18T09:00:00.000Z");
++  assert.equal(isBeforeCutoff(new Date("2026-03-18T08:59:59Z"), "2026-03-20", tokyo), true);
++  assert.equal(isBeforeCutoff(new Date("2026-03-18T09:00:00Z"), "2026-03-20", tokyo), false);
++});
++
++test("Honolulu cutoff is 18:00 HST, not 18:00 server time", () => {
++  const hnl = { ...sub, timezone: "Pacific/Honolulu" };
++  // 2026-03-18 18:00 HST (UTC-10) = 2026-03-19 04:00Z.
++  assert.equal(cutoffInstant("2026-03-20", hnl).toISOString(), "2026-03-19T04:00:00.000Z");
++  assert.equal(isBeforeCutoff(new Date("2026-03-19T03:59:59Z"), "2026-03-20", hnl), true);
++  assert.equal(isBeforeCutoff(new Date("2026-03-19T04:00:00Z"), "2026-03-20", hnl), false);
++});
++
++test("cutoff tracks DST: same local hour, different UTC offset", () => {
++  const la = { ...sub, timezone: "America/Los_Angeles" };
++  // PST (UTC-8) before 2026-03-08, PDT (UTC-7) after.
++  assert.equal(cutoffInstant("2026-03-06", la).toISOString(), "2026-03-05T02:00:00.000Z");
++  assert.equal(cutoffInstant("2026-03-13", la).toISOString(), "2026-03-12T01:00:00.000Z");
++});
++
++test("cutoff hour inside a DST gap resolves to the end of the gap", () => {
++  const la = { ...sub, timezone: "America/Los_Angeles", cutoffHour: 2 };
++  // 02:00 doesn't exist on 2026-03-08 in LA; clocks jump to 03:00 PDT = 10:00Z.
++  assert.equal(cutoffInstant("2026-03-10", la).toISOString(), "2026-03-08T10:00:00.000Z");
++});
++
++test("ambiguous cutoff hour (DST fall-back) uses the earlier occurrence", () => {
++  const la = { ...sub, timezone: "America/Los_Angeles", cutoffHour: 1 };
++  // 01:00 happens twice on 2026-11-01; first is 01:00 PDT = 08:00Z.
++  assert.equal(cutoffInstant("2026-11-03", la).toISOString(), "2026-11-01T08:00:00.000Z");
++});
++
++test("nextDeliveryDate uses the customer's local date, not UTC", () => {
++  const hnl = { ...sub, timezone: "Pacific/Honolulu", cutoffDaysBefore: 0, cutoffHour: 22 };
++  // 21:00 HST on 2026-03-20 (already 03-21 in UTC); the 03-20 box is open until 22:00 HST.
++  assert.equal(nextDeliveryDate(hnl, new Date("2026-03-21T07:00:00Z")), "2026-03-20");
++  assert.equal(nextDeliveryDate(hnl, new Date("2026-03-21T08:00:00Z")), "2026-03-27");
++});

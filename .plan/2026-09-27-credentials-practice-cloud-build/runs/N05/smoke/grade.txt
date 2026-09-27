@@ -1,0 +1,16 @@
+practice: deliveries
+clone: /tmp/cold-N05-smoke
+command: node _solutions/grade.mjs   (practice.json -> commands.grade)
+date: 2026-09-27T11:07:17Z
+----- output -----
+Acceptance grade — cutoff correctness + the skip feature, across server timezones
+
+  TZ=UTC                  8/13  FAIL
+  TZ=America/Los_Angeles  8/13  FAIL
+  TZ=Asia/Tokyo           8/13  FAIL
+
+  Worst-case score: 8/13
+  ❌ Not there yet — a cutoff lands at the wrong instant for customers outside the
+     server's timezone, and/or skipping the next box does not do what was agreed.
+----- end -----
+exit: 1
