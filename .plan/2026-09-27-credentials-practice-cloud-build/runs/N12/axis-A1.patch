@@ -1,0 +1,14 @@
+diff --git a/backend/src/notifier.rs b/backend/src/notifier.rs
+index 41efb54..c8c0291 100644
+--- a/backend/src/notifier.rs
++++ b/backend/src/notifier.rs
+@@ -151,6 +151,9 @@ impl Notifier {
+ 
+         if tokio::time::timeout(DISPATCH_BUDGET, fan_out).await.is_err() {
+             eprintln!("notifier: {tenant}: fan-out for {} did not finish within {DISPATCH_BUDGET:?}", change.credential_id);
++            let reason = format!("fan-out for {} did not finish within {DISPATCH_BUDGET:?}", change.credential_id);
++            // `*`: every subscription of the change that had not been answered.
++            self.sink.record(DeliveryEvent { tenant: tenant.to_string(), subscription: "*".to_string(), outcome: Outcome::Failed { reason } });
+         }
+     }
+ 

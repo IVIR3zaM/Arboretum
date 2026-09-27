@@ -1,0 +1,40 @@
+diff --git a/backend/src/notifier.rs b/backend/src/notifier.rs
+index 41efb54..8a23ba8 100644
+--- a/backend/src/notifier.rs
++++ b/backend/src/notifier.rs
+@@ -26,7 +26,9 @@ pub const DISPATCH_BUDGET: Duration = Duration::from_secs(10);
+ pub const WEBHOOK_KIND: &str = "webhook";
+ 
+ pub const CANARY_ID: &str = "canary";
+-pub const CANARY_URL: &str = "https://example.com/webhooks/status";
++/// A stub the platform serves on loopback. Never a name reserved for
++/// documentation: an answer from one says nothing about this service.
++pub const CANARY_URL: &str = "http://127.0.0.1/webhooks/canary";
+ 
+ #[derive(Debug, Clone, PartialEq, Eq)]
+ pub struct Subscription {
+@@ -136,17 +138,20 @@ impl Notifier {
+     pub async fn notify(&self, change: &StatusChange) {
+         let tenant = change.issuer.as_str();
+         let body = payload(change);
++        self.canary_ok.store(false, Ordering::SeqCst);
+ 
+         let fan_out = async {
+-            for sub in &self.platform {
++            // The platform subscribers, the canary among them, go out after the
++            // tenant's lookup and alongside the tenant's own subscribers: the
++            // canary is acknowledged only when the path they depend on works.
++            let mut subscriptions = self.subscriptions(tenant).await;
++            subscriptions.extend(self.platform.iter().cloned());
++            for sub in &subscriptions {
+                 let delivered = self.dispatch(tenant, sub, &body).await;
+                 if sub.id == CANARY_ID {
+                     self.canary_ok.store(delivered, Ordering::SeqCst);
+                 }
+             }
+-            for sub in self.subscriptions(tenant).await {
+-                self.dispatch(tenant, &sub, &body).await;
+-            }
+         };
+ 
+         if tokio::time::timeout(DISPATCH_BUDGET, fan_out).await.is_err() {

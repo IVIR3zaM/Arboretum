@@ -1,0 +1,23 @@
+# C2: planted + ticket-1.patch + axis-A2.patch → bash _solutions/grade.d/a2.sh
+notifier: did:web:issuer.cedarrowing.example: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000007 did not finish within 10s
+notifier: did:web:issuer.cedarrowing.example: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000007 did not finish within 10s
+notifier: did:web:guild.northfield.example:chapters:north: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000009 did not finish within 10s
+ok   D1 small tenant, all healthy: every healthy subscriber delivered within 10s
+ok   C1 small tenant, all healthy: canary healthy
+ok   K1 small tenant, all healthy: canary healthy implies every healthy subscriber delivered
+FAIL R1 small tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. https://example.com/webhooks/status
+ok   D2 small tenant, first subscriber hangs: every healthy subscriber delivered within 10s
+FAIL O2 small tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink: no sink event reports rp-00001 (never answered) as not delivered
+ok   K2 small tenant, first subscriber hangs: canary healthy implies every healthy subscriber delivered
+FAIL R2 small tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. https://example.com/webhooks/status
+FAIL D3 large tenant, all healthy: every healthy subscriber delivered within 10s: 20 of 20 healthy subscribers not delivered within 10s (rp-00001, rp-00002, rp-00003, … (20 in all))
+ok   C3 large tenant, all healthy: canary healthy
+FAIL K3 large tenant, all healthy: canary healthy implies every healthy subscriber delivered: canary healthy while 20 healthy subscribers got nothing
+FAIL R3 large tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. https://example.com/webhooks/status
+FAIL D4 large tenant, first subscriber hangs: every healthy subscriber delivered within 10s: 19 of 19 healthy subscribers not delivered within 10s (rp-00002, rp-00003, rp-00004, … (19 in all))
+FAIL O4 large tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink: no sink event reports rp-00001 (never answered) as not delivered
+FAIL K4 large tenant, first subscriber hangs: canary healthy implies every healthy subscriber delivered: canary healthy while 19 healthy subscribers got nothing
+FAIL R4 large tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. https://example.com/webhooks/status
+FAIL P1 delivery path fails (subscriptions unreadable within the budget): canary turns red: canary healthy, but 24000 of 24000 subscribers of the tenant got nothing (rp-00001, rp-00002, rp-00003, … (24000 in all))
+axis a2: FAIL 6/17
+exit=1

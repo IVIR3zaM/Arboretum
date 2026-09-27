@@ -1,0 +1,21 @@
+# C2: planted + ticket-1.patch + all-but-A1.patch → bash _solutions/grade.d/a2.sh
+notifier: did:web:guild.northfield.example:chapters:north: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000009 did not finish within 10s
+ok   D1 small tenant, all healthy: every healthy subscriber delivered within 10s
+ok   C1 small tenant, all healthy: canary healthy
+ok   K1 small tenant, all healthy: canary healthy implies every healthy subscriber delivered
+ok   R1 small tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md)
+ok   D2 small tenant, first subscriber hangs: every healthy subscriber delivered within 10s
+FAIL O2 small tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink: no sink event reports rp-00001 (never answered) as not delivered
+ok   K2 small tenant, first subscriber hangs: canary healthy implies every healthy subscriber delivered
+ok   R2 small tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md)
+ok   D3 large tenant, all healthy: every healthy subscriber delivered within 10s
+ok   C3 large tenant, all healthy: canary healthy
+ok   K3 large tenant, all healthy: canary healthy implies every healthy subscriber delivered
+ok   R3 large tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md)
+ok   D4 large tenant, first subscriber hangs: every healthy subscriber delivered within 10s
+FAIL O4 large tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink: no sink event reports rp-00001 (never answered) as not delivered
+ok   K4 large tenant, first subscriber hangs: canary healthy implies every healthy subscriber delivered
+ok   R4 large tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md)
+ok   P1 delivery path fails (subscriptions unreadable within the budget): canary turns red
+axis a2: FAIL 15/17
+exit=1

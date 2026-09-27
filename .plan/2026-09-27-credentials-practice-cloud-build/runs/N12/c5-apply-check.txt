@@ -1,0 +1,7 @@
+# C5: git apply --check ticket-2.patch
+## planted tree
+Checking patch backend/src/notifier.rs...
+exit=0
+## ticket-1-fixed tree
+Checking patch backend/src/notifier.rs...
+exit=0

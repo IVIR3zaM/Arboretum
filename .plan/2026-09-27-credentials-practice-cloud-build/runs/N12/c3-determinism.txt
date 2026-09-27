@@ -1,0 +1,4 @@
+# C3: three consecutive a2 runs on the fixed tree (planted + ticket-1 + ticket-2), full output hashed
+run 1: axis a2: PASS 17/17 · sha256 994a4c1a95bd5bf0
+run 2: axis a2: PASS 17/17 · sha256 994a4c1a95bd5bf0
+run 3: axis a2: PASS 17/17 · sha256 994a4c1a95bd5bf0

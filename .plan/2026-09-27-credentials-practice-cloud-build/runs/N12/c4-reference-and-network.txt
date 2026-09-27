@@ -1,0 +1,14 @@
+# C4: a2 on the fixed tree inside a network namespace with no interfaces (unshare -rn)
+axis a2: PASS 17/17
+# C4: reference/ is read at run time — the fixed tree with webhook-config.yaml timeout_seconds 10 → 3
+FAIL O2 small tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink: no sink event reports rp-00001 (never answered) as not 
+FAIL O4 large tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink: no sink event reports rp-00001 (never answered) as not 
+axis a2: FAIL 15/17
+# C4: reserved-domains.md table gains 127.0.0.1 (the fix's loopback canary)
+FAIL R1 small tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. http://127.0.0
+FAIL R2 small tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. htt
+FAIL R3 large tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. http://127.0.0
+FAIL R4 large tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md): 1 call(s) to a reserved name, e.g. htt
+axis a2: FAIL 13/17
+# restored
+axis a2: PASS 17/17

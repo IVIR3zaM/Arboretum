@@ -1,0 +1,70 @@
+# C1b: planted + ticket-1.patch + ticket-2.patch → bash _solutions/grade.sh
+==================================================================
+ axis a (_solutions/grade.d/a.sh)
+==================================================================
+ok   S1 never rotated (Harbour Club): current key accepted
+ok   S2 rotated key, new id #key-2 (Cedar Rowing): current key accepted
+ok   S3 rotated key, same id #signing, path DID (Northfield): current key accepted
+ok   S4 rotated key + moved endpoint (Kestrel): current key accepted, current issuer site
+ok   R1 Cedar Rowing: retired #key-1 rejected
+ok   R2 Northfield: retired #signing material rejected
+ok   R3 Kestrel: retired #key-2025 rejected
+ok   V1 resolve_issuer(did:web:members.harbourclub.example) is the hosted did.json (keys + LinkedDomains)
+ok   V2 resolve_issuer(did:web:issuer.cedarrowing.example) is the hosted did.json (keys + LinkedDomains)
+ok   V3 resolve_issuer(did:web:guild.northfield.example:chapters:north) is the hosted did.json (keys + LinkedDomains)
+ok   V4 resolve_issuer(did:web:badges.kestrel-league.example) is the hosted did.json (keys + LinkedDomains)
+ok   V5 document whose id is not the DID fails resolution (spec §3.2 step 8)
+ok   V6 deactivated issuer (document removed) fails resolution (spec §3.4)
+ok   V7 ported host did:web:example.com%3A3000:user:alice resolves at host:3000 (spec §3.2)
+ok   N1 Harbour Club rotates for the first time: new #key-2 accepted
+ok   N2 Harbour Club rotates for the first time: retired #key-1 rejected
+ok   N3 Cedar Rowing rotates again: new #key-3 accepted
+ok   N4 Cedar Rowing rotates again: #key-2 retired and rejected
+ok   N5 Northfield rotates #signing again: new material accepted
+ok   N6 Northfield rotates #signing again: previous material rejected
+ok   N7 Kestrel rotates key and moves its site again: accepted with the newest site
+axis a: PASS 21/21
+
+==================================================================
+ axis a2 (_solutions/grade.d/a2.sh)
+==================================================================
+notifier: did:web:guild.northfield.example:chapters:north: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000009 did not finish within 10s
+ok   D1 small tenant, all healthy: every healthy subscriber delivered within 10s
+ok   C1 small tenant, all healthy: canary healthy
+ok   K1 small tenant, all healthy: canary healthy implies every healthy subscriber delivered
+ok   R1 small tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md)
+ok   D2 small tenant, first subscriber hangs: every healthy subscriber delivered within 10s
+ok   O2 small tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink
+ok   K2 small tenant, first subscriber hangs: canary healthy implies every healthy subscriber delivered
+ok   R2 small tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md)
+ok   D3 large tenant, all healthy: every healthy subscriber delivered within 10s
+ok   C3 large tenant, all healthy: canary healthy
+ok   K3 large tenant, all healthy: canary healthy implies every healthy subscriber delivered
+ok   R3 large tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md)
+ok   D4 large tenant, first subscriber hangs: every healthy subscriber delivered within 10s
+ok   O4 large tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink
+ok   K4 large tenant, first subscriber hangs: canary healthy implies every healthy subscriber delivered
+ok   R4 large tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md)
+ok   P1 delivery path fails (subscriptions unreadable within the budget): canary turns red
+axis a2: PASS 17/17
+
+==================================================================
+ axis b (_solutions/grade.d/b.sh)
+==================================================================
+case feature: discloses exactly the claims the DCQL query asks for: FAIL — UnimplementedError: createPresentation
+case feature: the presentation is signed by the holder's key: FAIL — UnimplementedError: createPresentation
+case feature: the presentation is bound to the request's nonce and domain: FAIL — UnimplementedError: createPresentation
+case feature: an expired credential is refused: FAIL — UnimplementedError: createPresentation
+case xstack: the backend verifier accepts the wallet's presentation: FAIL — no presentation from the wallet (/tmp/tmp.EnJf0of6bi/app/test/gate/out/vp.json: No such file or directory (os error 2))
+case xstack: the backend verifier rejects a tampered disclosed value: FAIL — no presentation from the wallet (/tmp/tmp.EnJf0of6bi/app/test/gate/out/vp.json: No such file or directory (os error 2))
+case xstack: the backend verifier rejects the presentation replayed to another nonce or domain: FAIL — no presentation from the wallet (/tmp/tmp.EnJf0of6bi/app/test/gate/out/vp.json: No such file or directory (os error 2))
+axis b: FAIL 0/7
+
+==================================================================
+ summary (worst-case; every axis must pass)
+==================================================================
+axis a: PASS 21/21
+axis a2: PASS 17/17
+axis b: FAIL 0/7
+worst-case: FAIL
+exit=1

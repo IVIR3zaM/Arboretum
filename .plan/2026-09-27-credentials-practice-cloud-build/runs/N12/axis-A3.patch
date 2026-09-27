@@ -1,0 +1,26 @@
+diff --git a/backend/src/notifier.rs b/backend/src/notifier.rs
+index 41efb54..83b3439 100644
+--- a/backend/src/notifier.rs
++++ b/backend/src/notifier.rs
+@@ -154,18 +154,10 @@ impl Notifier {
+         }
+     }
+ 
+-    /// The tenant's webhook subscriptions.
++    /// The tenant's webhook subscriptions, read through the `tenant-kind`
++    /// index: the cost follows the number of subscriptions, not of settings.
+     async fn subscriptions(&self, tenant: &str) -> Vec<Subscription> {
+-        let mut subscriptions = Vec::new();
+-        let mut cursor: Option<String> = None;
+-        loop {
+-            let page = self.settings.query(tenant, cursor.as_deref()).await;
+-            subscriptions.extend(page.items.iter().filter(|s| s.kind == WEBHOOK_KIND).filter_map(Subscription::from_setting));
+-            match page.next {
+-                Some(next) => cursor = Some(next),
+-                None => return subscriptions,
+-            }
+-        }
++        self.settings.query_kind(tenant, WEBHOOK_KIND).await.iter().filter_map(Subscription::from_setting).collect()
+     }
+ 
+     /// POSTs `body` to `sub` and reports the outcome; `true` if delivered.

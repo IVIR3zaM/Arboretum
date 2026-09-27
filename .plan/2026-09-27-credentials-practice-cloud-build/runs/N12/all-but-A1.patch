@@ -1,0 +1,120 @@
+diff --git a/backend/src/notifier.rs b/backend/src/notifier.rs
+index 41efb54..551d953 100644
+--- a/backend/src/notifier.rs
++++ b/backend/src/notifier.rs
+@@ -9,8 +9,10 @@
+ //! [`Notifier::canary_healthy`] is the notifier's health check. Every
+ //! delivery attempt is reported to the [`DeliverySink`].
+ 
++use std::future::Future;
+ use std::sync::atomic::{AtomicBool, Ordering};
+ use std::sync::{Arc, Mutex};
++use std::task::Poll;
+ use std::time::Duration;
+ 
+ use serde_json::json;
+@@ -22,11 +24,18 @@ use crate::webhook::WebhookTransport;
+ /// How long one status change may take to fan out.
+ pub const DISPATCH_BUDGET: Duration = Duration::from_secs(10);
+ 
++/// How long one webhook call may take. Calls run side by side and each one
++/// is abandoned at this limit, so a slow endpoint cannot use up the budget
++/// of the others.
++pub const CALL_TIMEOUT: Duration = Duration::from_secs(5);
++
+ /// Setting kind of a webhook subscription.
+ pub const WEBHOOK_KIND: &str = "webhook";
+ 
+ pub const CANARY_ID: &str = "canary";
+-pub const CANARY_URL: &str = "https://example.com/webhooks/status";
++/// A stub the platform serves on loopback. Never a name reserved for
++/// documentation: an answer from one says nothing about this service.
++pub const CANARY_URL: &str = "http://127.0.0.1/webhooks/canary";
+ 
+ #[derive(Debug, Clone, PartialEq, Eq)]
+ pub struct Subscription {
+@@ -136,17 +145,20 @@ impl Notifier {
+     pub async fn notify(&self, change: &StatusChange) {
+         let tenant = change.issuer.as_str();
+         let body = payload(change);
++        self.canary_ok.store(false, Ordering::SeqCst);
+ 
+         let fan_out = async {
+-            for sub in &self.platform {
+-                let delivered = self.dispatch(tenant, sub, &body).await;
++            // The platform subscribers, the canary among them, go out after the
++            // tenant's lookup and alongside the tenant's own subscribers: the
++            // canary is acknowledged only when the path they depend on works.
++            let mut subscriptions = self.subscriptions(tenant).await;
++            subscriptions.extend(self.platform.iter().cloned());
++            let calls = subscriptions.iter().map(|sub| self.dispatch(tenant, sub, &body));
++            for (sub, delivered) in subscriptions.iter().zip(join_all(calls).await) {
+                 if sub.id == CANARY_ID {
+                     self.canary_ok.store(delivered, Ordering::SeqCst);
+                 }
+             }
+-            for sub in self.subscriptions(tenant).await {
+-                self.dispatch(tenant, &sub, &body).await;
+-            }
+         };
+ 
+         if tokio::time::timeout(DISPATCH_BUDGET, fan_out).await.is_err() {
+@@ -154,29 +166,43 @@ impl Notifier {
+         }
+     }
+ 
+-    /// The tenant's webhook subscriptions.
++    /// The tenant's webhook subscriptions, read through the `tenant-kind`
++    /// index: the cost follows the number of subscriptions, not of settings.
+     async fn subscriptions(&self, tenant: &str) -> Vec<Subscription> {
+-        let mut subscriptions = Vec::new();
+-        let mut cursor: Option<String> = None;
+-        loop {
+-            let page = self.settings.query(tenant, cursor.as_deref()).await;
+-            subscriptions.extend(page.items.iter().filter(|s| s.kind == WEBHOOK_KIND).filter_map(Subscription::from_setting));
+-            match page.next {
+-                Some(next) => cursor = Some(next),
+-                None => return subscriptions,
+-            }
+-        }
++        self.settings.query_kind(tenant, WEBHOOK_KIND).await.iter().filter_map(Subscription::from_setting).collect()
+     }
+ 
+     /// POSTs `body` to `sub` and reports the outcome; `true` if delivered.
++    /// A call not answered within [`CALL_TIMEOUT`] is abandoned.
+     async fn dispatch(&self, tenant: &str, sub: &Subscription, body: &[u8]) -> bool {
+-        let outcome = match self.transport.post(&sub.url, body).await {
+-            Ok(status) if (200..300).contains(&status) => Outcome::Delivered { status },
+-            Ok(status) => Outcome::Failed { reason: format!("HTTP {status}") },
+-            Err(error) => Outcome::Failed { reason: error.to_string() },
++        let outcome = match tokio::time::timeout(CALL_TIMEOUT, self.transport.post(&sub.url, body)).await {
++            Ok(Ok(status)) if (200..300).contains(&status) => Outcome::Delivered { status },
++            Ok(Ok(status)) => Outcome::Failed { reason: format!("HTTP {status}") },
++            Ok(Err(error)) => Outcome::Failed { reason: error.to_string() },
++            Err(_) => return false,
+         };
+         let delivered = matches!(outcome, Outcome::Delivered { .. });
+         self.sink.record(DeliveryEvent { tenant: tenant.to_string(), subscription: sub.id.clone(), outcome });
+         delivered
+     }
+ }
++
++/// Drives `calls` side by side; their outputs, in order.
++async fn join_all<F: Future>(calls: impl IntoIterator<Item = F>) -> Vec<F::Output> {
++    let mut calls: Vec<_> = calls.into_iter().map(Box::pin).collect();
++    let mut outputs: Vec<Option<F::Output>> = calls.iter().map(|_| None).collect();
++    std::future::poll_fn(|cx| {
++        let mut pending = false;
++        for (call, output) in calls.iter_mut().zip(outputs.iter_mut()) {
++            if output.is_none() {
++                match call.as_mut().poll(cx) {
++                    Poll::Ready(value) => *output = Some(value),
++                    Poll::Pending => pending = true,
++                }
++            }
++        }
++        if pending { Poll::Pending } else { Poll::Ready(()) }
++    })
++    .await;
++    outputs.into_iter().map(|output| output.expect("every call finished")).collect()
++}

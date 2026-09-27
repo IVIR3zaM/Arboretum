@@ -1,0 +1,23 @@
+# C2: planted + ticket-1.patch + all-but-A3.patch → bash _solutions/grade.d/a2.sh
+notifier: did:web:issuer.cedarrowing.example: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000007 did not finish within 10s
+notifier: did:web:issuer.cedarrowing.example: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000007 did not finish within 10s
+notifier: did:web:guild.northfield.example:chapters:north: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000009 did not finish within 10s
+ok   D1 small tenant, all healthy: every healthy subscriber delivered within 10s
+ok   C1 small tenant, all healthy: canary healthy
+ok   K1 small tenant, all healthy: canary healthy implies every healthy subscriber delivered
+ok   R1 small tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md)
+ok   D2 small tenant, first subscriber hangs: every healthy subscriber delivered within 10s
+ok   O2 small tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink
+ok   K2 small tenant, first subscriber hangs: canary healthy implies every healthy subscriber delivered
+ok   R2 small tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md)
+FAIL D3 large tenant, all healthy: every healthy subscriber delivered within 10s: 20 of 20 healthy subscribers not delivered within 10s (rp-00001, rp-00002, rp-00003, … (20 in all))
+FAIL C3 large tenant, all healthy: canary healthy: canary not healthy although every subscriber was reachable
+ok   K3 large tenant, all healthy: canary healthy implies every healthy subscriber delivered
+ok   R3 large tenant, all healthy: no call to a reserved name (reference/infra/reserved-domains.md)
+FAIL D4 large tenant, first subscriber hangs: every healthy subscriber delivered within 10s: 19 of 19 healthy subscribers not delivered within 10s (rp-00002, rp-00003, rp-00004, … (19 in all))
+FAIL O4 large tenant, first subscriber hangs: the hanging endpoint's timeout reaches the sink: no sink event reports rp-00001 (never answered) as not delivered
+ok   K4 large tenant, first subscriber hangs: canary healthy implies every healthy subscriber delivered
+ok   R4 large tenant, first subscriber hangs: no call to a reserved name (reference/infra/reserved-domains.md)
+ok   P1 delivery path fails (subscriptions unreadable within the budget): canary turns red
+axis a2: FAIL 13/17
+exit=1
