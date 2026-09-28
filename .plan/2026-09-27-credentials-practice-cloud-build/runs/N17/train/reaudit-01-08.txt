@@ -1,0 +1,35 @@
+# N17 try 2 (path A, D23 step 1): turns 01-08 re-audited with the fixed scripts/cold/audit.py --explain
+# (N23, default rules a,b,c), each against the CLONE in its meta.env. 2026-09-28T19:49:11Z
+# audit.py blob: 085483024c1b71034456c71e8f8aaab10f940bd9
+
+== train/turn-01 (clone /tmp/cold-N17-train2)
+audit: clean — 15 tool call(s) checked, clone /tmp/cold-N17-train2
+exit: 0
+
+== train/turn-02 (clone /tmp/cold-N17-train2)
+audit: clean — 10 tool call(s) checked, clone /tmp/cold-N17-train2
+exit: 0
+
+== train/turn-03 (clone /tmp/cold-N17-train2)
+audit: clean — 10 tool call(s) checked, clone /tmp/cold-N17-train2
+exit: 0
+
+== train/turn-04 (clone /tmp/cold-N17-train2)
+audit: clean — 15 tool call(s) checked, clone /tmp/cold-N17-train2
+exit: 0
+
+== train/turn-05 (clone /tmp/cold-N17-train2)
+audit: clean — 1 tool call(s) checked, clone /tmp/cold-N17-train2
+exit: 0
+
+== train/turn-06 (clone /tmp/cold-N17-train2)
+audit: clean — 23 tool call(s) checked, clone /tmp/cold-N17-train2
+exit: 0
+
+== train/turn-07 (clone /tmp/cold-N17-train2)
+audit: clean — 9 tool call(s) checked, clone /tmp/cold-N17-train2
+exit: 0
+
+== train/turn-08 (clone /tmp/cold-N17-train2)
+audit: clean — 25 tool call(s) checked, clone /tmp/cold-N17-train2
+exit: 0
