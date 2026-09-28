@@ -1,0 +1,5 @@
+the feature is through the release check. phase 4, improvements — no fixes in this turn.
+
+across both packages, find the highest-value correctness and robustness issues still in the code, ranked. each one shown, not recited: a failing test, a probe run, or a file:line plus what actually happens there. include everything we changed today (both tickets and the feature) in the search, not just what was there before — I want to know what our own changes got wrong too.
+
+for each: a one-line proposed fix, and whether you think it's in scope for this work or should be deferred to an owner (and which owner).

@@ -1,0 +1,4 @@
+VIOLATION [bash] call #3 Bash: names outside path / | 'd=$(find / -type d -path "*pub-cache*/ssi-3.9.6" 2>/dev/null | head -1); echo "$d"; [ -n "$d" ] && { grep -rlE "Ed25519Signature2020" $d/lib | head; echo ---; grep -rliE "jcs|canonicali[sz]" $d/lib | '
+VIOLATION [bash] call #3 Bash: names outside path / | 'd=$(find / -type d -path "*pub-cache*/ssi-3.9.6" 2>/dev/null | head -1); echo "$d"; [ -n "$d" ] && { grep -rlE "Ed25519Signature2020" $d/lib | head; echo ---; grep -rliE "jcs|canonicali[sz]" $d/lib | '
+audit: 2 violation(s) in 4 tool call(s) — clone /tmp/cold-N17-train
+audit exit: 1

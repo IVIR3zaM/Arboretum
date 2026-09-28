@@ -1,0 +1,6 @@
+last phase: review. treat the whole change since the baseline commit as a teammate's PR that I have to make the merge call on. work from the diff itself — git diff plus the untracked files — not from your earlier summaries. no code changes in this turn.
+
+1. triage: which parts need real scrutiny and which can be skimmed, and why — anchored on what the tickets promised ("every approved issuer"; every subscriber "whatever the size of the account and however any one relying party's endpoint is behaving"; "a green health check means callbacks are reaching customers") and on the owners' answers for the feature.
+2. for each part that needs scrutiny: is it correct, and what evidence supports that?
+3. do the new tests discriminate? run them against the shipped code (the baseline commit, in a scratch copy inside this repo's .git or your scratch area — not outside the repo) and against ours. show which fail on the old code and pass on ours, and flag any that pass on both or only pass when run together.
+4. name the weakest part of our change, what you (the AI) got wrong along the way today, and one trade-off we made with the condition under which we should revisit it.

@@ -1,0 +1,9 @@
+good list. my calls:
+
+fix now (small, ours): #4 (status list — keep existing indexes valid), #8 (follow the FormatException convention you found), #9, #12, #13.
+
+one more to fix: in the feature turn you listed "the returned map shares the stored credential object, so a caller that edits it also edits what the wallet holds" as deferred work; last turn you reclassified it as "the existing convention". convention or not, a presentation we hand to a caller must not be able to change what the wallet holds, or the other way round. show it with a failing test, then fix it for the presentation only. the store's own by-reference accessors are pre-existing — show whether they have the same problem, but don't change them now; they go on the follow-up list with the evidence.
+
+defer, out loud, each with its owner: #1 (verifier team + governance), #2 (a document cache is a new feature, not a fix — verifier team, together with the replay-guard order), #3 (verifier team, security review), #5 (verifier team + backend), #6 (Platform sets the cap), #7 (PM), #10 (Platform), #11 (app, with the persistence work). write them into FOLLOW-UPS.md at the repo root, one entry each: what, the evidence you already have, owner. put the earlier follow-ups from the two tickets in there too, deduplicated.
+
+for every fix: failing test first with the real output, then the fix, then green. full backend and app suites at the end, real output.

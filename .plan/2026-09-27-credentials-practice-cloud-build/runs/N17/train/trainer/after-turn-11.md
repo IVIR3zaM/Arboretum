@@ -1,0 +1,2 @@
+Trainer (after turn 11, phase 4 — the harness gate is red again on a ticket that had already landed):
+The fixes were shown red first and the deferrals are written down with owners — that part is right. But a closed ticket regressed during an "improvements" pass, which is exactly the risk of small fixes nobody re-reviews. A fix is only small if everything that consumes what it touched is unaffected. Find out which of this turn's changes reached beyond their own function bodies, and prefer the version of each fix that doesn't.

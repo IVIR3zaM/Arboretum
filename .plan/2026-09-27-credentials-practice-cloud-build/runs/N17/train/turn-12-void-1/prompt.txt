@@ -1,0 +1,5 @@
+the release check says ticket 2 has gone red again since this turn's fixes. it doesn't say why, and our suites are green, so our tests can't see it.
+
+before anything else: list every change this turn made to something code outside this repo's own tests could depend on — a public type or field, a function signature, an error type, a published data format. for each one, is there a fix for the same problem that leaves that surface exactly as it was? if there is, redo the fix that way (failing test first, real output, then green). if there isn't, tell me and we'll decide together whether the fix stays or gets deferred to its owner.
+
+then full backend and app suites again, real output.

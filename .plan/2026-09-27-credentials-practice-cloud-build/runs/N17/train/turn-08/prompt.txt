@@ -1,0 +1,27 @@
+I took your list to the PM, the verifier team and platform. their answers, as they gave them:
+
+PM
+- which claims: only what the scanner's request asks for — disclose exactly the claims its DCQL query names, nothing else. the door asks for credentialSubject.member; it must not get the name, member id or birth date.
+- consent screen / what the member sees / how the request arrives and the answer goes back: not in this feature. no door UI in v1.
+- a request asking for more than the member wants to share: not in v1, the door only asks for member.
+- several matching credentials: not in v1 — the caller passes the credentialId; choosing between credentials, and DCQL credential_sets across credentials, come later.
+- expired credentials: refuse. don't build a presentation of an expired credential — throw a WalletException to the caller instead of handing over something the door will turn down. not-yet-valid: not in v1.
+- persistence of credentials / the holder key: not part of this feature (holder key rotation is later too).
+- re-entry / single-use: a member shows the same credential every visit — see the verifier team's answer.
+
+Verifier team
+- response shape: the door's current JSON presentation, returned by createPresentation as a JSON map. each claim travels as the disclosure the issuer handed over ({salt, name, value}, unchanged), next to the unchanged credential.
+- proof: the wallet signs it. Ed25519Signature2020 by the holder's did:key key — verificationMethod = HolderKey.keyId, proofPurpose authentication — over the RFC 8785 (JCS) bytes of the presentation without its proof. the door's skip on other proof types is ours to fix separately; don't depend on it either way.
+- domain: yes, the requester's client_id (PresentationRequest.domain). put the request's nonce and that domain into the presentation, inside the holder-signed part.
+- claim mapping: credentialSubject.<name> maps to the disclosure named <name>. anything deeper isn't in v1 — refuse it, don't guess. the scanner requests ldp_vc.
+- door enforcing type / requested claims, nonce freshness: our side, not a wallet dependency.
+- holder DID methods: did:key only.
+- single-use: no, not in v1. the README says it, but nothing enforces it and it isn't the design. what stops replay is the per-request nonce: the same presentation can't be reused, the credential can be presented again to a fresh request. the wallet must not delete or "consume" the credential after presenting it.
+
+Platform
+- what the issuer hands out: the backend Issuer's shape is what production issues. expiry is expires_at, integer unix seconds (the backend README's expirationDate is out of date).
+- revocation: the verifier's job, on its side. the wallet presents what it holds.
+- online/offline, response_uri, request_id: building the presentation is fully local — credential, disclosures and holder key are all on the device. sending it to response_uri isn't part of createPresentation; it returns the presentation.
+- key storage policy: not this feature.
+
+now build it: WalletService.createPresentation, the smallest thing those answers require, nothing more. no backend changes. tests should go red if any one of the answered rules is broken — show me that for at least the rules you think are easiest to get subtly wrong. check it end to end against the real backend verifier the way you did with the throwaway programs, and paste the real outputs. then list what you deferred, one line each, and anything in the answers you think is wrong or that you had to interpret.

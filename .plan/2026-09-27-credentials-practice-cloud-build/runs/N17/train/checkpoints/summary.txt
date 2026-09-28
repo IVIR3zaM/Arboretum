@@ -1,0 +1,64 @@
+# per-checkpoint summary: ../../sumunit.sh on unit.txt (backend = sum of cargo's per-binary 'test result' lines; app = flutter's last line) + grade.txt's summary block
+== 00-baseline
+backend: 68 passed, 0 failed · app: +20: All tests passed! · test exit: 0
+axis a: FAIL 6/26
+axis a2: FAIL 4/17
+axis b: FAIL 0/7
+worst-case: FAIL
+exit: 1
+== 03-ticket-1
+backend: 73 passed, 0 failed · app: +20: All tests passed! · test exit: 0
+axis a: PASS 26/26
+axis a2: FAIL 4/17
+axis b: FAIL 0/7
+worst-case: FAIL
+exit: 1
+== 05-ticket-2
+backend: 81 passed, 0 failed · app: +20: All tests passed! · test exit: 0
+axis a: PASS 26/26
+axis a2: FAIL 16/17
+axis b: FAIL 0/7
+worst-case: FAIL
+exit: 1
+== 06-ticket-2-rework
+backend: 82 passed, 0 failed · app: +20: All tests passed! · test exit: 0
+axis a: PASS 26/26
+axis a2: PASS 17/17
+axis b: FAIL 0/7
+worst-case: FAIL
+exit: 1
+== 08-feature
+backend: 82 passed, 0 failed · app: +42: All tests passed! · test exit: 0
+axis a: PASS 26/26
+axis a2: PASS 17/17
+axis b: FAIL 0/7
+worst-case: FAIL
+exit: 1
+== 09-feature-rework
+backend: 82 passed, 0 failed · app: +38: All tests passed! · test exit: 0
+axis a: PASS 26/26
+axis a2: PASS 17/17
+axis b: PASS 7/7
+worst-case: PASS
+exit: 0
+== 11-improve
+backend: 85 passed, 0 failed · app: +40: All tests passed! · test exit: 0
+axis a: PASS 26/26
+axis a2: FAIL 0/0
+axis b: PASS 7/7
+worst-case: FAIL
+exit: 1
+== 13-improve-rework
+backend: 85 passed, 0 failed · app: +41: All tests passed! · test exit: 0
+axis a: PASS 26/26
+axis a2: PASS 17/17
+axis b: PASS 7/7
+worst-case: PASS
+exit: 0
+== 99-final
+backend: 87 passed, 0 failed · app: +41: All tests passed! · test exit: 0
+axis a: PASS 26/26
+axis a2: PASS 17/17
+axis b: PASS 7/7
+worst-case: PASS
+exit: 0

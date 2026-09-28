@@ -1,0 +1,5 @@
+VIOLATION [bash] call #2 Bash: names outside path / | "cd /tmp/cold-N17-train/backend && cat >> tests/status.rs <<'EOF'\n\n#[test]\nfn the_published_format_is_unchanged() {\n    // One bit per index of the capacity: DEFAULT_CAPACITY / 8 bytes.\n    let list = "
+VIOLATION [bash] call #2 Bash: names outside path / | "cd /tmp/cold-N17-train/backend && cat >> tests/status.rs <<'EOF'\n\n#[test]\nfn the_published_format_is_unchanged() {\n    // One bit per index of the capacity: DEFAULT_CAPACITY / 8 bytes.\n    let list = "
+VIOLATION [bash] call #2 Bash: names outside path / | "cd /tmp/cold-N17-train/backend && cat >> tests/status.rs <<'EOF'\n\n#[test]\nfn the_published_format_is_unchanged() {\n    // One bit per index of the capacity: DEFAULT_CAPACITY / 8 bytes.\n    let list = "
+audit: 3 violation(s) in 9 tool call(s) — clone /tmp/cold-N17-train
+audit exit: 1

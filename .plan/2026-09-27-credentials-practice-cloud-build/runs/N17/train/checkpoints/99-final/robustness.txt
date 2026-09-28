@@ -1,0 +1,18 @@
+clone: /tmp/cold-N17-train (throwaway copy + practices/credentials/_solutions)
+date: 2026-09-28T07:01:03Z
+install: cd backend && cargo fetch --locked && cd ../app && flutter pub get --enforce-lockfile
+install exit: 0
+command: bash _solutions/robustness-probes.sh   (rubric.md Axis A item 5; non-blocking)
+----- output -----
+FAIL W1 a credential read from the wallet cannot change what the wallet holds: editing the credential that credential(id) returned changed the one the wallet holds
+FAIL W2 an element of heldCredentials() cannot change what the wallet holds: editing an element of heldCredentials() changed the credential the wallet holds
+PASS W3 a presentation shares no state with the held credential
+PASS G1 a credential bound to another holder is refused even when it bypassed requestCredential
+PASS D1 a query that names no claim discloses nothing and is still signed and bound
+PASS D2 a query for a claim the credential does not hold is refused, not half-answered
+PASS N1 a tenant with no subscription: fan-out finishes, no failure reported, canary healthy
+FAIL N2 a tenant subscription at a reserved name is never called (the rule holds beyond the canary): 1 call(s) to a reserved name: https://example.net/webhooks/status
+PASS S1 every status-list index handed out, up to capacity, can be revoked
+robustness 6/9
+----- end -----
+exit: 0

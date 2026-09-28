@@ -226,11 +226,19 @@ driving the assistant well.
 
 ## Proof that it works (maintainers)
 
-A recorded end-to-end run of this kata will live in `_solutions/` as a `proof-<mode>-<date>.html`
-file once the kata has been driven end-to-end. It documents the harness, date and model used, the
-control run and what it scored, and for each phase: the learner's prompt, how the assistant
-behaved, the trap that fired *by design*, and the real command outcome. It lives in `_solutions/`
-because it necessarily reveals the fix, so **don't open it before attempting the kata.**
+A recorded end-to-end run of this kata lives in `_solutions/proof-train-2026-09-28.html`: a
+`train`-mode session through the harness on 2026-09-28, with the assistant a fresh
+`claude -p --model opus` (resolved `claude-opus-5-5`) working in a stripped, jailed clone and the
+tickets and feature request staged in one at a time. It is a **calibration run**, not a learner
+grade: the learner's prompts and the trainer's notes were written by an operator who could read the
+answer key (AGENTS.md rule 10), so it shows how the assistant behaves and whether the traps fire, not
+how an independent learner drives. It documents the harness, date and model used; the control run
+(one casual, uncoached prompt with both tickets and the feature request in hand, which did not clear
+the gate) and what it scored; the naive and elicited feature builds; and for each phase: the
+learner's prompt, how the assistant behaved, the trap that fired *by design*, the trainer's and a
+separate examiner's output, and the real command outcome at baseline and at the end. It lives in
+`_solutions/` because it necessarily reveals the fix, so **don't open it before attempting the
+kata.**
 
 Maintainers verifying the kata use the declared commands in `practice.json` against a copy that
 still has `_solutions/`: `commands.grade` for the gate (the shipped tree fails all three axes, the

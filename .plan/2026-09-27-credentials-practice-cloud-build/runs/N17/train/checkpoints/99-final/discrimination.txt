@@ -1,0 +1,57 @@
+clone: /tmp/cold-N17-train   baseline commit: c6edebbe5df09d6b26c30efdce437f3818e2b3d6
+date: 2026-09-28T07:01:42Z
+method: each test the run added, run alone (cargo test --offline --locked --test <file> -- --exact <name>)
+        against base (baseline source + the final test files) and final (the clone's tree).
+        no-build = the test file does not compile against that source (it names API the run added).
+        Flutter tests: the whole new test file per tree (flutter test --no-pub <file>), per-test lines.
+
+file       base     final    test
+issuer     FAILED   ok       a_holder_key_of_the_wrong_length_is_refused
+status     FAILED   ok       every_index_a_full_list_hands_out_can_be_revoked
+status     ok       ok       the_published_form_of_a_list_is_unchanged
+status     ok       ok       a_full_list_hands_out_distinct_indexes
+ticket_4127 FAILED   ok       every_approved_club_s_members_are_admitted_with_a_credential_signed_by_its_current_key
+ticket_4127 FAILED   ok       the_door_checks_each_approved_club_against_the_key_it_publishes_now
+ticket_4127 FAILED   ok       a_rotation_takes_effect_at_the_next_door_check
+ticket_4127 FAILED   ok       did_web_with_a_path_maps_to_the_path_without_well_known
+ticket_4127 FAILED   ok       every_approved_club_s_published_document_resolves
+ticket_4163 no-build ok       every_subscriber_of_a_customer_with_a_lot_of_settings_is_told
+ticket_4163 no-build ok       every_one_of_a_customer_s_many_subscribers_is_told
+ticket_4163 no-build ok       an_endpoint_that_never_answers_does_not_stop_the_others_being_told
+ticket_4163 no-build ok       a_slow_endpoint_does_not_stop_the_others_being_told
+ticket_4163 no-build ok       every_subscriber_s_delivery_outcome_is_reported
+ticket_4163 no-build ok       the_canary_does_not_target_a_reserved_domain
+ticket_4163 no-build ok       the_health_check_is_not_green_when_the_delivery_path_cannot_run_in_time
+ticket_4163 no-build ok       a_change_the_runtime_cuts_short_does_not_leave_the_health_check_green
+ticket_4163 no-build ok       a_subscriber_that_never_answers_has_a_recorded_outcome
+ticket_4163 no-build ok       the_health_check_is_not_green_while_subscribers_miss_callbacks
+
+----- flutter test --no-pub app/test/create_presentation_test.dart   (base) -----
++0: loading /tmp/claude-0/-home-user-Arboretum/73e636a9-426a-530a-9bb9-c647720fe418/scratchpad/n17-extra.RY2LW9/base/app/test/create_presentation_test.dart
++0 -1: loading /tmp/claude-0/-home-user-Arboretum/73e636a9-426a-530a-9bb9-c647720fe418/scratchpad/n17-extra.RY2LW9/base/app/test/create_presentation_test.dart [E]
++0 -1: Some tests failed.
+
+----- flutter test --no-pub app/test/create_presentation_test.dart   (final) -----
++0: loading /tmp/claude-0/-home-user-Arboretum/73e636a9-426a-530a-9bb9-c647720fe418/scratchpad/n17-extra.RY2LW9/final/app/test/create_presentation_test.dart
++0: the presentation is signed exactly as the backend signs it
++1: the presentation discloses only the claims the request names
++2: the presentation carries each requested disclosure exactly as issued
++3: the presentation carries the credential exactly as issued
++4: the presentation is bound to the request nonce and client_id inside the signed part
++5: the presentation is signed by the holder key for authentication
++6: the presentation discloses nothing when the request names no claims
++7: expiry a credential is presented up to its expires_at
++8: expiry an expired credential is refused
++9: expiry a credential without an integer expires_at is refused
++10: the credential is kept and can be presented to a fresh request
++11: the presentation and the wallet are independent keeps the value types it had when the feature shipped
++12: the presentation and the wallet are independent editing the presentation leaves the held credential as issued
++13: the presentation and the wallet are independent editing the held credential leaves the presentation as signed
++14: refuses rather than guesses a deeper claim path
++15: refuses rather than guesses a claim outside credentialSubject
++16: refuses rather than guesses a claim the credential does not hold
++17: refuses rather than guesses a query for several credentials
++18: holder an unknown credential is refused
++19: holder without a holder key, one is created and the credential is refused
++20: holder a credential issued to another key is refused
++21: All tests passed!

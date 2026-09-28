@@ -1,0 +1,5 @@
+my calls:
+- #9: option (b). revert it to exactly ticket 2's version, and defer the reserved-name problem (both `*` and `canary`) to Platform, since the name is created where tenant settings are written, not here. update FOLLOW-UPS.md with the reasoning and the evidence you have.
+- #8: keep the FormatException. it's the convention the wallet already uses for malformed input, and a crash past the app's own error handling is worse than a changed error type. note the error-type change in FOLLOW-UPS.md so the app owner sees it.
+
+after the revert, show me that the ticket-2 tests and the whole backend suite are green again (real output), and that nothing outside backend/src/notifier.rs, its tests and FOLLOW-UPS.md changed in this turn (git diff --stat before/after is fine).

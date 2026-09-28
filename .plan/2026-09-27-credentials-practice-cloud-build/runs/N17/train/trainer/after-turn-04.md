@@ -1,0 +1,2 @@
+Trainer (after turn 4, phase 2 · Ticket 2):
+You reproduced under the ticket's own conditions and made the green signal prove itself instead of trusting it — that is the discipline. Now the fix. The ticket makes three promises; before you delegate, decide what "closed" means against each of them, and which choices here belong to someone else's configuration rather than to this code. Then ask for the evidence per promise, not one overall "it works".

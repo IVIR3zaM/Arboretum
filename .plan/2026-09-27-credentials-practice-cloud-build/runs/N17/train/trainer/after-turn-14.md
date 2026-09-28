@@ -1,0 +1,2 @@
+Trainer (after turn 14, phase 5):
+That review read the diff, triaged by the tickets' promises, and made the tests prove themselves — including finding two that proved nothing. The assistant has given you its view; the merge call, the weakness you'd name and the trade-off you'd sign are yours to state in your own words. Say what you verified yourself, decide what ships now and what waits for whom, and don't let anything you called a merge condition go in unmeasured.

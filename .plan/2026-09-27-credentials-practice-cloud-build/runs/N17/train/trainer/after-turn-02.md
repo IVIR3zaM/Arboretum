@@ -1,0 +1,2 @@
+Trainer (after turn 2, phase 2 · Ticket 1):
+Good: you watched it fail for every issuer, not only the one in the complaint, and you put your model up to be corrected — it came back sharper than you sent it. The assistant has now raised decisions that are not the code's to make. Before you delegate the fix, decide which of those are yours, take the rest to whoever owns them, and keep the fix to what the ticket promises: anything else gets named and deferred out loud, not folded in.

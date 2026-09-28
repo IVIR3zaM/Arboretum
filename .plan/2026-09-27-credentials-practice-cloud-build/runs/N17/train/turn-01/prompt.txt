@@ -1,0 +1,7 @@
+hey, I just picked up this repo and TICKET-1.md landed on me. before anyone touches code I want to actually understand what we've got. no edits to the code in this turn, please.
+
+1. map both packages for me: the backend's path from issuing a credential to verifying it at the door (including how it figures out an issuer's keys), the status-change notifier, and on the app side the wallet's store and the presentation stub. short, with file:line pointers.
+2. there's a reference/ folder next to the code. read all of it and write what you learn into a research-notes.md at the repo root — cite the file (and section/line) for each point so I can check it. notes only, no fix ideas dressed up as facts.
+3. then reconcile: go through our own READMEs and code comments and tell me which claims match what the code actually does and which are stale. quote the line and say how you know.
+
+don't propose or start a fix for the ticket yet — I'll ask for that separately.

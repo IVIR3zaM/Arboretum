@@ -1,0 +1,4 @@
+great, that's exactly what I needed. now ticket 1 — but step one is seeing it fail, not fixing it.
+
+1. write test(s) that reproduce TICKET-1 the way a member hits it: a credential signed with the key a club publishes now, presented at the door, refused. cover every approved issuer, not just one club. run them and paste me the real failing output. don't change any non-test code in this turn.
+2. my understanding — tell me if it's wrong: the door checks the club's key against the copy of its DID document we saved at onboarding, but for did:web the key that counts is whatever the club's domain serves now, so any club that rotated since onboarding gets refused, and our tests never notice because the only club in them never rotated. and from what you found there's a second problem sitting behind the first one, for clubs whose DID has a path. is that the whole model, or am I missing something?

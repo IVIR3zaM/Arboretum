@@ -1,0 +1,2 @@
+Trainer (after turn 13, phase 4 → phase 5):
+The decisions were yours, the reasoning is on paper, and the gate is green again. Phase 5 is where you own the merge. Review it the way you would a teammate's PR: from the diff itself, not from anyone's summary of it; spend your attention where the tickets' promises live and skim the rest; and make the tests prove they can fail on the old code before you count them as evidence.

@@ -1,0 +1,9 @@
+my review and merge call, for the record:
+
+- what I verified myself: ticket 1 red for every approved club before the fix, and green after including a simulated rotation; ticket 2 reproduced for the large account and the hung endpoint with the health check green, then re-measured under the runtime's hard limit once I stopped trusting our own deadline; the feature built only after the owners answered, and checked end to end against the real verifier; and the release check green on both tickets and the feature after the phase-4 regression was reverted.
+- weakest part, in my view: the notifier's health check. it's honest now, but narrower than what ticket 2 promised, and its target isn't provisioned yet.
+- what the AI got wrong today: a wrong test total; a ticket-2 fix only tested under its own deadline; refusal rules in the feature nobody asked for; calling the shared credential map "deferred" and then "convention"; and phase-4 fixes that changed public surfaces and put ticket 2 back to red. each one was caught by re-running something or by the release check, not by a summary.
+- trade-off I'm signing: live issuer resolution with no cache. revisit when a real HTTPS transport goes in, or as soon as door fetch errors or latency show up.
+- decision: the product code merges once the two missing tests from your review (the per-call deadline, and distinct indexes from a full list) are in, each shown red against the deliberately broken version you used and green against ours. the canary host goes to Platform as a deploy blocker. TICKET-2.md and FEATURE-REQUEST.md stay out of the PR. everything else in FOLLOW-UPS.md waits for its owner.
+
+so: add those two tests, show each red against the broken version and green against ours (real output), restore the broken copy, run both full suites. then draft the PR description in your reply (not a file), reflecting this decision — including the deploy blocker and what's deferred to whom.

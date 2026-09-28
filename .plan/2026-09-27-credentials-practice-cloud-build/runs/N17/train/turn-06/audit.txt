@@ -1,0 +1,2 @@
+audit: clean — 11 tool call(s) checked, clone /tmp/cold-N17-train
+audit exit: 0

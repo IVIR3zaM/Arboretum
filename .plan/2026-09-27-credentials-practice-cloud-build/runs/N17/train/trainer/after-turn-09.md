@@ -1,0 +1,2 @@
+Trainer (after turn 9, phase 3 lands → phase 4):
+The gate agrees now, and look at what closed it: not more tests, but pulling the build's own decisions apart from the owners' and holding each one against the code around it. Carry that into phase 4. Ask for findings, not a recitation of generic risks — each one shown happening in this code — and point the same scrutiny at today's changes, not only at what was there before you arrived.

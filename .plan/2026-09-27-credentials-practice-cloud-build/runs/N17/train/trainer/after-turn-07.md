@@ -1,0 +1,2 @@
+Trainer (after turn 7, phase 3 · feature):
+Exactly the right order: the other side of the boundary read first, the questions grouped by owner, and the "I'd pick" answers kept as questions instead of becoming code. Now take them to the owners, and bring back only what they actually said. When you delegate the build, ask for the smallest thing their answers require, with the deferred items named, and for tests that would go red if any one of the answered rules were broken.

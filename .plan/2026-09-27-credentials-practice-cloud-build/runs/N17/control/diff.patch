@@ -1,0 +1,860 @@
+diff --git a/app/README.md b/app/README.md
+index 0e1b18c..c43686d 100644
+--- a/app/README.md
++++ b/app/README.md
+@@ -5,10 +5,19 @@ keeps it on the device next to the holder's key, and lists what it holds.
+ 
+ ## Credentials
+ 
+-Credentials are **JWT-VCs**: the issuer signs a compact JWT whose `vc` claim carries the
+-credential, and the wallet keeps that token exactly as issued. The holder is identified by a
++Credentials are JSON verifiable credentials with an embedded issuer proof; the claims are
++selectively disclosable (`credentialSubject._sd` digests plus one disclosure per claim), and the
++wallet keeps the credential and its disclosures exactly as issued. The holder is identified by a
+ `did:key` (Ed25519, via the `ssi` package), created the first time the wallet needs it.
+ 
++## Presentations
++
++`WalletService.createPresentation` answers a door scanner's request: it wraps the held credential
++and the disclosures for exactly the claims the request's DCQL query names, binds them to the
++request's `nonce` and `client_id` (as `domain`), and signs the result with the holder key
++(`Ed25519Signature2020` over the RFC 8785 form without `proof`) — the format the backend's
++`Verifier::verify_presentation` checks.
++
+ ## Layout
+ 
+ | File | What it does |
+diff --git a/app/lib/src/wallet_service.dart b/app/lib/src/wallet_service.dart
+index 928a6db..1278c1e 100644
+--- a/app/lib/src/wallet_service.dart
++++ b/app/lib/src/wallet_service.dart
+@@ -1,3 +1,8 @@
++import 'dart:convert';
++
++import 'package:dcql/dcql.dart';
++import 'package:ssi/ssi.dart';
++
+ import 'credential_store.dart';
+ import 'held_credential.dart';
+ import 'holder_key.dart';
+@@ -17,12 +22,15 @@ class WalletService {
+     required this._issuer,
+     CredentialStore? store,
+     HolderKey Function()? newKey,
++    DateTime Function()? clock,
+   }) : _store = store ?? CredentialStore(),
+-       _newKey = newKey ?? HolderKey.generate;
++       _newKey = newKey ?? HolderKey.generate,
++       _clock = clock ?? DateTime.now;
+ 
+   final IssuerClient _issuer;
+   final CredentialStore _store;
+   final HolderKey Function() _newKey;
++  final DateTime Function() _clock;
+ 
+   /// The holder key, created on first use.
+   HolderKey holderKey() => _store.holderKey ??= _newKey();
+@@ -49,10 +57,127 @@ class WalletService {
+ 
+   /// Builds a presentation of the held credential [credentialId] in answer
+   /// to [request], ready to send to the requester.
++  ///
++  /// The presentation carries the credential exactly as issued plus the
++  /// disclosures for the claims the request's DCQL query asks for — no
++  /// others. It is bound to the request's `nonce` and domain (`client_id`)
++  /// and signed with the holder key (`Ed25519Signature2020` over the RFC 8785
++  /// form of the presentation without its `proof`), the form the door
++  /// verifier checks.
+   Future<Map<String, dynamic>> createPresentation(
+     String credentialId,
+     PresentationRequest request,
+   ) async {
+-    throw UnimplementedError('createPresentation');
++    final credential = _store.byId(credentialId);
++    if (credential == null) {
++      throw WalletException('No credential $credentialId in the wallet');
++    }
++    final key = holderKey();
++    if (credential.holderDid != key.did) {
++      throw WalletException(
++        'Credential $credentialId belongs to ${credential.holderDid}, not ${key.did}',
++      );
++    }
++    final query = _queryFor(credential, request);
++    final disclosures = _disclosuresFor(credential, query);
++
++    final presentation = <String, dynamic>{
++      '@context': [_credentialsContext],
++      'type': ['VerifiablePresentation'],
++      'holder': key.did,
++      'verifiableCredential': credential.vc,
++      'disclosures': [for (final d in disclosures) d.toJson()],
++      'nonce': request.nonce,
++      'domain': request.domain,
++    };
++    final signature = await key.sign(
++      utf8.encode(JcsUtil.canonicalize(presentation)),
++    );
++    presentation['proof'] = {
++      'type': 'Ed25519Signature2020',
++      'created': _clock().millisecondsSinceEpoch ~/ 1000,
++      'verificationMethod': key.keyId,
++      'proofPurpose': 'authentication',
++      'proofValue': toMultiBase(signature),
++    };
++    return presentation;
++  }
++
++  static const _credentialsContext = 'https://www.w3.org/2018/credentials/v1';
++
++  /// The credential query in [request] that [credential] answers.
++  DcqlCredential _queryFor(
++    HeldCredential credential,
++    PresentationRequest request,
++  ) {
++    final types = switch (credential.vc['type']) {
++      final List<dynamic> list => list.whereType<String>().toSet(),
++      final String single => {single},
++      _ => <String>{},
++    };
++    for (final query in request.dcqlQuery.credentials) {
++      if (query.format != CredentialFormat.ldpVc) continue;
++      final typeValues = query.meta?.typeValues;
++      if (typeValues != null &&
++          !typeValues.any((wanted) => types.containsAll(wanted))) {
++        continue;
++      }
++      return query;
++    }
++    throw WalletException(
++      'The request does not ask for a credential like ${credential.id}',
++    );
++  }
++
++  /// The disclosures that reveal exactly the claims [query] asks for.
++  List<Disclosure> _disclosuresFor(
++    HeldCredential credential,
++    DcqlCredential query,
++  ) {
++    final claims = query.claims;
++    if (claims == null || claims.isEmpty) return const [];
++
++    Disclosure? disclosureFor(DcqlClaim claim) {
++      final path = claim.path;
++      if (path.length != 2 || path[0] != 'credentialSubject') return null;
++      for (final disclosure in credential.disclosures) {
++        if (disclosure.name != path[1]) continue;
++        final values = claim.values;
++        if (values != null && !values.contains(disclosure.value)) return null;
++        return disclosure;
++      }
++      return null;
++    }
++
++    List<Disclosure>? satisfy(Iterable<DcqlClaim> wanted) {
++      final found = <Disclosure>[];
++      for (final claim in wanted) {
++        final disclosure = disclosureFor(claim);
++        if (disclosure == null) return null;
++        if (!found.contains(disclosure)) found.add(disclosure);
++      }
++      return found;
++    }
++
++    final claimSets = query.claimSets;
++    if (claimSets == null) {
++      final found = satisfy(claims);
++      if (found != null) return found;
++      final missing = claims.where((c) => disclosureFor(c) == null);
++      throw WalletException(
++        'Credential ${credential.id} cannot show ${missing.map((c) => c.path.join('.')).join(', ')}',
++      );
++    }
++    // Claim sets are alternatives in order of the verifier's preference.
++    for (final set in claimSets) {
++      final wanted = [
++        for (final id in set) ...claims.where((claim) => claim.id == id),
++      ];
++      final found = wanted.length == set.length ? satisfy(wanted) : null;
++      if (found != null) return found;
++    }
++    throw WalletException(
++      'Credential ${credential.id} satisfies none of the requested claim sets',
++    );
+   }
+ }
+diff --git a/app/test/presentation_test.dart b/app/test/presentation_test.dart
+new file mode 100644
+index 0000000..519238c
+--- /dev/null
++++ b/app/test/presentation_test.dart
+@@ -0,0 +1,187 @@
++import 'dart:convert';
++
++import 'package:credentials_app/credentials_app.dart';
++import 'package:flutter_test/flutter_test.dart';
++import 'package:ssi/ssi.dart';
++
++import 'fake_issuer_client.dart';
++import 'fixtures.dart';
++
++const credentialId = 'urn:uuid:5b1d7c2e-0f7a-4c3e-9d0b-6a2f1e8c4d11';
++
++Future<WalletService> walletHoldingMembership() async {
++  final wallet = WalletService(
++    issuer: FakeIssuerClient(),
++    newKey: () => HolderKey.fromSeed(holderSeed),
++    clock: () => DateTime.utc(2026, 6, 1),
++  );
++  await wallet.requestCredential('MembershipCredential');
++  return wallet;
++}
++
++PresentationRequest requestFor(Map<String, dynamic> credentialQuery) {
++  final json = doorRequest();
++  json['dcql_query'] = {
++    'credentials': [credentialQuery],
++  };
++  return PresentationRequest.fromJson(json);
++}
++
++void main() {
++  test('answers the door request with the credential and the asked-for claim '
++      'only', () async {
++    final wallet = await walletHoldingMembership();
++
++    final vp = await wallet.createPresentation(
++      credentialId,
++      PresentationRequest.fromJson(doorRequest()),
++    );
++
++    expect(vp['type'], ['VerifiablePresentation']);
++    expect(vp['holder'], holderDid);
++    expect(vp['nonce'], 'n-8f3Kq2xWz0Lb');
++    expect(vp['domain'], 'door-scanner.members.test');
++    expect(
++      vp['verifiableCredential'],
++      membershipIssuance()['credential'],
++      reason: 'the issuer-signed credential is passed on unchanged',
++    );
++    expect(vp['disclosures'], [
++      {'salt': 'Qg8wYx1dLr0pVb3kTz7sNw', 'name': 'member', 'value': true},
++    ]);
++  });
++
++  test('is signed by the holder key over the canonical presentation', () async {
++    final wallet = await walletHoldingMembership();
++    final vp = await wallet.createPresentation(
++      credentialId,
++      PresentationRequest.fromJson(doorRequest()),
++    );
++
++    final proof = vp['proof'] as Map<String, dynamic>;
++    expect(proof['type'], 'Ed25519Signature2020');
++    expect(proof['proofPurpose'], 'authentication');
++    expect(proof['verificationMethod'], wallet.holderKey().keyId);
++    expect(proof['created'], 1780272000);
++
++    final unsigned = Map<String, dynamic>.of(vp)..remove('proof');
++    final signingInput = utf8.encode(JcsUtil.canonicalize(unsigned));
++    final signature = multiBaseToUint8List(proof['proofValue'] as String);
++    expect(await wallet.holderKey().verify(signingInput, signature), isTrue);
++
++    unsigned['nonce'] = 'another-nonce';
++    expect(
++      await wallet.holderKey().verify(
++        utf8.encode(JcsUtil.canonicalize(unsigned)),
++        signature,
++      ),
++      isFalse,
++    );
++  });
++
++  test('discloses nothing when the query names no claims', () async {
++    final wallet = await walletHoldingMembership();
++    final vp = await wallet.createPresentation(
++      credentialId,
++      requestFor({'id': 'membership', 'format': 'ldp_vc'}),
++    );
++    expect(vp['disclosures'], isEmpty);
++  });
++
++  test('refuses a claim the credential cannot show', () async {
++    final wallet = await walletHoldingMembership();
++    final request = requestFor({
++      'id': 'membership',
++      'format': 'ldp_vc',
++      'claims': [
++        {
++          'path': ['credentialSubject', 'tier'],
++        },
++      ],
++    });
++    await expectLater(
++      wallet.createPresentation(credentialId, request),
++      throwsA(isA<WalletException>()),
++    );
++  });
++
++  test('refuses a claim whose value the request rules out', () async {
++    final wallet = await walletHoldingMembership();
++    final request = requestFor({
++      'id': 'membership',
++      'format': 'ldp_vc',
++      'claims': [
++        {
++          'path': ['credentialSubject', 'memberId'],
++          'values': ['M-00001'],
++        },
++      ],
++    });
++    await expectLater(
++      wallet.createPresentation(credentialId, request),
++      throwsA(isA<WalletException>()),
++    );
++  });
++
++  test('uses the first claim set the credential can satisfy', () async {
++    final wallet = await walletHoldingMembership();
++    final request = requestFor({
++      'id': 'membership',
++      'format': 'ldp_vc',
++      'claims': [
++        {
++          'id': 'tier',
++          'path': ['credentialSubject', 'tier'],
++        },
++        {
++          'id': 'member_id',
++          'path': ['credentialSubject', 'memberId'],
++        },
++        {
++          'id': 'name',
++          'path': ['credentialSubject', 'name'],
++        },
++      ],
++      'claim_sets': [
++        ['tier'],
++        ['member_id', 'name'],
++      ],
++    });
++    final vp = await wallet.createPresentation(credentialId, request);
++    expect(
++      (vp['disclosures'] as List).map((d) => (d as Map)['name']),
++      unorderedEquals(['memberId', 'name']),
++    );
++  });
++
++  test('refuses a request for another kind of credential', () async {
++    final wallet = await walletHoldingMembership();
++    final otherFormat = requestFor({'id': 'x', 'format': 'dc+sd-jwt'});
++    final otherType = requestFor({
++      'id': 'x',
++      'format': 'ldp_vc',
++      'meta': {
++        'type_values': [
++          ['VerifiableCredential', 'DriverLicence'],
++        ],
++      },
++    });
++    for (final request in [otherFormat, otherType]) {
++      await expectLater(
++        wallet.createPresentation(credentialId, request),
++        throwsA(isA<WalletException>()),
++      );
++    }
++  });
++
++  test('refuses a credential the wallet does not hold', () async {
++    final wallet = await walletHoldingMembership();
++    await expectLater(
++      wallet.createPresentation(
++        'urn:uuid:not-held',
++        PresentationRequest.fromJson(doorRequest()),
++      ),
++      throwsA(isA<WalletException>()),
++    );
++  });
++}
+diff --git a/backend/README.md b/backend/README.md
+index 4f1b5b7..9e340f2 100644
+--- a/backend/README.md
++++ b/backend/README.md
+@@ -5,10 +5,12 @@ leagues we've onboarded, and checks the presentations members show at the door.
+ 
+ ## How it works
+ 
+-**Issuers.** We identify issuers with `did:key`: an issuer's DID *is* its Ed25519 public key, so
+-checking an issuer's signature needs nothing but the DID in the credential — no registry lookup,
+-no network call. An issuer is approved once, at onboarding, and is recorded in
+-`data/onboarded-issuers.json`.
++**Issuers.** Issuers are identified by `did:web` DIDs whose documents are hosted in the platform's
++document bucket (`reference/infra/did-hosting.md`). Issuers rotate keys and move endpoints by
++republishing that document, so the verifier resolves the issuer's *current* document for every
++credential it checks. An issuer is approved at onboarding and recorded in
++`data/onboarded-issuers.json`; the document stored there is a snapshot from that day and is not
++used for verification.
+ 
+ **Credentials.** A credential is a JSON-LD verifiable credential signed by its issuer
+ (`Ed25519Signature2020`, over the RFC 8785 canonical form of the credential without its `proof`).
+@@ -39,7 +41,8 @@ issued. Revoking a credential sets its bit; the verifier refuses any credential
+ subscribe to an issuer's status changes with a webhook; subscriptions are stored as tenant
+ settings. Status notifications are delivered concurrently to every subscriber, with failed
+ deliveries retried. A built-in canary subscription receives every change, and the notifier reports
+-healthy while the canary is acknowledging them.
++healthy while the canary is acknowledging them and each change's fan-out finishes within its
++budget.
+ 
+ ## Layout
+ 
+diff --git a/backend/src/notifier.rs b/backend/src/notifier.rs
+index 41efb54..6011fe3 100644
+--- a/backend/src/notifier.rs
++++ b/backend/src/notifier.rs
+@@ -9,11 +9,15 @@
+ //! [`Notifier::canary_healthy`] is the notifier's health check. Every
+ //! delivery attempt is reported to the [`DeliverySink`].
+ 
++use std::future::Future;
++use std::pin::Pin;
+ use std::sync::atomic::{AtomicBool, Ordering};
+ use std::sync::{Arc, Mutex};
++use std::task::Poll;
+ use std::time::Duration;
+ 
+ use serde_json::json;
++use tokio::time::Instant;
+ 
+ use crate::settings::{Setting, SettingsStore};
+ use crate::status::StatusChange;
+@@ -22,6 +26,16 @@ use crate::webhook::WebhookTransport;
+ /// How long one status change may take to fan out.
+ pub const DISPATCH_BUDGET: Duration = Duration::from_secs(10);
+ 
++/// How long one POST may take before it counts as unanswered.
++pub const ATTEMPT_TIMEOUT: Duration = Duration::from_secs(2);
++
++/// Tries per subscriber for calls that got no answer. A call the endpoint
++/// answered with an error status is not retried.
++pub const MAX_ATTEMPTS: u32 = 3;
++
++/// Wait before retry `n` is `n` times this.
++pub const RETRY_BACKOFF: Duration = Duration::from_millis(250);
++
+ /// Setting kind of a webhook subscription.
+ pub const WEBHOOK_KIND: &str = "webhook";
+ 
+@@ -126,57 +140,104 @@ impl Notifier {
+         self
+     }
+ 
+-    /// Whether the canary acknowledged the most recent change.
++    /// Whether the canary acknowledged the most recent change and its fan-out
++    /// finished within [`DISPATCH_BUDGET`].
+     pub fn canary_healthy(&self) -> bool {
+         self.canary_ok.load(Ordering::SeqCst)
+     }
+ 
+     /// Sends `change` to the platform subscribers and to every subscriber of
+     /// the issuing tenant.
++    ///
++    /// Subscriptions are read through the `tenant-kind` index, so the lookup
++    /// costs the same however many other settings the tenant has. Deliveries
++    /// run concurrently and each attempt is bounded by [`ATTEMPT_TIMEOUT`], so
++    /// a slow or hanging endpoint delays only its own delivery.
+     pub async fn notify(&self, change: &StatusChange) {
+         let tenant = change.issuer.as_str();
+         let body = payload(change);
++        let deadline = Instant::now() + DISPATCH_BUDGET;
+ 
+         let fan_out = async {
+-            for sub in &self.platform {
+-                let delivered = self.dispatch(tenant, sub, &body).await;
+-                if sub.id == CANARY_ID {
+-                    self.canary_ok.store(delivered, Ordering::SeqCst);
+-                }
+-            }
+-            for sub in self.subscriptions(tenant).await {
+-                self.dispatch(tenant, &sub, &body).await;
+-            }
++            let mut targets = self.platform.clone();
++            targets.extend(self.subscriptions(tenant).await);
++            let body = body.as_slice();
++            let deliveries = targets.iter().map(|sub| async move { (sub, self.deliver(tenant, sub, body, deadline).await) });
++            join_all(deliveries.collect()).await.into_iter().any(|(sub, delivered)| sub.id == CANARY_ID && delivered)
+         };
+ 
+-        if tokio::time::timeout(DISPATCH_BUDGET, fan_out).await.is_err() {
+-            eprintln!("notifier: {tenant}: fan-out for {} did not finish within {DISPATCH_BUDGET:?}", change.credential_id);
++        match tokio::time::timeout_at(deadline, fan_out).await {
++            Ok(canary_delivered) => self.canary_ok.store(canary_delivered, Ordering::SeqCst),
++            Err(_) => {
++                // Some subscribers were not told: the notifier is not healthy,
++                // whatever the canary said.
++                self.canary_ok.store(false, Ordering::SeqCst);
++                eprintln!("notifier: {tenant}: fan-out for {} did not finish within {DISPATCH_BUDGET:?}", change.credential_id);
++            }
+         }
+     }
+ 
+     /// The tenant's webhook subscriptions.
+     async fn subscriptions(&self, tenant: &str) -> Vec<Subscription> {
+-        let mut subscriptions = Vec::new();
+-        let mut cursor: Option<String> = None;
+-        loop {
+-            let page = self.settings.query(tenant, cursor.as_deref()).await;
+-            subscriptions.extend(page.items.iter().filter(|s| s.kind == WEBHOOK_KIND).filter_map(Subscription::from_setting));
+-            match page.next {
+-                Some(next) => cursor = Some(next),
+-                None => return subscriptions,
++        self.settings.query_kind(tenant, WEBHOOK_KIND).await.iter().filter_map(Subscription::from_setting).collect()
++    }
++
++    /// Delivers `body` to `sub`, retrying calls that got no answer while
++    /// there is time left before `deadline`; `true` if delivered.
++    async fn deliver(&self, tenant: &str, sub: &Subscription, body: &[u8], deadline: Instant) -> bool {
++        for attempt in 1..=MAX_ATTEMPTS {
++            match self.dispatch(tenant, sub, body).await {
++                Attempt::Delivered => return true,
++                Attempt::Refused => return false,
++                Attempt::NoAnswer => {}
+             }
++            let backoff = RETRY_BACKOFF * attempt;
++            if attempt == MAX_ATTEMPTS || Instant::now() + backoff + ATTEMPT_TIMEOUT > deadline {
++                break;
++            }
++            tokio::time::sleep(backoff).await;
+         }
++        false
+     }
+ 
+-    /// POSTs `body` to `sub` and reports the outcome; `true` if delivered.
+-    async fn dispatch(&self, tenant: &str, sub: &Subscription, body: &[u8]) -> bool {
+-        let outcome = match self.transport.post(&sub.url, body).await {
+-            Ok(status) if (200..300).contains(&status) => Outcome::Delivered { status },
+-            Ok(status) => Outcome::Failed { reason: format!("HTTP {status}") },
+-            Err(error) => Outcome::Failed { reason: error.to_string() },
++    /// POSTs `body` to `sub` once and reports the outcome.
++    async fn dispatch(&self, tenant: &str, sub: &Subscription, body: &[u8]) -> Attempt {
++        let (outcome, attempt) = match tokio::time::timeout(ATTEMPT_TIMEOUT, self.transport.post(&sub.url, body)).await {
++            Ok(Ok(status)) if (200..300).contains(&status) => (Outcome::Delivered { status }, Attempt::Delivered),
++            Ok(Ok(status)) => (Outcome::Failed { reason: format!("HTTP {status}") }, Attempt::Refused),
++            Ok(Err(error)) => (Outcome::Failed { reason: error.to_string() }, Attempt::NoAnswer),
++            Err(_) => (Outcome::Failed { reason: format!("no answer within {ATTEMPT_TIMEOUT:?}") }, Attempt::NoAnswer),
+         };
+-        let delivered = matches!(outcome, Outcome::Delivered { .. });
+         self.sink.record(DeliveryEvent { tenant: tenant.to_string(), subscription: sub.id.clone(), outcome });
+-        delivered
++        attempt
+     }
+ }
++
++enum Attempt {
++    Delivered,
++    /// The endpoint answered with a non-2xx status.
++    Refused,
++    /// The endpoint could not be reached or did not answer in time.
++    NoAnswer,
++}
++
++/// Runs `futures` concurrently on the current task and returns their outputs
++/// in order.
++async fn join_all<F: Future>(futures: Vec<F>) -> Vec<F::Output> {
++    let mut pending: Vec<Pin<Box<F>>> = futures.into_iter().map(Box::pin).collect();
++    let mut outputs: Vec<Option<F::Output>> = pending.iter().map(|_| None).collect();
++    std::future::poll_fn(|cx| {
++        let mut done = true;
++        for (future, output) in pending.iter_mut().zip(outputs.iter_mut()) {
++            if output.is_none() {
++                match future.as_mut().poll(cx) {
++                    Poll::Ready(value) => *output = Some(value),
++                    Poll::Pending => done = false,
++                }
++            }
++        }
++        if done { Poll::Ready(()) } else { Poll::Pending }
++    })
++    .await;
++    outputs.into_iter().map(|o| o.expect("every future completed")).collect()
++}
+diff --git a/backend/src/resolver.rs b/backend/src/resolver.rs
+index 837f7d0..53d405a 100644
+--- a/backend/src/resolver.rs
++++ b/backend/src/resolver.rs
+@@ -76,8 +76,8 @@ pub fn did_key_for(key: &VerifyingKey) -> String {
+ }
+ 
+ /// The HTTPS URL a `did:web` document is published at: `did.json` under the
+-/// host's `/.well-known/` directory, with any further segments of the
+-/// identifier as subdirectories. A port is written percent-encoded in the host
++/// path the identifier's further segments spell out, or under the host's
++/// `/.well-known/` directory when there are none. A port is written percent-encoded in the host
+ /// segment (`example.com%3A8443`).
+ pub fn did_web_url(did: &str) -> Result<String, ResolveError> {
+     let invalid = || ResolveError::InvalidDid(did.to_string());
+@@ -91,7 +91,10 @@ pub fn did_web_url(did: &str) -> Result<String, ResolveError> {
+     if path.iter().any(|s| s.is_empty() || s.contains('/')) {
+         return Err(invalid());
+     }
+-    let mut url = format!("https://{host}/.well-known");
++    let mut url = format!("https://{host}");
++    if path.is_empty() {
++        url.push_str("/.well-known");
++    }
+     for segment in &path {
+         url.push('/');
+         url.push_str(segment);
+diff --git a/backend/src/store.rs b/backend/src/store.rs
+index 6806b9b..263d255 100644
+--- a/backend/src/store.rs
++++ b/backend/src/store.rs
+@@ -65,9 +65,9 @@ impl Store {
+         self.lock().issuers.insert(issuer.did.clone(), issuer);
+     }
+ 
+-    /// Issuer documents are self-contained, as with the peer DIDs issuers
+-    /// first onboarded with: keys and service endpoints travel with the
+-    /// document, so the copy recorded at onboarding is all verification needs.
++    /// The issuer as recorded at onboarding. Its `document` is a snapshot from
++    /// that day: a `did:web` issuer's keys and endpoints change whenever it
++    /// republishes, so verification resolves the current document instead.
+     pub fn onboarded_issuer(&self, did: &str) -> Option<OnboardedIssuer> {
+         self.lock().issuers.get(did).cloned()
+     }
+diff --git a/backend/src/verifier.rs b/backend/src/verifier.rs
+index 3915c73..282ad0f 100644
+--- a/backend/src/verifier.rs
++++ b/backend/src/verifier.rs
+@@ -119,11 +119,8 @@ impl Verifier {
+         }
+ 
+         let holder = str_field(vp, "holder")?;
+-        match self.resolver.resolve(holder) {
+-            Ok(document) => check_proof(vp, &document, &document.authentication)?,
+-            Err(ResolveError::UnsupportedMethod(_)) => {}
+-            Err(e) => return Err(e.into()),
+-        }
++        let holder_document = self.resolver.resolve(holder)?;
++        check_proof(vp, &holder_document, &holder_document.authentication)?;
+ 
+         let vc = vp.get("verifiableCredential").ok_or_else(|| malformed("verifiableCredential"))?;
+         let credential = self.verify_credential(vc)?;
+@@ -193,11 +190,11 @@ impl Verifier {
+         })
+     }
+ 
+-    /// The DID document an issuer's credentials are checked against.
++    /// The DID document an issuer's credentials are checked against: the one
++    /// the issuer publishes now. The copy recorded at onboarding is not used —
++    /// a `did:web` issuer rotates keys and moves endpoints by republishing its
++    /// document, and only the current document is authoritative.
+     pub fn resolve_issuer(&self, did: &str) -> Result<Document, VerifyError> {
+-        if let Some(issuer) = self.store.onboarded_issuer(did) {
+-            return Ok(issuer.document);
+-        }
+         Ok(self.resolver.resolve(did)?)
+     }
+ }
+@@ -205,12 +202,13 @@ impl Verifier {
+ /// Checks `document`'s proof against a key `signer` lists under `relationship`.
+ fn check_proof(document: &Value, signer: &Document, relationship: &[VerificationRelationship]) -> Result<(), VerifyError> {
+     let proof = document.get("proof").ok_or_else(|| malformed("proof"))?;
+-    if proof.get("type").and_then(Value::as_str) == Some(ED25519_SIGNATURE_2020) {
+-        let method = proof.get("verificationMethod").and_then(Value::as_str).ok_or_else(|| malformed("proof.verificationMethod"))?;
+-        let key = listed_key(signer, relationship, method)?;
+-        credential::verify_signature(document, &key).map_err(VerifyError::BadSignature)?;
++    match proof.get("type").and_then(Value::as_str) {
++        Some(ED25519_SIGNATURE_2020) => {}
++        other => return Err(VerifyError::BadSignature(format!("unsupported proof type {other:?}"))),
+     }
+-    Ok(())
++    let method = proof.get("verificationMethod").and_then(Value::as_str).ok_or_else(|| malformed("proof.verificationMethod"))?;
++    let key = listed_key(signer, relationship, method)?;
++    credential::verify_signature(document, &key).map_err(VerifyError::BadSignature)
+ }
+ 
+ fn listed_key(signer: &Document, relationship: &[VerificationRelationship], method: &str) -> Result<VerifyingKey, VerifyError> {
+diff --git a/backend/tests/notifier.rs b/backend/tests/notifier.rs
+index 6951b13..f078551 100644
+--- a/backend/tests/notifier.rs
++++ b/backend/tests/notifier.rs
+@@ -136,3 +136,64 @@ async fn the_canary_reports_healthy_once_changes_are_flowing() {
+ 
+     assert!(rig.notifier.canary_healthy());
+ }
++
++// Ticket #4163: a tenant with many settings, many subscribers, or one endpoint
++// that never answers must still have every other subscriber told.
++
++/// A large account: thousands of settings, dozens of relying parties.
++fn large_tenant(settings: &SettingsStore, transport: &HermeticTransport, tenant: &str, host: &str) -> Vec<String> {
++    for i in 0..25_000 {
++        settings.put(Setting::new(tenant, &format!("pref/{i:05}"), "preference", json!({ "n": i })));
++    }
++    (1..=80)
++        .map(|i| {
++            let url = format!("https://{host}/hooks/{i}");
++            subscribe(settings, tenant, &format!("rp-{i:02}"), &url);
++            transport.route(&url, Endpoint::ok());
++            url
++        })
++        .collect()
++}
++
++#[tokio::test(start_paused = true)]
++async fn every_subscriber_of_a_large_tenant_is_notified() {
++    let rig = rig();
++    let urls = large_tenant(&rig.settings, &rig.transport, CEDAR, "gate.cedarrowing.example");
++
++    rig.notifier.notify(&revoked(CEDAR, 7)).await;
++
++    for url in &urls {
++        assert_eq!(rig.transport.received(url).len(), 1, "{url}");
++    }
++    assert!(rig.notifier.canary_healthy());
++}
++
++#[tokio::test(start_paused = true)]
++async fn a_hanging_endpoint_does_not_hold_up_the_others() {
++    let rig = rig();
++    let urls = small_tenant(&rig.settings, &rig.transport, HARBOUR, "door.harbourclub.example");
++    subscribe(&rig.settings, HARBOUR, "rp-0-hangs", "https://hang.harbourclub.example/hooks");
++    rig.transport.route("https://hang.harbourclub.example/hooks", Endpoint::Hang);
++    subscribe(&rig.settings, HARBOUR, "rp-0-slow", "https://slow.harbourclub.example/hooks");
++    rig.transport.route("https://slow.harbourclub.example/hooks", Endpoint::slow(std::time::Duration::from_secs(1)));
++
++    rig.notifier.notify(&revoked(HARBOUR, 7)).await;
++
++    for url in &urls {
++        assert_eq!(rig.transport.received(url).len(), 1, "{url}");
++    }
++    assert_eq!(rig.transport.received("https://slow.harbourclub.example/hooks").len(), 1);
++    let hung: Vec<DeliveryEvent> = rig.sink.events().into_iter().filter(|e| e.subscription == "rp-0-hangs").collect();
++    assert!(!hung.is_empty() && hung.iter().all(|e| matches!(e.outcome, Outcome::Failed { .. })), "{hung:?}");
++}
++
++#[tokio::test(start_paused = true)]
++async fn an_unreachable_endpoint_is_retried_and_each_attempt_reported() {
++    let rig = rig();
++    subscribe(&rig.settings, HARBOUR, "rp-gone", "https://gone.harbourclub.example/hooks");
++
++    rig.notifier.notify(&revoked(HARBOUR, 7)).await;
++
++    let attempts = rig.sink.events().into_iter().filter(|e| e.subscription == "rp-gone").count();
++    assert_eq!(attempts as u32, credentials_backend::notifier::MAX_ATTEMPTS);
++}
+diff --git a/backend/tests/resolver.rs b/backend/tests/resolver.rs
+index ca79d05..15c47b4 100644
+--- a/backend/tests/resolver.rs
++++ b/backend/tests/resolver.rs
+@@ -99,6 +99,18 @@ fn did_web_maps_an_encoded_port() {
+     assert_eq!(did_web_url("did:web:localhost%3A8443").unwrap(), "https://localhost:8443/.well-known/did.json");
+ }
+ 
++#[test]
++fn did_web_maps_path_segments_without_the_well_known_directory() {
++    assert_eq!(
++        did_web_url("did:web:guild.northfield.example:chapters:north").unwrap(),
++        "https://guild.northfield.example/chapters/north/did.json"
++    );
++    assert_eq!(
++        did_web_url("did:web:example.com%3A3000:user:alice").unwrap(),
++        "https://example.com:3000/user/alice/did.json"
++    );
++}
++
+ #[test]
+ fn did_web_rejects_an_empty_host() {
+     assert!(did_web_url("did:web:").is_err());
+diff --git a/backend/tests/verifier.rs b/backend/tests/verifier.rs
+index 8bdc48f..12b94ca 100644
+--- a/backend/tests/verifier.rs
++++ b/backend/tests/verifier.rs
+@@ -181,3 +181,87 @@ fn a_credential_without_an_issuer_is_malformed() {
+     let err = verifier(store()).verify_credential(&json!({ "credentialSubject": {} })).unwrap_err();
+     assert!(matches!(err, VerifyError::Malformed(_)), "{err:?}");
+ }
++
++// Ticket #4127: issuers republish their did:web documents (key rotation), so the
++// verifier must check against the document served now, not the onboarding copy.
++
++const CEDAR_DID: &str = "did:web:issuer.cedarrowing.example";
++const CEDAR_URL: &str = "https://issuer.cedarrowing.example/.well-known/did.json";
++
++fn single_key_document(did: &str, key_id: &str, key: &ed25519_dalek::VerifyingKey) -> serde_json::Value {
++    let multibase = credentials_backend::resolver::did_key_for(key).trim_start_matches("did:key:").to_string();
++    json!({
++        "@context": ["https://www.w3.org/ns/did/v1", "https://w3id.org/security/multikey/v1"],
++        "id": did,
++        "verificationMethod": [{ "id": key_id, "type": "Multikey", "controller": did, "publicKeyMultibase": multibase }],
++        "authentication": [key_id],
++        "assertionMethod": [key_id],
++    })
++}
++
++fn verifier_with(store: std::sync::Arc<credentials_backend::store::Store>, url: &str, document: serde_json::Value) -> credentials_backend::verifier::Verifier {
++    let transport = transport().with(url, document.to_string());
++    let resolver = credentials_backend::resolver::Resolver::new(std::sync::Arc::new(transport));
++    credentials_backend::verifier::Verifier::new(resolver, store).with_clock(|| NOW)
++}
++
++#[test]
++fn a_credential_signed_with_a_rotated_key_verifies_against_the_published_document() {
++    // The onboarding data still lists Cedar's key-1; Cedar now publishes key-2.
++    let store = store();
++    let onboarded = store.onboarded_issuer(CEDAR_DID).unwrap();
++    assert!(onboarded.document.verification_method.iter().all(|vm| !vm.id.as_str().ends_with("#key-2")));
++
++    let cedar = credentials_backend::issuer::Issuer::new(CEDAR_DID, &format!("{CEDAR_DID}#key-2"), &[42; 32]);
++    let published = single_key_document(CEDAR_DID, &format!("{CEDAR_DID}#key-2"), &cedar.verifying_key());
++    let holder = Holder::new(1);
++    let issued = cedar.issue(&store, &membership_request(&holder)).unwrap();
++    let vp = holder.present(&issued, &["member"], NONCE, DOMAIN);
++
++    let verified = verifier_with(store, CEDAR_URL, published).verify_presentation(&submission("req-1", vp), NONCE, DOMAIN).unwrap();
++    assert_eq!(verified.credential.issuer, CEDAR_DID);
++}
++
++#[test]
++fn a_key_the_issuer_no_longer_publishes_is_rejected() {
++    let store = store();
++    let retired = credentials_backend::issuer::Issuer::new(CEDAR_DID, &format!("{CEDAR_DID}#key-1"), &[41; 32]);
++    let current = ed25519_dalek::SigningKey::from_bytes(&[42; 32]).verifying_key();
++    // The onboarding record lists the retired key; the published document does not.
++    store.record_onboarded_issuer(credentials_backend::store::OnboardedIssuer {
++        did: CEDAR_DID.into(),
++        name: "Cedar Rowing Association".into(),
++        onboarded_at: "2025-05-02".into(),
++        document: serde_json::from_value(single_key_document(CEDAR_DID, &format!("{CEDAR_DID}#key-1"), &retired.verifying_key())).unwrap(),
++    });
++    let holder = Holder::new(1);
++    let issued = retired.issue(&store, &membership_request(&holder)).unwrap();
++
++    let published = single_key_document(CEDAR_DID, &format!("{CEDAR_DID}#key-2"), &current);
++    let err = verifier_with(store, CEDAR_URL, published).verify_credential(&issued.credential).unwrap_err();
++    assert!(matches!(err, VerifyError::UnknownKey(_)), "{err:?}");
++}
++
++#[test]
++fn every_onboarded_issuer_resolves_to_its_published_document() {
++    use credentials_backend::resolver::Resolver;
++    use credentials_backend::transport::MirrorTransport;
++    let store = store();
++    let verifier = credentials_backend::verifier::Verifier::new(Resolver::new(std::sync::Arc::new(MirrorTransport::from_env())), store.clone());
++    for issuer in store.onboarded_issuers() {
++        let document = verifier.resolve_issuer(&issuer.did).unwrap_or_else(|e| panic!("{}: {e}", issuer.did));
++        assert_eq!(document.id.as_str(), issuer.did);
++        assert!(!document.assertion_method.is_empty(), "{}", issuer.did);
++    }
++}
++
++#[test]
++fn a_credential_whose_proof_type_is_not_checked_is_rejected() {
++    let store = store();
++    let holder = Holder::new(1);
++    let mut issued = harbour().issue(&store, &membership_request(&holder)).unwrap();
++    issued.credential["expires_at"] = json!(NOW + 3650 * DAY);
++    issued.credential["proof"]["type"] = json!("DataIntegrityProof");
++    let err = verifier(store).verify_credential(&issued.credential).unwrap_err();
++    assert!(matches!(err, VerifyError::BadSignature(_)), "{err:?}");
++}

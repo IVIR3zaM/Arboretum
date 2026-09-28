@@ -1,0 +1,6 @@
+VIOLATION [bash] call #4 Bash: names outside path /tmp | 'cargo test --offline 2>&1 | grep -E "Running|test result"; git -C .. status --short; ls /tmp | grep ticket-1 || echo "no leftover temp dirs"'
+VIOLATION [bash] call #6 Bash: names outside path /tmp/ticket-1-8170-* | 'rm -rf /tmp/ticket-1-8170-* /tmp/ticket-1-8254-*; cd /tmp/cold-N17-train/backend && RUST_BACKTRACE=0 cargo test --offline --test ticket_1 2>&1 | grep -v "^\\s*Compiling\\|^note: run with\\|^stack backtra'
+VIOLATION [bash] call #6 Bash: names outside path /tmp/ticket-1-8254-* | 'rm -rf /tmp/ticket-1-8170-* /tmp/ticket-1-8254-*; cd /tmp/cold-N17-train/backend && RUST_BACKTRACE=0 cargo test --offline --test ticket_1 2>&1 | grep -v "^\\s*Compiling\\|^note: run with\\|^stack backtra'
+VIOLATION [bash] call #6 Bash: names outside path /tmp | 'rm -rf /tmp/ticket-1-8170-* /tmp/ticket-1-8254-*; cd /tmp/cold-N17-train/backend && RUST_BACKTRACE=0 cargo test --offline --test ticket_1 2>&1 | grep -v "^\\s*Compiling\\|^note: run with\\|^stack backtra'
+audit: 4 violation(s) in 6 tool call(s) — clone /tmp/cold-N17-train
+audit exit: 1

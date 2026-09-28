@@ -1,0 +1,2 @@
+Trainer (after turn 10, phase 4):
+Strong list: every item shown rather than recited, and today's own changes searched too. Now the calls are yours, not the assistant's. Choose what is in scope out loud, defer the rest by name to an owner, and watch for anything on the list that is a new feature dressed up as a fix. One more habit: hold this list against what the assistant told you earlier in the session — a finding that quietly changed category between turns deserves a second look.

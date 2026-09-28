@@ -1,0 +1,2 @@
+Trainer (after turn 1, phase 1 → phase 2):
+That is the phase-1 deliverable: written, cited, and a reconciliation you can check line by line. Two things before you delegate anything on the ticket. First, you have not seen the symptom happen yet — the suite is green today, and it was green while members were being turned away, so decide what "fixed" will be measured against. Second, say the cause back in your own words and ask to be corrected; if you can't state it, you can't review the fix.

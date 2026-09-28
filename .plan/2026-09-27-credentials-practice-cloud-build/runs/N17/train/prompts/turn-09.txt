@@ -1,0 +1,7 @@
+the release check says the feature hasn't landed yet — it doesn't say why. before changing anything:
+
+1. list every behaviour in createPresentation that wasn't settled by one of the owners' answers — the calls you made yourself, including the ones you already flagged as interpretations.
+2. for each one, what does the existing code in this repo already do in the same situation — the rest of WalletService, the store, the verifier? mark every place your build departs from an existing convention.
+3. where the build departs from the existing code's convention and no owner's answer requires it, go back to the convention. tell me which ones you changed and why the others stay.
+
+tests still have to go red when a rule is broken. re-run the app and backend suites and paste the real outputs.

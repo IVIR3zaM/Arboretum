@@ -1,0 +1,3 @@
+VIOLATION [bash] call #7 Bash: names outside path / | 'export CARGO_TARGET_DIR=$PWD/../target RUST_BACKTRACE=0 && cargo test --offline --test ticket_4163 2>&1 | grep -A1 "panicked at" | grep -v "^--$" | sed -E "s/^thread \'([^\']+)\'.*/\\1:/" | paste - - | cu'
+audit: 1 violation(s) in 14 tool call(s) — clone /tmp/cold-N17-train
+audit exit: 1
