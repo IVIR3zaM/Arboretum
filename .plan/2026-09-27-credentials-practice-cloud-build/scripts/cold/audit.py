@@ -12,14 +12,22 @@ Toolchain caches and SDK dirs (cargo, rustup, pub cache, the flutter/dart/node S
 binary dirs and /dev/null & co. are allowed. Extra allowed prefixes: COLD_AUDIT_ALLOW (colon-sep).
 
 A Bash token counts as an absolute path only if its first component exists at `/` on this machine
-(so `/etc/x` is a path, a route string like `/api/v1/users` is not). The Bash cwd is simulated
-across calls, starting at the clone, so `cd src && cat ../x` stays inside.
+(so `/etc/x` is a path, a route string like `/api/v1/users` is not). A `//...` part right after a
+`:` (the authority of `scheme://host/...`) is not a path on its own; the whole `scheme://...` word
+is still resolved from the cwd if it holds a `..`. The Bash cwd is simulated across calls, starting
+at the clone, so `cd src && cat ../x` stays inside. An unquoted newline at the top level of the
+command line separates commands as `;` does (not one in quotes, after a backslash, or inside
+`( )`, `$( )` or backticks), so a `cd` at the start of the next line moves the cwd.
 
 Heredocs (`<<` / `<<-`, quoted delimiter or not): the body is split off the command line. A body
 fed to a shell (bash, sh, zsh, dash, ksh, source, ., eval anywhere on the operator's line) is
 audited as shell, like any command. Any other body is data: every check still runs on its tokens,
 except that a `~` is not expanded (bash does no tilde expansion in a heredoc body, so Dart's
 `ms ~/ 1000` is not $HOME). An unquoted-delimiter body's $(...) and `...` run, so they are shell.
+A body that `cat` or `tee` only writes to a file (a `>`/`>>` redirect on that simple command, and
+for tee a file argument too; no pipe onward, no other redirect, not inside ( ), $( ) or backticks)
+is audited the way Write content is: its tokens are not path-checked, but the target and the rest
+of the command line are, and an unquoted body's $(...) and `...` are still audited as shell.
 
 Exit 0: clean. Exit 1: violations (each printed). Exit 2: usage or unreadable transcript.
 """
@@ -114,6 +122,70 @@ def tokenize(command):
         return [t for t in re.split(r"(\s+|&&|\|\||[;|&()<>])", command) if t and not t.isspace()]
 
 
+def mark_newlines(command):
+    """Replace each command-separating newline with ` ; `: an unquoted newline at the top level of
+    the command line (the newline that ends a comment counts). A newline in quotes, after a
+    backslash, or inside ( ), $( ) or backticks is left as it is."""
+    out, stack, i, n = [], [], 0, len(command)
+    while i < n:
+        c = command[i]
+        top = stack[-1] if stack else None
+        if top == "sq":
+            if c == "'":
+                stack.pop()
+            out.append(c)
+            i += 1
+            continue
+        if c == "\\" and i + 1 < n:
+            out.append(command[i:i + 2])
+            i += 2
+            continue
+        if top == "dq":
+            if c == '"':
+                stack.pop()
+            elif command.startswith("$(", i):
+                stack.append("sub")
+                out.append("$(")
+                i += 2
+                continue
+            elif c == "`":
+                stack.append("bt")
+            out.append(c)
+            i += 1
+            continue
+        if c == "\n":
+            out.append(" ; " if not stack else c)
+            i += 1
+            continue
+        if c == "#" and (i == 0 or command[i - 1] in " \t\n;&|("):
+            end = command.find("\n", i)
+            end = n if end == -1 else end
+            out.append(command[i:end])
+            i = end
+            continue
+        if c == "'":
+            stack.append("sq")
+        elif c == '"':
+            stack.append("dq")
+        elif command.startswith("$(", i):
+            stack.append("sub")
+            out.append("$(")
+            i += 2
+            continue
+        elif c == "`":
+            if top == "bt":
+                stack.pop()
+            else:
+                stack.append("bt")
+        elif c == "(":
+            stack.append("par")
+        elif c == ")" and top in ("sub", "par"):
+            stack.pop()
+        out.append(c)
+        i += 1
+    return "".join(out)
+
+
 def tokenize_data(text):
     """Tokens of a data heredoc body. Unbalanced quotes: split on the quotes too, so a quoted
     path ("/etc/x", '$HOME/x', "../x") still reaches the checks."""
@@ -145,10 +217,12 @@ def split_heredocs(command):
     """Split heredoc bodies off a Bash command.
 
     Returns (text, bodies): text is the command with each body (and its delimiter line) replaced
-    by a marker line `@@HEREDOC_<k>@@`; bodies[k] = (body, shell, quoted). A `<<` inside quotes is
-    not an operator; a heredoc whose delimiter line never comes is left on the command line."""
+    by a marker line `@@HEREDOC_<k>@@`; bodies[k] = (body, shell, quoted, to_file), to_file per
+    writes_to_file(). A `<<` inside quotes is not an operator; a heredoc whose delimiter line never
+    comes is left on the command line."""
     out, bodies, stack, pending = [], [], [], []
     i, n, line_start = 0, len(command), 0
+    cmd_start = 0  # index in `out` where the current top-level logical line starts
     while i < n:
         c = command[i]
         top = stack[-1] if stack else None
@@ -169,13 +243,15 @@ def split_heredocs(command):
                 line = command[line_start:i - 1]
                 lines = command[i:].split("\n")
                 j, parsed = 0, []
-                for strip, delim, quoted in pending:
+                for strip, delim, quoted, op_idx in pending:
                     body = []
                     while j < len(lines):
                         ln = lines[j]
                         j += 1
                         if (ln.lstrip("\t") if strip else ln) == delim:
-                            parsed.append(("\n".join(body), feeds_shell(line), quoted))
+                            to_file = op_idx is not None and not stack and \
+                                writes_to_file(logical_line(out, cmd_start, op_idx, pending))
+                            parsed.append(("\n".join(body), feeds_shell(line), quoted, to_file))
                             break
                         body.append(ln)
                     else:
@@ -188,6 +264,8 @@ def split_heredocs(command):
                     i = min(i, n)
                 pending = []
             line_start = i
+            if not stack:
+                cmd_start = len(out)
             continue
         if top == "dq":
             if c == '"':
@@ -210,7 +288,7 @@ def split_heredocs(command):
                 delim = m.group(2) if m.group(2) is not None else \
                     m.group(3) if m.group(3) is not None else m.group(5)
                 quoted = m.group(2) is not None or m.group(3) is not None or bool(m.group(4))
-                pending.append((m.group(1) == "-", delim, quoted))
+                pending.append((m.group(1) == "-", delim, quoted, None if stack else len(out)))
                 out.append(m.group(0))
                 i = m.end()
                 continue
@@ -243,6 +321,81 @@ def split_heredocs(command):
     return "".join(out), bodies
 
 
+DATA_WRITERS = {"cat", "tee"}
+ASSIGNMENT = re.compile(r"[A-Za-z_][A-Za-z0-9_]*=")
+
+
+def logical_line(out, start, op_idx, pending):
+    """The top-level logical line holding the heredoc operator at out[op_idx], with that operator
+    as the word @@OP@@ and every other pending operator as @@HD@@."""
+    others = {p[3] for p in pending} - {op_idx}
+    parts = []
+    for k in range(start, len(out)):
+        parts.append(" @@OP@@ " if k == op_idx else " @@HD@@ " if k in others else out[k])
+    return "".join(parts)
+
+
+def writes_to_file(line):
+    """True if the heredoc @@OP@@ on this top-level line is the stdin of a `cat` or `tee` whose
+    output goes only to files: its simple command starts with cat/tee (after NAME=value words), has
+    a `>`/`>>` redirect to a word, tee also has a file argument, it has no other redirect or
+    operator word, it is not piped onward, and the line has no ( ), $( ) or backticks (so the
+    simple command is exactly what bash runs). Anything else is False: the body keeps every check."""
+    try:
+        lex = shlex.shlex(line, posix=True, punctuation_chars=True)
+        lex.whitespace_split = True
+        lex.commenters = ""
+        tokens = list(lex)
+    except ValueError:
+        return False
+    if any(t in ("(", ")") or "$(" in t or "`" in t for t in tokens):
+        return False
+    segments, cur = [], []
+    for t in tokens:
+        if t in SEPARATORS:
+            segments.append((cur, t))
+            cur = []
+        else:
+            cur.append(t)
+    segments.append((cur, None))
+    for words, after in segments:
+        if "@@OP@@" in words:
+            break
+    else:
+        return False
+    if after in ("|", "|&"):
+        return False
+    k = 0
+    while k < len(words) and ASSIGNMENT.match(words[k]):
+        k += 1
+    if k >= len(words) or words[k] not in DATA_WRITERS:
+        return False
+    cmd, rest = words[k], words[k + 1:]
+    redirected, files, j = False, [], 0
+    while j < len(rest):
+        t = rest[j]
+        if t in ("@@OP@@", "@@HD@@"):
+            j += 1
+            continue
+        if t in (">", ">>"):
+            if j > 0 and rest[j - 1].isdigit():
+                return False  # maybe an fd redirect (`2>`), not stdout
+            if j + 1 >= len(rest) or rest[j + 1].startswith("@@") or \
+                    any(ch in rest[j + 1] for ch in "<>&|;"):
+                return False
+            redirected = True
+            j += 2
+            continue
+        if any(ch in t for ch in "<>&|;"):
+            return False
+        if not t.startswith("-"):
+            files.append(t)
+        j += 1
+    if not redirected:
+        return False
+    return cmd == "cat" or bool(files)
+
+
 def substitutions(text):
     """The $(...) and `...` command substitutions in an unquoted heredoc body."""
     subs, i = [], 0
@@ -266,12 +419,13 @@ def substitutions(text):
 
 def audit_heredoc(jail, body, cwd):
     """Return (violations, new_cwd) for one heredoc body."""
-    text, shell, quoted = body
+    text, shell, quoted, to_file = body
     if shell:
         return audit_bash(jail, text, cwd)
     violations = []
-    for tok in tokenize_data(text):
-        violations += audit_token(jail, tok, cwd, tilde=False)
+    if not to_file:  # a body cat/tee only writes to a file is data, like Write content
+        for tok in tokenize_data(text):
+            violations += audit_token(jail, tok, cwd, tilde=False)
     if not quoted:
         for sub in substitutions(text):
             violations += audit_bash(jail, sub, cwd)[0]
@@ -297,7 +451,7 @@ def audit_bash(jail, command, cwd):
     violations = []
     command, bodies = split_heredocs(command)
     audited = set()
-    tokens = tokenize(command)
+    tokens = tokenize(mark_newlines(command))
     command_start = True
     i = 0
     while i < len(tokens):
@@ -344,10 +498,27 @@ def audit_bash(jail, command, cwd):
     return violations, cwd
 
 
+def url_authority(delim, part):
+    """A `//...` part right after a `:`: the authority of `scheme://host/...`, not a path."""
+    return delim == ":" and part.startswith("//")
+
+
 def audit_token(jail, tok, cwd, tilde=True):
     violations = []
-    for part in re.split(r"[=:]", tok):
+    pieces = re.split(r"([=:])", tok)
+    word = ""  # the text since the last `=`: what bash would open if it were a path
+    for idx in range(0, len(pieces), 2):
+        part = pieces[idx]
+        delim = pieces[idx - 1] if idx else ""
+        word = word + ":" + part if delim == ":" else part
         if not part:
+            continue
+        if url_authority(delim, part):
+            whole = jail.expand(word, tilde)
+            if has_dotdot(whole):
+                p = norm(os.path.join(cwd, whole))
+                if not jail.ok(p):
+                    violations.append(("escape", f"`{whole}` resolves outside the clone (-> {p})"))
             continue
         part = jail.expand(part, tilde)
         if looks_absolute(part):

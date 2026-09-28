@@ -1,0 +1,251 @@
+# N23 re-audit: fixed scripts/cold/audit.py over every recorded audit.txt under runs/,
+# each against the CLONE in its meta.env. Rules: (a) newline separator, (b) `//` URL
+# authority, (c) cat/tee-to-file heredoc body. A cleared finding is credited to the rule
+# (or smallest set of rules) whose switch-off alone brings it back.
+
+== runs/N05/smoke (clone /tmp/cold-N05-smoke)
+(clone dir /tmp/cold-N05-smoke was gone: mkdir -p)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N11/cold (clone /tmp/n11t2.OvwFpr/clone)
+(clone dir /tmp/n11t2.OvwFpr/clone was gone: mkdir -p)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N11/try1/cold (clone /tmp/n11v/clone2)
+(clone dir /tmp/n11v/clone2 was gone: mkdir -p)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N11/try1/void-1 (clone /tmp/n11v/clone)
+(clone dir /tmp/n11v/clone was gone: mkdir -p)
+old exit: 1 (1 finding(s))   new exit: 1 (1 finding(s))   all rules off == HEAD audit.py: yes
+  new: VIOLATION [file] call #5 Read: file_path=/root/.claude/projects/-tmp-n11v-clone/20d6fe92-4df5-4de5-9ccc-2f813b2fa94d/tool-results/blciqz5qa.txt is outside the clone
+  old findings still named: 1 of 1
+
+== runs/N13/elicited-void-1 (clone /tmp/cold-N13-elicited)
+(clone dir /tmp/cold-N13-elicited was gone: mkdir -p)
+old exit: 1 (6 finding(s))   new exit: 1 (6 finding(s))   all rules off == HEAD audit.py: yes
+  new: VIOLATION [bash] call #9 Bash: names outside path / | 'ls / /opt /usr/local 2>/dev/null | head -40; find / -name flutter -maxdepth 5 -type f 2>/dev/null | head; grep -rn "base58\\|canonical" /root/.pub-cache/hosted/pub.dev/ssi-3.9.6/lib --include=*.dart -i'
+  new: VIOLATION [bash] call #9 Bash: names outside path /opt | 'ls / /opt /usr/local 2>/dev/null | head -40; find / -name flutter -maxdepth 5 -type f 2>/dev/null | head; grep -rn "base58\\|canonical" /root/.pub-cache/hosted/pub.dev/ssi-3.9.6/lib --include=*.dart -i'
+  new: VIOLATION [bash] call #9 Bash: names outside path /usr/local | 'ls / /opt /usr/local 2>/dev/null | head -40; find / -name flutter -maxdepth 5 -type f 2>/dev/null | head; grep -rn "base58\\|canonical" /root/.pub-cache/hosted/pub.dev/ssi-3.9.6/lib --include=*.dart -i'
+  new: VIOLATION [bash] call #9 Bash: names outside path / | 'ls / /opt /usr/local 2>/dev/null | head -40; find / -name flutter -maxdepth 5 -type f 2>/dev/null | head; grep -rn "base58\\|canonical" /root/.pub-cache/hosted/pub.dev/ssi-3.9.6/lib --include=*.dart -i'
+  new: VIOLATION [bash] call #21 Bash: names outside path /tmp/claude-0/-tmp-cold-N13-elicited/ecef953c-289c-4ddf-8bfb-16ce0e8241d7/scratchpad | 'SP=/tmp/claude-0/-tmp-cold-N13-elicited/ecef953c-289c-4ddf-8bfb-16ce0e8241d7/scratchpad; mkdir -p $SP; cd /tmp/cold-N13-elicited/backend\ncat > tests/zz_e2e_tmp.rs <<EOF\nmod common;\nuse common::*;\nuse '
+  new: VIOLATION [bash] call #22 Bash: names outside path /tmp/claude-0/-tmp-cold-N13-elicited/ecef953c-289c-4ddf-8bfb-16ce0e8241d7/scratchpad | "SP=/tmp/claude-0/-tmp-cold-N13-elicited/ecef953c-289c-4ddf-8bfb-16ce0e8241d7/scratchpad; cd /tmp/cold-N13-elicited/app\ncat > test/zz_e2e_tmp_test.dart <<EOF\nimport 'dart:convert';\nimport 'dart:io';\nim"
+  old findings still named: 6 of 6
+
+== runs/N13/elicited (clone /tmp/cold-N13-elicited)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N13/naive-void-1 (clone /tmp/cold-N13-naive)
+(clone dir /tmp/cold-N13-naive was gone: mkdir -p)
+old exit: 1 (8 finding(s))   new exit: 1 (8 finding(s))   all rules off == HEAD audit.py: yes
+  new: VIOLATION [bash] call #8 Bash: names outside path /opt | 'ls /opt /usr/local 2>/dev/null; ls ~ ; find / -name flutter -maxdepth 4 -type f 2>/dev/null | head; find / -name dart -maxdepth 5 -type f 2>/dev/null | head'
+  new: VIOLATION [bash] call #8 Bash: names outside path /usr/local | 'ls /opt /usr/local 2>/dev/null; ls ~ ; find / -name flutter -maxdepth 4 -type f 2>/dev/null | head; find / -name dart -maxdepth 5 -type f 2>/dev/null | head'
+  new: VIOLATION [bash] call #8 Bash: names outside path /root | 'ls /opt /usr/local 2>/dev/null; ls ~ ; find / -name flutter -maxdepth 4 -type f 2>/dev/null | head; find / -name dart -maxdepth 5 -type f 2>/dev/null | head'
+  new: VIOLATION [bash] call #8 Bash: names outside path / | 'ls /opt /usr/local 2>/dev/null; ls ~ ; find / -name flutter -maxdepth 4 -type f 2>/dev/null | head; find / -name dart -maxdepth 5 -type f 2>/dev/null | head'
+  new: VIOLATION [bash] call #8 Bash: names outside path / | 'ls /opt /usr/local 2>/dev/null; ls ~ ; find / -name flutter -maxdepth 4 -type f 2>/dev/null | head; find / -name dart -maxdepth 5 -type f 2>/dev/null | head'
+  new: VIOLATION [bash] call #15 Bash: names outside path /tmp/claude-0/-tmp-cold-N13-naive/138fa3e1-8acf-4ed3-8766-b45383ddb605/scratchpad | 'cd /tmp/cold-N13-naive/backend && S=/tmp/claude-0/-tmp-cold-N13-naive/138fa3e1-8acf-4ed3-8766-b45383ddb605/scratchpad && mkdir -p $S && cat > tests/zz_crosscheck.rs <<EOF\nmod common;\nuse common::*;\nus'
+  new: VIOLATION [bash] call #16 Bash: names outside path /tmp/claude-0/-tmp-cold-N13-naive/138fa3e1-8acf-4ed3-8766-b45383ddb605/scratchpad | "cd /tmp/cold-N13-naive/app && S=/tmp/claude-0/-tmp-cold-N13-naive/138fa3e1-8acf-4ed3-8766-b45383ddb605/scratchpad && cat > test/zz_crosscheck_test.dart <<EOF\nimport 'dart:convert';\nimport 'dart:io';\ni"
+  new: VIOLATION [bash] call #17 Bash: names outside path /tmp/claude-0/-tmp-cold-N13-naive/138fa3e1-8acf-4ed3-8766-b45383ddb605/scratchpad | 'S=/tmp/claude-0/-tmp-cold-N13-naive/138fa3e1-8acf-4ed3-8766-b45383ddb605/scratchpad && python3 -c "\nimport json;p=\'$S/vp.json\';v=json.load(open(p));v[\'disclosures\']=v[\'disclosures\'][:1];json.dump(v,op'
+  old findings still named: 8 of 8
+
+== runs/N13/naive (clone /tmp/cold-N13-naive)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N14/cold-void-1 (clone /tmp/n14.hxKyQa/clone)
+(clone dir /tmp/n14.hxKyQa/clone was gone: mkdir -p)
+old exit: 1 (6 finding(s))   new exit: 1 (5 finding(s))   all rules off == HEAD audit.py: yes
+  new: VIOLATION [bash] call #7 Bash: names outside path /tmp/claude-0/-tmp-n14-hxKyQa-clone/004c278f-ff65-4b5a-b7ce-6202ab624670/scratchpad/notifier.rs.new | "cp tests/notifier.rs /tmp/claude-0/-tmp-n14-hxKyQa-clone/004c278f-ff65-4b5a-b7ce-6202ab624670/scratchpad/notifier.rs.new && sed -i 's/\\.healthy()/.canary_healthy()/g' tests/notifier.rs && cargo test -"
+  new: VIOLATION [bash] call #7 Bash: names outside path /tmp/claude-0/-tmp-n14-hxKyQa-clone/004c278f-ff65-4b5a-b7ce-6202ab624670/scratchpad/notifier.rs.new | "cp tests/notifier.rs /tmp/claude-0/-tmp-n14-hxKyQa-clone/004c278f-ff65-4b5a-b7ce-6202ab624670/scratchpad/notifier.rs.new && sed -i 's/\\.healthy()/.canary_healthy()/g' tests/notifier.rs && cargo test -"
+  new: VIOLATION [escape] call #8 Bash: `../../scratch_n.rs` resolves outside the clone (-> /tmp/n14.hxKyQa/scratch_n.rs) | "python3 - <<'EOF'\np='tests/notifier.rs'\ns=open(p).read()\ns=s.replace('''    let notify = rig.notifier.notify(&revoked(HARBOUR, 7));\n''','''    let change = revoked(HARBOUR, 7);\n    let notify = rig.no"
+  new: VIOLATION [bash] call #8 Bash: names outside path /tmp/claude-0/-tmp-n14-hxKyQa-clone/004c278f-ff65-4b5a-b7ce-6202ab624670/scratchpad | "python3 - <<'EOF'\np='tests/notifier.rs'\ns=open(p).read()\ns=s.replace('''    let notify = rig.notifier.notify(&revoked(HARBOUR, 7));\n''','''    let change = revoked(HARBOUR, 7);\n    let notify = rig.no"
+  new: VIOLATION [escape] call #8 Bash: `../../scratch_n.rs` resolves outside the clone (-> /tmp/n14.hxKyQa/scratch_n.rs) | "python3 - <<'EOF'\np='tests/notifier.rs'\ns=open(p).read()\ns=s.replace('''    let notify = rig.notifier.notify(&revoked(HARBOUR, 7));\n''','''    let change = revoked(HARBOUR, 7);\n    let notify = rig.no"
+  old findings still named: 5 of 6
+  cleared by N20's heredoc split (2341991), before N23 — named by the audit before 2341991, not by HEAD audit.py; no N23 rule brings it back: VIOLATION [bash] call #10 Bash: names outside path / | "sed -i 's/^use crate::webhook::WebhookTransport;/use crate::webhook::{WebhookError, WebhookTransport};/; s/crate::webhook::WebhookError/WebhookError/g' src/notifier.rs && python3 - <<'EOF'\np='README.m"
+
+== runs/N14/cold (clone /tmp/n14.hxKyQa/clone2)
+(clone dir /tmp/n14.hxKyQa/clone2 was gone: mkdir -p)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/control (clone /tmp/cold-N17-control)
+(clone dir /tmp/cold-N17-control was gone: mkdir -p)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/examiner (clone /tmp/cold-N17-examiner)
+(clone dir /tmp/cold-N17-examiner was gone: mkdir -p)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-01 (clone /tmp/cold-N17-train)
+(clone dir /tmp/cold-N17-train was gone: mkdir -p)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-02-void-1 (clone /tmp/cold-N17-train)
+old exit: 1 (4 finding(s))   new exit: 1 (4 finding(s))   all rules off == HEAD audit.py: yes
+  new: VIOLATION [bash] call #4 Bash: names outside path /tmp | 'cargo test --offline 2>&1 | grep -E "Running|test result"; git -C .. status --short; ls /tmp | grep ticket-1 || echo "no leftover temp dirs"'
+  new: VIOLATION [bash] call #6 Bash: names outside path /tmp/ticket-1-8170-* | 'rm -rf /tmp/ticket-1-8170-* /tmp/ticket-1-8254-*; cd /tmp/cold-N17-train/backend && RUST_BACKTRACE=0 cargo test --offline --test ticket_1 2>&1 | grep -v "^\\s*Compiling\\|^note: run with\\|^stack backtra'
+  new: VIOLATION [bash] call #6 Bash: names outside path /tmp/ticket-1-8254-* | 'rm -rf /tmp/ticket-1-8170-* /tmp/ticket-1-8254-*; cd /tmp/cold-N17-train/backend && RUST_BACKTRACE=0 cargo test --offline --test ticket_1 2>&1 | grep -v "^\\s*Compiling\\|^note: run with\\|^stack backtra'
+  new: VIOLATION [bash] call #6 Bash: names outside path /tmp | 'rm -rf /tmp/ticket-1-8170-* /tmp/ticket-1-8254-*; cd /tmp/cold-N17-train/backend && RUST_BACKTRACE=0 cargo test --offline --test ticket_1 2>&1 | grep -v "^\\s*Compiling\\|^note: run with\\|^stack backtra'
+  old findings still named: 4 of 4
+
+== runs/N17/superseded-try1/train/turn-02 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-03 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-04 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-05 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-06 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-07-void-1 (clone /tmp/cold-N17-train)
+old exit: 1 (2 finding(s))   new exit: 1 (2 finding(s))   all rules off == HEAD audit.py: yes
+  new: VIOLATION [bash] call #3 Bash: names outside path / | 'd=$(find / -type d -path "*pub-cache*/ssi-3.9.6" 2>/dev/null | head -1); echo "$d"; [ -n "$d" ] && { grep -rlE "Ed25519Signature2020" $d/lib | head; echo ---; grep -rliE "jcs|canonicali[sz]" $d/lib | '
+  new: VIOLATION [bash] call #3 Bash: names outside path / | 'd=$(find / -type d -path "*pub-cache*/ssi-3.9.6" 2>/dev/null | head -1); echo "$d"; [ -n "$d" ] && { grep -rlE "Ed25519Signature2020" $d/lib | head; echo ---; grep -rliE "jcs|canonicali[sz]" $d/lib | '
+  old findings still named: 2 of 2
+
+== runs/N17/superseded-try1/train/turn-07 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-08 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-09 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-10 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-11 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-12-void-1 (clone /tmp/cold-N17-train)
+old exit: 1 (3 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+  old findings still named: 0 of 3
+  cleared by (c): VIOLATION [bash] call #2 Bash: names outside path / | "cd /tmp/cold-N17-train/backend && cat >> tests/status.rs <<'EOF'\n\n#[test]\nfn the_published_format_is_unchanged() {\n    // One bit per index of the capacity: DEFAULT_CAPACITY / 8 bytes.\n    let list = "
+  cleared by (c): VIOLATION [bash] call #2 Bash: names outside path / | "cd /tmp/cold-N17-train/backend && cat >> tests/status.rs <<'EOF'\n\n#[test]\nfn the_published_format_is_unchanged() {\n    // One bit per index of the capacity: DEFAULT_CAPACITY / 8 bytes.\n    let list = "
+  cleared by (c): VIOLATION [bash] call #2 Bash: names outside path / | "cd /tmp/cold-N17-train/backend && cat >> tests/status.rs <<'EOF'\n\n#[test]\nfn the_published_format_is_unchanged() {\n    // One bit per index of the capacity: DEFAULT_CAPACITY / 8 bytes.\n    let list = "
+
+== runs/N17/superseded-try1/train/turn-12 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-13 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-14-void-1 (clone /tmp/cold-N17-train)
+old exit: 1 (1 finding(s))   new exit: 1 (1 finding(s))   all rules off == HEAD audit.py: yes
+  new: VIOLATION [bash] call #7 Bash: names outside path / | 'export CARGO_TARGET_DIR=$PWD/../target RUST_BACKTRACE=0 && cargo test --offline --test ticket_4163 2>&1 | grep -A1 "panicked at" | grep -v "^--$" | sed -E "s/^thread \'([^\']+)\'.*/\\1:/" | paste - - | cu'
+  old findings still named: 1 of 1
+
+== runs/N17/superseded-try1/train/turn-14 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/superseded-try1/train/turn-15 (clone /tmp/cold-N17-train)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/train/turn-01 (clone /tmp/cold-N17-train2)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/train/turn-02 (clone /tmp/cold-N17-train2)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/train/turn-03 (clone /tmp/cold-N17-train2)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/train/turn-04 (clone /tmp/cold-N17-train2)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/train/turn-05 (clone /tmp/cold-N17-train2)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/train/turn-06 (clone /tmp/cold-N17-train2)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/train/turn-07 (clone /tmp/cold-N17-train2)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/train/turn-08 (clone /tmp/cold-N17-train2)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== runs/N17/train/turn-09-void-1 (clone /tmp/cold-N17-train2)
+old exit: 1 (4 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+  old findings still named: 0 of 4
+  cleared by (a): VIOLATION [escape] call #2 Bash: `../app` resolves outside the clone (-> /tmp/app) | 'S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncd $S/probe/backend && rm -rf src tests && cp -r /tmp/cold-N17-train2/backend/src /tmp/'
+  cleared by (a): VIOLATION [escape] call #2 Bash: `../app/test` resolves outside the clone (-> /tmp/app/test) | 'S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncd $S/probe/backend && rm -rf src tests && cp -r /tmp/cold-N17-train2/backend/src /tmp/'
+  cleared by (a): VIOLATION [escape] call #2 Bash: `../app/test/` resolves outside the clone (-> /tmp/app/test) | 'S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncd $S/probe/backend && rm -rf src tests && cp -r /tmp/cold-N17-train2/backend/src /tmp/'
+  cleared by (a): VIOLATION [escape] call #5 Bash: `..` resolves outside the clone (-> /tmp) | "S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncat > $S/wallet_probe.dart <<'EOF'\nimport 'dart:convert';\nimport 'dart:io';\nimport 'dar"
+
+== runs/N17/train/turn-09-void-2 (clone /tmp/cold-N17-train2)
+old exit: 1 (8 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+  old findings still named: 0 of 8
+  cleared by (a): VIOLATION [escape] call #1 Bash: `../app` resolves outside the clone (-> /tmp/app) | 'S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncd $S/probe/backend && rm -rf src tests && cp -r /tmp/cold-N17-train2/backend/src /tmp/'
+  cleared by (a): VIOLATION [escape] call #1 Bash: `../app` resolves outside the clone (-> /tmp/app) | 'S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncd $S/probe/backend && rm -rf src tests && cp -r /tmp/cold-N17-train2/backend/src /tmp/'
+  cleared by (a): VIOLATION [escape] call #1 Bash: `../app` resolves outside the clone (-> /tmp/app) | 'S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncd $S/probe/backend && rm -rf src tests && cp -r /tmp/cold-N17-train2/backend/src /tmp/'
+  cleared by (a): VIOLATION [escape] call #1 Bash: `../app/.dart_tool/package_config.json` resolves outside the clone (-> /tmp/app/.dart_tool/package_config.json) | 'S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncd $S/probe/backend && rm -rf src tests && cp -r /tmp/cold-N17-train2/backend/src /tmp/'
+  cleared by (a): VIOLATION [escape] call #1 Bash: `../app/.dart_tool/package_config.json` resolves outside the clone (-> /tmp/app/.dart_tool/package_config.json) | 'S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncd $S/probe/backend && rm -rf src tests && cp -r /tmp/cold-N17-train2/backend/src /tmp/'
+  cleared by (c): VIOLATION [bash] call #5 Bash: names outside path /tmp/does-not-exist-root | "cat > tests/phase4.rs <<'EOF'\nmod common;\nuse std::sync::Arc;\nuse credentials_backend::credential::Disclosure;\nuse credentials_backend::resolver::{did_web_url, Resolver};\nuse credentials_backend::stat"
+  cleared by (b)+(c): VIOLATION [escape] call #5 Bash: `//h.example/../../etc/passwd` resolves outside the clone (-> //etc/passwd) | "cat > tests/phase4.rs <<'EOF'\nmod common;\nuse std::sync::Arc;\nuse credentials_backend::credential::Disclosure;\nuse credentials_backend::resolver::{did_web_url, Resolver};\nuse credentials_backend::stat"
+  cleared by (b)+(c): VIOLATION [escape] call #5 Bash: `//h.example/.well-known/../../../etc/passwd` resolves outside the clone (-> //etc/passwd) | "cat > tests/phase4.rs <<'EOF'\nmod common;\nuse std::sync::Arc;\nuse credentials_backend::credential::Disclosure;\nuse credentials_backend::resolver::{did_web_url, Resolver};\nuse credentials_backend::stat"
+
+== runs/N17/train/turn-09-void-3 (clone /tmp/cold-N17-train2)
+old exit: 1 (7 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+  old findings still named: 0 of 7
+  cleared by (a): VIOLATION [escape] call #1 Bash: `../app` resolves outside the clone (-> /tmp/app) | 'S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncd $S/probe/backend && rm -rf src tests && cp -r /tmp/cold-N17-train2/backend/src /tmp/'
+  cleared by (a): VIOLATION [escape] call #1 Bash: `../app/test` resolves outside the clone (-> /tmp/app/test) | 'S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncd $S/probe/backend && rm -rf src tests && cp -r /tmp/cold-N17-train2/backend/src /tmp/'
+  cleared by (a): VIOLATION [escape] call #1 Bash: `../app/test/` resolves outside the clone (-> /tmp/app/test) | 'S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncd $S/probe/backend && rm -rf src tests && cp -r /tmp/cold-N17-train2/backend/src /tmp/'
+  cleared by (a)+(c): VIOLATION [escape] call #1 Bash: `../../app/test/fixtures/wallet_presentation.json` resolves outside the clone (-> /app/test/fixtures/wallet_presentation.json) | 'S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncd $S/probe/backend && rm -rf src tests && cp -r /tmp/cold-N17-train2/backend/src /tmp/'
+  cleared by (c): VIOLATION [bash] call #1 Bash: names outside path / | 'S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncd $S/probe/backend && rm -rf src tests && cp -r /tmp/cold-N17-train2/backend/src /tmp/'
+  cleared by (a)+(c): VIOLATION [escape] call #2 Bash: `..` resolves outside the clone (-> /tmp) | "cat > tests/p4_notifier.rs <<'EOF'\nmod common;\nuse std::sync::Arc;\nuse std::time::{Duration, Instant as WallClock};\nuse credentials_backend::notifier::*;\nuse credentials_backend::settings::{Setting, S"
+  cleared by (a): VIOLATION [escape] call #4 Bash: `..` resolves outside the clone (-> /tmp) | "S=/tmp/cold-N17-train2/.git/cc-tmp/claude-0/-tmp-cold-N17-train2/3ce2466c-b3d9-459b-9fc5-41c308b909f6/scratchpad\ncat > $S/p4_wallet.dart <<'EOF'\nimport 'dart:convert';\nimport 'dart:io';\nimport 'packag"
+
+== runs/N20/probe (clone /tmp/cold-N20-probe)
+(clone dir /tmp/cold-N20-probe was gone: mkdir -p)
+old exit: 0 (0 finding(s))   new exit: 0 (0 finding(s))   all rules off == HEAD audit.py: yes
+
+== summary: run | old exit -> new exit | cleared findings | unattributed | all-off == HEAD
+runs/N05/smoke | 0 -> 0 | 0 | 0 | yes
+runs/N11/cold | 0 -> 0 | 0 | 0 | yes
+runs/N11/try1/cold | 0 -> 0 | 0 | 0 | yes
+runs/N11/try1/void-1 | 1 -> 1 | 0 | 0 | yes
+runs/N13/elicited-void-1 | 1 -> 1 | 0 | 0 | yes
+runs/N13/elicited | 0 -> 0 | 0 | 0 | yes
+runs/N13/naive-void-1 | 1 -> 1 | 0 | 0 | yes
+runs/N13/naive | 0 -> 0 | 0 | 0 | yes
+runs/N14/cold-void-1 | 1 -> 1 | 1 | 0 | yes
+runs/N14/cold | 0 -> 0 | 0 | 0 | yes
+runs/N17/control | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/examiner | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-01 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-02-void-1 | 1 -> 1 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-02 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-03 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-04 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-05 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-06 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-07-void-1 | 1 -> 1 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-07 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-08 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-09 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-10 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-11 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-12-void-1 | 1 -> 0 | 3 | 0 | yes
+runs/N17/superseded-try1/train/turn-12 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-13 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-14-void-1 | 1 -> 1 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-14 | 0 -> 0 | 0 | 0 | yes
+runs/N17/superseded-try1/train/turn-15 | 0 -> 0 | 0 | 0 | yes
+runs/N17/train/turn-01 | 0 -> 0 | 0 | 0 | yes
+runs/N17/train/turn-02 | 0 -> 0 | 0 | 0 | yes
+runs/N17/train/turn-03 | 0 -> 0 | 0 | 0 | yes
+runs/N17/train/turn-04 | 0 -> 0 | 0 | 0 | yes
+runs/N17/train/turn-05 | 0 -> 0 | 0 | 0 | yes
+runs/N17/train/turn-06 | 0 -> 0 | 0 | 0 | yes
+runs/N17/train/turn-07 | 0 -> 0 | 0 | 0 | yes
+runs/N17/train/turn-08 | 0 -> 0 | 0 | 0 | yes
+runs/N17/train/turn-09-void-1 | 1 -> 0 | 4 | 0 | yes
+runs/N17/train/turn-09-void-2 | 1 -> 0 | 8 | 0 | yes
+runs/N17/train/turn-09-void-3 | 1 -> 0 | 7 | 0 | yes
+runs/N20/probe | 0 -> 0 | 0 | 0 | yes
