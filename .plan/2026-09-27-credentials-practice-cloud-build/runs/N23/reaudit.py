@@ -5,11 +5,14 @@ each against the CLONE in its meta.env, and write runs/N23/reaudit.txt.
 For each run: the old exit and findings (from the recorded audit.txt), the new exit and findings,
 and for every old finding the new audit no longer names, the D23 rule that cleared it. A rule is
 credited when switching that rule (or that set of rules) off alone brings the finding back:
-  (a) newline separator  -> audit.mark_newlines is the identity
+  (a) newline separator  -> audit.mark_newlines is the identity (with it go the quoting rewrites
+                            that decide which newlines are separators: $'...', continuations, ...)
   (b) `//` URL authority -> audit.url_authority is always False
   (c) cat/tee-to-file    -> audit.writes_to_file is always False
-With all three off, the audit must print exactly what HEAD's audit.py prints (checked per run), so
-the three switches are the whole change.
+The baseline is audit.py as it was before N23 (the last commit touching it that is not an N23
+commit). With all three rules off, the audit must name every finding the baseline names (checked
+per run), so nothing but (a), (b) and (c) clears a finding; findings only the new audit names (its
+stricter quoting and subshell handling) are counted per run.
 """
 import contextlib
 import io
@@ -62,8 +65,20 @@ def old_exit(text):
     return 1 if VIOLATION.search(text) else None
 
 
+def base_commit():
+    """The last commit that touched audit.py before N23."""
+    log = subprocess.run(["git", "-C", AUDIT_DIR, "log", "--format=%H%x09%s", "--", "audit.py"],
+                         capture_output=True, text=True, check=True).stdout
+    for line in log.splitlines():
+        sha, subject = line.split("\t", 1)
+        if "N23" not in subject:
+            return sha
+    raise SystemExit("no pre-N23 commit of audit.py")
+
+
 def main():
-    head_src = subprocess.run(["git", "-C", AUDIT_DIR, "show", "HEAD:./audit.py"],
+    base = base_commit()
+    head_src = subprocess.run(["git", "-C", AUDIT_DIR, "show", f"{base}:./audit.py"],
                               capture_output=True, text=True, check=True).stdout
     tmpdir = tempfile.mkdtemp()
     head_audit = os.path.join(tmpdir, "audit_head.py")
@@ -81,7 +96,8 @@ def main():
     out = ["# N23 re-audit: fixed scripts/cold/audit.py over every recorded audit.txt under runs/,",
            "# each against the CLONE in its meta.env. Rules: (a) newline separator, (b) `//` URL",
            "# authority, (c) cat/tee-to-file heredoc body. A cleared finding is credited to the rule",
-           "# (or smallest set of rules) whose switch-off alone brings it back.", ""]
+           "# (or smallest set of rules) whose switch-off alone brings it back. Baseline: audit.py",
+           f"# before N23 ({base[:7]}).", ""]
     summary = []
     for path in audits:
         run = os.path.relpath(os.path.dirname(path), PLAN)
@@ -103,12 +119,16 @@ def main():
         new_found = VIOLATION.findall(text)
         head = subprocess.run([sys.executable, head_audit, transcript, clone],
                               capture_output=True, text=True)
+        head_found = VIOLATION.findall(head.stdout)
         _, all_off = run_variant(transcript, clone, off=("a", "b", "c"))
-        same_as_head = all_off.strip() == (head.stdout + head.stderr).strip()
+        all_off_found = VIOLATION.findall(all_off)
+        same_as_head = all(v in all_off_found for v in head_found)
+        stricter = [v for v in new_found if v not in head_found]
 
         out.append(f"old exit: {old_rc} ({len(old_found)} finding(s))   new exit: {rc} "
-                   f"({len(new_found)} finding(s))   all rules off == HEAD audit.py: "
-                   f"{'yes' if same_as_head else 'NO'}")
+                   f"({len(new_found)} finding(s))   all rules off names every baseline finding: "
+                   f"{'yes' if same_as_head else 'NO'}   named by the new audit only: "
+                   f"{len(stricter)}")
         for v in new_found:
             out.append(f"  new: {v}")
         cleared = [v for v in old_found if v not in new_found]
@@ -119,7 +139,6 @@ def main():
         for k in (1, 2, 3):
             for combo in itertools.combinations("abc", k):
                 variants[combo] = VIOLATION.findall(run_variant(transcript, clone, off=combo)[1])
-        head_found = VIOLATION.findall(head.stdout)
         unattributed = 0
         for v in cleared:
             why = None
@@ -132,9 +151,9 @@ def main():
                 pre = subprocess.run([sys.executable, pre_n20_audit, transcript, clone],
                                      capture_output=True, text=True).stdout
                 why = (f"N20's heredoc split ({N20_COMMIT}), before N23 — named by the audit "
-                       f"before {N20_COMMIT}, not by HEAD audit.py; no N23 rule brings it back") \
+                       f"before {N20_COMMIT}, not by the baseline; no N23 rule brings it back") \
                     if v in VIOLATION.findall(pre) else \
-                    "an audit change before N20 — not named by HEAD audit.py; no N23 rule brings it back"
+                    "an audit change before N20 — not named by the baseline; no N23 rule brings it back"
             if why is None:
                 why = "UNATTRIBUTED"
                 unattributed += 1
@@ -143,7 +162,7 @@ def main():
         summary.append((run, old_rc, rc, len(cleared), unattributed, same_as_head))
 
     out.append("== summary: run | old exit -> new exit | cleared findings | unattributed | "
-               "all-off == HEAD")
+               "all-off names every baseline finding")
     for run, o, n, c, u, s in summary:
         out.append(f"{run} | {o} -> {n} | {c} | {u} | {'yes' if s else 'NO'}")
     dest = os.path.join(HERE, "reaudit.txt")
