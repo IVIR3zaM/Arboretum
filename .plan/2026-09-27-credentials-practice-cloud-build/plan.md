@@ -60,7 +60,7 @@ budgets: 2 tries per brief · 2 replans per node
     - Re-audit void-1..3 into a committed file. They stay voids and are never reinstated.
     - Re-run turn 09 with the same prompt from `/tmp/cold-N17-snap2/turn-09`, under the brief's existing void protocol. This counts as consistent with D22, because a voided attempt is not part of the recorded session.
     - If the container was reclaimed (clone, session store or snapshot gone), `git mv` the partial run to runs/N17/superseded-try2/ and start a brand-new run from turn 1 per D22.
-  | proposed · recommend: as stated, (a)+(b)+(c) · alt A: (a)+(b) only (the audit is no weaker, but void-2/3's flags would recur, and N17 has no replans left) · alt B: never re-run a voided turn, and restart from turn 1 now
+  | confirmed · recommend: as stated, (a)+(b)+(c) · alt A: (a)+(b) only (the audit is no weaker, but void-2/3's flags would recur, and N17 has no replans left) · alt B: never re-run a voided turn, and restart from turn 1 now
 
 ## Graph
 
