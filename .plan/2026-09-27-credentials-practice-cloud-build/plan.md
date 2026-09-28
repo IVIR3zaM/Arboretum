@@ -46,6 +46,7 @@ budgets: 2 tries per brief · 2 replans per node
   - N15's trap-manifest and README claim the Ticket 1 plateau only in CONTRACT.md:30-32 terms (measurable when the fix prompt comes before the research pass). They never say a cold agent falls into it.
   - N11 closes on the committed evidence, with no re-run. Ticket 2 (N14) stays the trap that is shown to bite a real cold agent.
   | confirmed · recommend: as stated · alt A: cold T1 re-run on sonnet (D12 alt), falling back to this if it converges · alt B: plant again (N11 has no replans left)
+- D22 (N17 blocked) The try-1 calibration train run's trainer note after turn 5 named which count was wrong (harness/DESIGN.md §3), and turn 6 acted on it; rewinding/editing that recorded session was refused as transcript tampering. The human authorizes a brand-new train run from turn 1 in a new clone and a new session (never a rewind or edit of the old one); the try-1 run is kept intact under runs/N17/superseded-try1/ as evidence; the proof is regenerated from the new run, and every evidence file it cites is committable (no gitignored *.log) | confirmed · recommend: fresh run · alt: keep run and disclose the defect
 
 ## Graph
 
@@ -70,6 +71,6 @@ budgets: 2 tries per brief · 2 replans per node
 | N15 | README, practice.json, examiner docs, probes | exec | N11,N13,N14 | opus/opus | 2 | 0 | DONE | |
 | N22 | scrub clone taxonomy tags + leak guard scans taxonomy | exec | N15 | sonnet/opus | 1 | 0 | DONE | |
 | N16 | fresh reviewer: solvable at XL | check | N15,N22 | -/opus | 1 | 1 | DONE | |
-| N17 | control run + calibration train proof | exec | N16 | opus/opus | 2 | 0 | BLOCKED | blocked: re-driving the train run refused by permission classifier (transcript tampering); needs human |
+| N17 | control run + calibration train proof | exec | N16 | opus/opus | 2 | 0 | REPLAN | blocked: needs fresh train run (D22) |
 | N18 | merge into main + delete stale branches | exec | N17 | sonnet/opus | 0 | 0 | TODO | |
 | N19 | plan acceptance (CONTRACT checklist) | check | N18 | -/opus | 0 | 0 | TODO | |
