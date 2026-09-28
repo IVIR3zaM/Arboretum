@@ -1,0 +1,4 @@
+thanks. two problems before I can call this done — the release check says ticket 2 hasn't landed yet (it doesn't tell me why), and I want to find out ourselves rather than guess.
+
+1. you told me the full backend suite was a certain count. re-run it now and paste the real per-binary "test result" lines, and tell me whether your earlier number was right.
+2. your tests all run the notifier under conditions our code sets for itself (our own deadline, our own timeouts). your research notes list what production imposes from outside — the hard runtime limit above all. for each of the ticket's three promises, tell me whether any test puts the code under the production conditions, or only under ours. where none does, write the test that does, show it red first with real output, and only then fix what it shows. same rules as before: no retries, don't raise the budget, small diff.

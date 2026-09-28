@@ -1,0 +1,6 @@
+ticket 1 is done and checked on our side. next one: TICKET-2.md just landed in the repo root. same drill as before — no fixes this turn.
+
+1. read the ticket, and whatever in the code and in reference/ bears on it. add anything new that matters for it to research-notes.md, cited like before.
+2. reproduce it under the conditions the ticket describes — a customer with a lot of settings, and a relying party whose endpoint is slow or never answers — as failing tests. paste the real output.
+3. tell me exactly what the health check checks, and show me (with a test or a run, not by reading) whether it stays green while subscribers are missing callbacks.
+4. then give me the causes as you understand them, and for each one which of the "what support has confirmed" promises in the ticket it breaks.

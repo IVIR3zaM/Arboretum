@@ -1,0 +1,8 @@
+good diagnosis. decisions before the fix:
+
+- all five causes are in scope: the ticket's promise is every subscriber of every customer, and a green health check that actually means something. fix them at the root, not for the one league.
+- the health check: the standard you found is explicit, so follow it — the canary has to target something the platform operates, and it should only be green when the real delivery path actually ran for that change. I've asked Platform which endpoint they want long-term; until they answer, pick one that satisfies the standard and flag it as their decision in your summary.
+- no retries in this change: the deployment is set to zero retries and that's Platform's config, not ours — put it on the follow-up list. and don't raise the 10 s budget; work inside it, and leave margin for the runtime kill you pointed out.
+- a subscriber that isn't reached has to show up as a recorded outcome, not just a log line.
+
+keep the diff as small as that allows. when done: run your six tests red → green with the real output, run the full backend and app suites, and walk me through the diff. for each of the five causes, tell me why fixing only that one would not have closed the ticket.

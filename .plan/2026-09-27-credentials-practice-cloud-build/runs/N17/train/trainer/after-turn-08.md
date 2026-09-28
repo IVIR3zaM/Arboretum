@@ -1,2 +1,1 @@
-Trainer (after turn 8, phase 3 — the harness gate has not accepted the feature yet):
-The build answered the owners' rules and proved its tests can go red — good. But a build also makes calls nobody asked it to make, and those are the ones nobody reviews. Separate what the owners decided from what the assistant decided on its own, and for each of its own calls ask whether it follows what the surrounding code already does or quietly departs from it. A departure needs a reason someone agreed to.
+Trainer: when a build comes back with its open choices already made, each of them was decided for you. Were any of them yours to make before the code was written, and would you make them the same way now?

@@ -1,7 +1,7 @@
-hey, I just picked up this repo and TICKET-1.md landed on me. before anyone touches code I want to actually understand what we've got. no edits to the code in this turn, please.
+Before we touch anything, I want us both to understand this repo. Please don't change any code or docs in this turn.
 
-1. map both packages for me: the backend's path from issuing a credential to verifying it at the door (including how it figures out an issuer's keys), the status-change notifier, and on the app side the wallet's store and the presentation stub. short, with file:line pointers.
-2. there's a reference/ folder next to the code. read all of it and write what you learn into a research-notes.md at the repo root — cite the file (and section/line) for each point so I can check it. notes only, no fix ideas dressed up as facts.
-3. then reconcile: go through our own READMEs and code comments and tell me which claims match what the code actually does and which are stale. quote the line and say how you know.
+1. Map the two packages: in backend/, the path a credential takes from issuance to verification (how the verifier resolves an issuer and checks its key, expiry, status), and the status-change webhook notifier; in app/, the wallet's store and the presentation stub. Point me at the files and functions, briefly.
+2. Read everything under reference/ (every file, including the infra/ folder and the hosted documents) and write what you learn to research-notes.md at the repo root. I don't want a file listing: for each source, write down the rules it states that the code has to obey, and anything where it disagrees with what the code or its READMEs/comments assume.
+3. Reconcile the docs: go through backend/README.md, app/README.md and the code comments, and list every claim that doesn't match what the code actually does or what reference/ says. For each, say which source you'd trust and why.
 
-don't propose or start a fix for the ticket yet — I'll ask for that separately.
+TICKET-1.md is in the repo. Read it, but don't start on it yet; just tell me which parts of the code and reference you think are relevant to it.

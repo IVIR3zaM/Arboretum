@@ -1,0 +1,9 @@
+thanks — that sharpened my model a lot. decisions before the fix:
+
+- your point 4 (old-key credentials start getting refused): I took it to Partner Success. answer: the spec wins, a key the club no longer publishes isn't valid, and they'll handle re-issuance with the three clubs. so refusing old-key credentials is expected — call it out in the summary, don't work around it.
+- your point 5 (the "approved" gap: no trust-registry check, and the proof-type skip) and point 6 (frozen endpoints beyond what the fix naturally changes): real, but not this ticket. don't fix them now. keep them on a follow-up list.
+- your point 3 (can't onboard Northfield): the fix should cover it naturally if the URL mapping is right; confirm, don't build anything extra for it.
+
+now fix ticket 1 at the root: the door should check against whatever each approved club publishes at the time of the check, and a DID with a path should map the way the method spec says. it has to hold for every approved club and for the next time any of them rotates — not just for the clubs in the ticket. keep the diff small.
+
+when you're done: run your four tests and show them going from red to green (paste the real output), run the full backend and app suites, and walk me through the diff — what each change does and why it's correct. then give me the follow-up list (not fixed, one line of why each).

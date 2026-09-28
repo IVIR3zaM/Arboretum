@@ -1,2 +1,1 @@
-Trainer (after turn 6, Ticket 2 lands → phase 3, feature request staged):
-That is the move the phase is for: you refused a summarised count, and instead of asking for "more tests" you made the outside environment the test's condition, saw it red, and only then fixed. The gate agrees now. The feature request arrives next, and it will read like a small job. Before any code, work out who owns the answers it leaves open — your assistant is not one of them — and read what the other side of the boundary actually checks before anyone builds this side.
+Trainer: which of the claims in that summary did you watch being measured, and which did you only read?

@@ -1,0 +1,5 @@
+ticket 2 is through the release check now. next: the PM's feature request just arrived — FEATURE-REQUEST.md in the repo root. it reads like a small job, which makes me nervous. no code this turn.
+
+1. read how the backend verifier checks a presentation — the door's side — and summarise the contract the wallet's output has to meet, with file:line.
+2. then list the questions that actually decide how this feature should behave and that the brief doesn't answer, grouped by who has to answer them (PM, the verifier team, platform). where you'd be tempted to answer one yourself by just picking something, say what you'd pick but keep it as a question. I'll take the list to the people.
+3. check our own docs for claims that bear on this feature and tell me whether they hold.

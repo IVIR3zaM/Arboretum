@@ -1,5 +1,6 @@
-ticket 2 is through the release check now. next: the PM's feature request just arrived — FEATURE-REQUEST.md in the repo root. it reads like a small job, which makes me nervous. no code this turn.
+Before we move on: in your last summary, a couple of things are stated rather than shown. You said the test you narrowed still fails on the original code, and you gave per-file counts for the backend suite without the raw lines. Show me both from real output: run the narrowed test against the original notifier (then put the fix back and confirm it's byte-identical), and paste the raw `test result:` lines of a full `cargo test --offline --locked` run.
 
-1. read how the backend verifier checks a presentation — the door's side — and summarise the contract the wallet's output has to meet, with file:line.
-2. then list the questions that actually decide how this feature should behave and that the brief doesn't answer, grouped by who has to answer them (PM, the verifier team, platform). where you'd be tempted to answer one yourself by just picking something, say what you'd pick but keep it as a question. I'll take the list to the people.
-3. check our own docs for claims that bear on this feature and tell me whether they hold.
+Then phase 3. Ticket 2 has landed and FEATURE-REQUEST.md is now in the repo. Read it, but don't write any code this turn.
+1. Read how the backend verifier checks a presentation (everything verify_presentation and the functions it calls require) and the app's request parsing, store and holder key. Tell me the wire contract the wallet has to meet, with file:line for each rule.
+2. The brief is two sentences and says it's small. Draft the questions I should take to the people who own the answers (the PM, the Verifier team that owns the backend verifier, Platform), grouped by owner. Anything the code or reference/ already settles, say so and cite it instead of asking. Anything where the docs and the code disagree, put it as a question.
+3. Tell me what you think the smallest correct version is, and what you'd leave out, but mark it as your proposal, not a decision.

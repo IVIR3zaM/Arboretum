@@ -1,27 +1,23 @@
-I took your list to the PM, the verifier team and platform. their answers, as they gave them:
+Good, the measured output settles both. I took your questions to the owners. Their answers, verbatim where I have them:
 
 PM
-- which claims: only what the scanner's request asks for — disclose exactly the claims its DCQL query names, nothing else. the door asks for credentialSubject.member; it must not get the name, member id or birth date.
-- consent screen / what the member sees / how the request arrives and the answer goes back: not in this feature. no door UI in v1.
-- a request asking for more than the member wants to share: not in v1, the door only asks for member.
-- several matching credentials: not in v1 — the caller passes the credentialId; choosing between credentials, and DCQL credential_sets across credentials, come later.
-- expired credentials: refuse. don't build a presentation of an expired credential — throw a WalletException to the caller instead of handing over something the door will turn down. not-yet-valid: not in v1.
-- persistence of credentials / the holder key: not part of this feature (holder key rotation is later too).
-- re-entry / single-use: a member shows the same credential every visit — see the verifier team's answer.
+- Claims (your PM 1): only what the scanner's request asks for. Disclose exactly the claims its query names and nothing else. No confirmation step in this version.
+- Single-use (PM 2): no, not in v1. The README says it but it isn't the design: a member shows the same credential every visit. What stops replay is the per-request nonce, so the same presentation can't be reused, but the credential can be presented again to a fresh request. The wallet must not delete or "consume" the credential after presenting it.
+- Storage (PM 3): out of scope for this feature.
+- Format (PM 4): the wallet holds what our backend issuer issues. The app README's JWT-VC line is out of date.
+- Can't satisfy (PM 5): if the credential has expired, refuse: don't build a presentation of an expired credential; raise an error to the caller (a WalletException) instead of handing over something the door will turn down. Revoked: the wallet doesn't check that; revocation is the verifier's job, it reads the status list on its side. A requested claim the credential doesn't hold: refuse with a WalletException too.
+- I also asked the PM for the minimal version and what's deliberately out. Answer: ship WalletService.createPresentation(credentialId, request) returning the presentation as a JSON map: the requested subset, holder-signed, bound to nonce and domain, refusing an expired credential. Deferred on purpose: posting to response_uri and the door UI; choosing between several matching credentials and DCQL credential_sets; a not-yet-valid check in the wallet; holder-side revocation checks; enforced single-use; holder key rotation.
 
 Verifier team
-- response shape: the door's current JSON presentation, returned by createPresentation as a JSON map. each claim travels as the disclosure the issuer handed over ({salt, name, value}, unchanged), next to the unchanged credential.
-- proof: the wallet signs it. Ed25519Signature2020 by the holder's did:key key — verificationMethod = HolderKey.keyId, proofPurpose authentication — over the RFC 8785 (JCS) bytes of the presentation without its proof. the door's skip on other proof types is ours to fix separately; don't depend on it either way.
-- domain: yes, the requester's client_id (PresentationRequest.domain). put the request's nonce and that domain into the presentation, inside the holder-signed part.
-- claim mapping: credentialSubject.<name> maps to the disclosure named <name>. anything deeper isn't in v1 — refuse it, don't guess. the scanner requests ldp_vc.
-- door enforcing type / requested claims, nonce freshness: our side, not a wallet dependency.
-- holder DID methods: did:key only.
-- single-use: no, not in v1. the README says it, but nothing enforces it and it isn't the design. what stops replay is the per-request nonce: the same presentation can't be reused, the credential can be presented again to a fresh request. the wallet must not delete or "consume" the credential after presenting it.
+- Envelope (Verifier 1): createPresentation returns the presentation object that verify_presentation takes. Any envelope is the scanner's side, not this feature.
+- Domain (Verifier 2): the requester's client_id, i.e. PresentationRequest.domain. Nonce and domain both go inside the holder-signed part; we reject a presentation whose nonce or domain isn't the one we issued.
+- Naming a claim (Verifier 3): yes, the claim is the last element of the query's path; send that claim's disclosure exactly as the issuer handed it over ({salt, name, value}, unchanged), next to the unchanged credential.
+- Proof type and purpose (Verifier 4): sign with Ed25519Signature2020 by the holder's key, proofPurpose authentication. The bypass on our side is ours to fix, separately; not part of this feature.
+- Canonical numbers (Verifier 5), fresh nonces (6), transport and registry (7), unsupported holder methods (8): not part of this feature. Log them as follow-ups for us.
 
 Platform
-- what the issuer hands out: the backend Issuer's shape is what production issues. expiry is expires_at, integer unix seconds (the backend README's expirationDate is out of date).
-- revocation: the verifier's job, on its side. the wallet presents what it holds.
-- online/offline, response_uri, request_id: building the presentation is fully local — credential, disclosures and holder key are all on the device. sending it to response_uri isn't part of createPresentation; it returns the presentation.
-- key storage policy: not this feature.
+- Transport (Platform 1): building the presentation is fully local: credential, disclosures and holder key are on the device and signing is local. Sending it to response_uri isn't part of createPresentation; it returns the presentation. Your Platform 2 and 3 fall away with that.
 
-now build it: WalletService.createPresentation, the smallest thing those answers require, nothing more. no backend changes. tests should go red if any one of the answered rules is broken — show me that for at least the rules you think are easiest to get subtly wrong. check it end to end against the real backend verifier the way you did with the throwaway programs, and paste the real outputs. then list what you deferred, one line each, and anything in the answers you think is wrong or that you had to interpret.
+So build the smallest correct thing: exactly the PM's minimal version, in app/, nothing in the backend's source. Tests: the app needs a credential in the shape the backend issues; and I want one test that proves the backend verifier accepts what the wallet builds (your cross-language idea is fine, as a test, not a script you throw away). Cover each rule above with a test that would go red without it, including the expiry refusal and that the credential is still held afterwards.
+
+Show me real output: the new tests, both full suites, and the diff. Fix app/README.md's lines that this feature makes wrong, and record the follow-ups in research-notes.md.

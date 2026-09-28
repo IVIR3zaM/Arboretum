@@ -1,0 +1,335 @@
+clone: /tmp/cold-N17-train2 (throwaway copy)
+date: 2026-09-28T14:08:13Z
+install: cd backend && cargo fetch --locked && cd ../app && flutter pub get --enforce-lockfile   (practice.json -> commands.install)
+----- install output -----
+  test_api 0.7.12 (0.7.14 available)
+  vector_math 2.4.0 (2.4.3 available)
+Got dependencies!
+8 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+install exit: 0
+test: cd backend && cargo test --offline --locked && cd ../app && flutter test --no-pub   (practice.json -> commands.test)
+----- test output -----
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling unicode-ident v1.0.26
+   Compiling subtle v2.6.1
+   Compiling libc v0.2.189
+   Compiling rand_core v0.10.1
+   Compiling cfg-if v1.0.5
+   Compiling getrandom v0.4.3
+   Compiling typenum v1.20.1
+   Compiling cmov v0.5.4
+   Compiling ctutils v0.4.2
+   Compiling syn v2.0.119
+   Compiling syn v3.0.6
+   Compiling const-oid v0.10.2
+   Compiling autocfg v1.5.1
+   Compiling stable_deref_trait v1.2.1
+   Compiling base64ct v1.8.3
+   Compiling num-traits v0.2.19
+   Compiling pem-rfc7468 v1.0.0
+   Compiling cpubits v0.1.1
+   Compiling ff v0.14.0
+   Compiling cpufeatures v0.3.1
+   Compiling group v0.14.0
+   Compiling base16ct v1.0.0
+   Compiling litemap v0.8.3
+   Compiling serde_core v1.0.229
+   Compiling writeable v0.6.4
+   Compiling semver v1.0.28
+   Compiling utf8_iter v1.0.4
+   Compiling rustc_version v0.4.1
+   Compiling icu_normalizer_data v2.3.0
+   Compiling icu_properties_data v2.3.0
+   Compiling curve25519-dalek v5.0.0
+   Compiling serde v1.0.229
+   Compiling data-encoding v2.11.1
+   Compiling smallvec v1.16.2
+   Compiling thiserror v2.0.21
+   Compiling synstructure v0.14.0
+   Compiling zmij v1.0.23
+   Compiling const-str v0.4.3
+   Compiling serde_json v1.0.151
+   Compiling zeroize_derive v1.5.0
+   Compiling curve25519-dalek-derive v0.1.1
+   Compiling match-lookup v0.1.3
+   Compiling zeroize v1.9.0
+   Compiling base256emoji v1.0.2
+   Compiling hybrid-array v0.4.15
+   Compiling der v0.8.2
+   Compiling zerofrom-derive v0.1.8
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling yoke-derive v0.8.3
+   Compiling digest v0.11.3
+   Compiling zerofrom v0.1.8
+   Compiling crypto-bigint v0.7.5
+   Compiling zerovec-derive v0.11.6
+   Compiling hmac v0.13.0
+   Compiling yoke v0.8.3
+   Compiling displaydoc v0.2.7
+   Compiling spki v0.8.0
+   Compiling pkcs8 v0.11.0
+   Compiling hkdf v0.13.0
+   Compiling signature v3.0.0
+   Compiling sec1 v0.8.1
+   Compiling zerotrie v0.2.5
+   Compiling zerovec v0.11.8
+   Compiling sha2 v0.11.0
+   Compiling serde_derive v1.0.229
+   Compiling tinystr v0.8.4
+   Compiling icu_locale_core v2.3.0
+   Compiling potential_utf v0.1.6
+   Compiling primefield v0.14.0
+   Compiling elliptic-curve v0.14.1
+   Compiling wnaf v0.14.1
+   Compiling rfc6979 v0.6.0
+   Compiling primeorder v0.14.0
+   Compiling ecdsa v0.17.0
+   Compiling icu_provider v2.3.1
+   Compiling icu_collections v2.3.0
+   Compiling data-encoding-macro-internal v0.1.19
+   Compiling icu_properties v2.3.0
+   Compiling icu_normalizer v2.3.0
+   Compiling thiserror-impl v2.0.21
+   Compiling data-encoding-macro v0.1.21
+   Compiling ed25519 v3.0.0
+   Compiling idna_adapter v1.2.2
+   Compiling chacha20 v0.10.2
+   Compiling getrandom v0.2.17
+   Compiling unsigned-varint v0.8.0
+   Compiling base45 v3.2.0
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.18
+   Compiling percent-encoding v2.3.2
+   Compiling base-x v0.2.11
+   Compiling bs58 v0.5.1
+   Compiling multibase v0.9.3
+   Compiling form_urlencoded v1.2.2
+   Compiling rand v0.10.3
+   Compiling affinidi-encoding v0.1.6
+   Compiling rand_core v0.6.4
+   Compiling idna v1.1.0
+   Compiling ed25519-dalek v3.0.0
+   Compiling x25519-dalek v3.0.0
+   Compiling p256 v0.14.0
+   Compiling p521 v0.14.0
+   Compiling p384 v0.14.0
+   Compiling k256 v0.14.0
+   Compiling base64 v0.23.1
+   Compiling base58 v0.2.0
+   Compiling url v2.5.8
+   Compiling tokio-macros v2.7.2
+   Compiling pin-project-lite v0.2.17
+   Compiling tokio v1.53.1
+   Compiling affinidi-crypto v0.2.9
+   Compiling affinidi-did-common v0.4.3
+   Compiling credentials-backend v0.1.0 (/tmp/cold-N17-check.HEgwGT/backend)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 22.84s
+     Running unittests src/lib.rs (/tmp/cold-N17-check.HEgwGT.target/debug/deps/credentials_backend-82ef79e65254530d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/callbacks.rs (/tmp/cold-N17-check.HEgwGT.target/debug/deps/callbacks-36ef9a08d7e55e17)
+
+running 14 tests
+test a_subscriber_that_never_answers_does_not_stop_the_others ... ok
+test a_slow_subscriber_does_not_stop_the_others ... ok
+test a_silent_subscriber_is_recorded_as_failed_within_the_call_bound ... ok
+test healthy_subscribers_sorted_before_a_silent_one_are_notified ... ok
+test every_subscriber_of_an_account_with_many_subscribers_is_notified ... ok
+test the_canary_goes_to_the_platform_health_receiver ... ok
+test every_subscriber_of_a_mid_sized_account_is_notified ... ok
+test the_health_check_does_not_carry_over_from_the_previous_change ... ok
+test the_fan_out_ends_before_the_platform_kills_it ... ok
+test every_subscriber_of_a_large_account_is_notified ... ok
+test the_health_check_is_not_green_while_a_silent_subscriber_blocks_the_others ... ok
+test the_health_check_is_not_green_when_the_lookup_does_not_finish ... ok
+test the_health_check_is_not_green_while_a_large_accounts_subscribers_miss_revocations ... ok
+test subscribers_still_pending_when_the_budget_runs_out_are_recorded_as_failed ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.98s
+
+     Running tests/credential.rs (/tmp/cold-N17-check.HEgwGT.target/debug/deps/credential-f8f10d9b64a2c245)
+
+running 7 tests
+test canonical_form_escapes_only_what_json_requires ... ok
+test canonical_form_sorts_keys_and_drops_whitespace ... ok
+test canonical_form_writes_integral_numbers_without_a_fraction ... ok
+test canonical_form_orders_keys_by_utf16_code_units ... ok
+test disclosure_digest_is_sha256_of_the_canonical_triple ... ok
+test signing_input_excludes_the_proof ... ok
+test signed_documents_verify_and_tampering_is_detected ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/did_document.rs (/tmp/cold-N17-check.HEgwGT.target/debug/deps/did_document-18fb639c728feb4d)
+
+running 1 test
+test builds_a_did_document_from_affinidi_did_common ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/issuer.rs (/tmp/cold-N17-check.HEgwGT.target/debug/deps/issuer-a6afd66d89f4819a)
+
+running 9 tests
+test holders_must_be_did_key ... ok
+test an_expiry_before_issuance_is_refused ... ok
+test every_issue_uses_fresh_salts ... ok
+test claims_are_carried_only_as_salted_digests ... ok
+test issuance_is_recorded_in_the_store ... ok
+test onboarding_fails_when_the_document_is_unavailable ... ok
+test issued_credentials_carry_the_wire_fields ... ok
+test onboarding_records_the_published_document ... ok
+test the_issuer_proof_verifies_with_the_issuer_key ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running tests/notifier.rs (/tmp/cold-N17-check.HEgwGT.target/debug/deps/notifier-7d0e5776db1ca711)
+
+running 6 tests
+test a_rejected_delivery_is_reported_as_failed ... ok
+test every_subscriber_of_the_tenant_is_notified_once ... ok
+test each_delivery_is_reported_to_the_sink ... ok
+test other_tenants_subscribers_are_not_notified ... ok
+test the_canary_reports_healthy_once_changes_are_flowing ... ok
+test the_notification_carries_the_status_change ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/published_keys.rs (/tmp/cold-N17-check.HEgwGT.target/debug/deps/published_keys-cc71a8c0212e139f)
+
+running 18 tests
+test did_web_url_matches_the_spec_example_for_a_bare_domain ... ok
+test did_web_url_matches_the_spec_example_for_a_path ... ok
+test did_web_url_for_northfield_is_where_its_document_is_hosted ... ok
+test did_web_url_matches_the_spec_example_for_a_port ... ok
+test did_web_url_matches_the_spec_example_for_a_port_and_a_path ... ok
+test northfield_resolves_from_its_hosted_url ... ok
+test the_door_accepts_harbour_signed_with_its_published_key ... ok
+test the_door_accepts_cedar_rowing_signed_with_a_key_its_document_lists ... ok
+test the_door_checks_cedar_rowing_against_the_document_served_today ... ok
+test the_door_checks_harbour_against_the_document_served_today ... ok
+test the_door_checks_kestrel_against_the_document_served_today ... ok
+test the_door_checks_northfield_north_against_the_document_served_today ... ok
+test the_door_accepts_harbour_after_it_rotates_its_key ... ok
+test the_door_accepts_kestrel_signed_with_a_key_its_document_lists ... ok
+test the_door_refuses_when_the_issuer_document_cannot_be_fetched ... ok
+test the_door_refuses_a_key_id_the_issuer_no_longer_lists ... ok
+test the_door_accepts_northfield_north_signed_with_a_key_its_document_lists ... ok
+test the_door_refuses_a_key_the_issuer_replaced_under_the_same_id ... ok
+
+test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/resolver.rs (/tmp/cold-N17-check.HEgwGT.target/debug/deps/resolver-12fe0cfa7594279e)
+
+running 13 tests
+test did_key_with_a_non_ed25519_codec_is_rejected ... ok
+test did_key_decodes_to_a_single_ed25519_key ... ok
+test did_peer_with_an_unknown_numalgo_is_rejected ... ok
+test did_peer_0_decodes_its_inception_key ... ok
+test did_web_maps_a_bare_domain_to_the_well_known_path ... ok
+test did_web_maps_an_encoded_port ... ok
+test did_web_rejects_an_empty_host ... ok
+test did_web_fetches_the_hosted_document ... ok
+test did_web_reports_a_missing_document ... ok
+test unsupported_methods_are_reported ... ok
+test did_web_rejects_a_document_for_another_did ... ok
+test mirror_transport_serves_documents_from_its_root ... ok
+test did_peer_2_decodes_keys_by_purpose_and_its_service ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/settings.rs (/tmp/cold-N17-check.HEgwGT.target/debug/deps/settings-9d0269617965a225)
+
+running 4 tests
+test a_page_read_takes_the_tables_read_latency ... ok
+test the_kind_index_returns_only_settings_of_that_kind ... ok
+test putting_a_setting_again_replaces_it ... ok
+test a_query_returns_the_tenants_settings_a_page_at_a_time ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/status.rs (/tmp/cold-N17-check.HEgwGT.target/debug/deps/status-34c8ba3ed512dfb0)
+
+running 7 tests
+test a_new_list_has_nothing_revoked ... ok
+test allocation_hands_out_distinct_indexes ... ok
+test revoking_an_unknown_credential_fails ... ok
+test revoking_a_credential_flips_its_status ... ok
+test setting_a_bit_only_touches_that_index ... ok
+test the_encoded_list_round_trips ... ok
+test revoking_one_credential_leaves_the_others_valid ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/store.rs (/tmp/cold-N17-check.HEgwGT.target/debug/deps/store-803b879a27beddcf)
+
+running 5 tests
+test a_new_store_is_empty ... ok
+test credential_records_round_trip ... ok
+test onboarded_issuers_are_looked_up_by_did ... ok
+test status_indexes_are_unique_per_list ... ok
+test onboarding_data_loads_every_approved_issuer ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/verifier.rs (/tmp/cold-N17-check.HEgwGT.target/debug/deps/verifier-a3c3c0797b0abc1f)
+
+running 16 tests
+test a_credential_without_an_issuer_is_malformed ... ok
+test a_credential_verifies_on_its_own ... ok
+test a_presentation_for_another_domain_is_rejected ... ok
+test a_presentation_for_another_nonce_is_rejected ... ok
+test a_credential_that_is_not_yet_valid_is_rejected ... ok
+test a_proof_by_a_key_the_issuer_does_not_list_is_rejected ... ok
+test a_credential_presented_by_another_holder_is_rejected ... ok
+test a_presentation_discloses_only_the_requested_claims ... ok
+test a_presentation_signed_by_someone_else_is_rejected ... ok
+test an_expired_credential_is_rejected ... ok
+test a_revoked_credential_is_rejected ... ok
+test a_tampered_credential_is_rejected ... ok
+test the_issuer_document_is_the_one_harbour_publishes ... ok
+test a_tampered_disclosure_is_rejected ... ok
+test every_claim_can_be_disclosed ... ok
+test the_same_submission_is_accepted_once ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
+
+   Doc-tests credentials_backend
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Woah! You appear to be trying to run flutter as root.
+   We strongly recommend running the flutter tool without superuser privileges.
+  /
+📎
+00:00 +0: loading /tmp/cold-N17-check.HEgwGT/app/test/credential_store_test.dart
+00:00 +0: /tmp/cold-N17-check.HEgwGT/app/test/credential_store_test.dart: parses an issued credential with its disclosures
+00:00 +1: /tmp/cold-N17-check.HEgwGT/app/test/credential_store_test.dart: saves and finds a credential by id
+00:00 +2: /tmp/cold-N17-check.HEgwGT/app/test/credential_store_test.dart: lists every held credential
+00:00 +3: /tmp/cold-N17-check.HEgwGT/app/test/credential_store_test.dart: saving the same id twice keeps one copy
+00:00 +4: /tmp/cold-N17-check.HEgwGT/app/test/credential_store_test.dart: keeps the holder key
+00:00 +5: /tmp/cold-N17-check.HEgwGT/app/test/credential_list_test.dart: shows an empty wallet
+00:01 +6: /tmp/cold-N17-check.HEgwGT/app/test/credential_list_test.dart: lists held credentials by type and issuer
+00:01 +7: /tmp/cold-N17-check.HEgwGT/app/test/credential_list_test.dart: requesting a membership adds it to the list
+00:01 +8: /tmp/cold-N17-check.HEgwGT/app/test/credential_list_test.dart: requesting a membership adds it to the list
+00:01 +9: /tmp/cold-N17-check.HEgwGT/app/test/credential_list_test.dart: requesting a membership adds it to the list
+00:01 +10: /tmp/cold-N17-check.HEgwGT/app/test/credential_list_test.dart: requesting a membership adds it to the list
+00:01 +11: /tmp/cold-N17-check.HEgwGT/app/test/credential_list_test.dart: requesting a membership adds it to the list
+00:01 +12: /tmp/cold-N17-check.HEgwGT/app/test/credential_list_test.dart: requesting a membership adds it to the list
+00:01 +13: /tmp/cold-N17-check.HEgwGT/app/test/credential_list_test.dart: a failed request shows an error
+00:02 +14: /tmp/cold-N17-check.HEgwGT/app/test/smoke_test.dart: generates an Ed25519 key pair via the ssi package
+00:02 +15: /tmp/cold-N17-check.HEgwGT/app/test/smoke_test.dart: builds a DCQL credential query via the dcql package
+00:02 +16: /tmp/cold-N17-check.HEgwGT/app/test/holder_key_test.dart: a generated holder key is an Ed25519 did:key
+00:02 +17: /tmp/cold-N17-check.HEgwGT/app/test/holder_key_test.dart: two generated keys have different DIDs
+00:02 +18: /tmp/cold-N17-check.HEgwGT/app/test/holder_key_test.dart: a key from a fixed seed has a stable DID
+00:02 +19: /tmp/cold-N17-check.HEgwGT/app/test/holder_key_test.dart: the holder key signs with Ed25519
+00:02 +20: All tests passed!
+----- end -----
+test exit: 0

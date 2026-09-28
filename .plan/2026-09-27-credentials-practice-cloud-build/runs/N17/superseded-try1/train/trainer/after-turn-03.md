@@ -1,0 +1,2 @@
+Trainer (after turn 3, Ticket 1 lands → Ticket 2 staged):
+You made the calls that were yours, routed the one that wasn't, and asked for the red-to-green evidence rather than a "done". The harness's gate agrees with your tests this time, which is the point of running it. The next ticket is in the repo now. Same discipline, and it matters more here: see it fail under the conditions the ticket describes before anyone changes code, and treat any green signal as unproven until you know exactly what it measures.

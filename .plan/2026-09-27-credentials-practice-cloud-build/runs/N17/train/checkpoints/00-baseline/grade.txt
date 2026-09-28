@@ -1,7 +1,7 @@
 practice: credentials
-clone: /tmp/cold-N17-check.VdGEI9
+clone: /tmp/cold-N17-check.WKrS3W
 command: bash _solutions/grade.sh   (practice.json -> commands.grade)
-date: 2026-09-28T00:39:11Z
+date: 2026-09-28T13:44:11Z
 ----- output -----
 ==================================================================
  axis a (_solutions/grade.d/a.sh)
@@ -67,9 +67,9 @@ case feature: discloses exactly the claims the DCQL query asks for: FAIL — Uni
 case feature: the presentation is signed by the holder's key: FAIL — UnimplementedError: createPresentation
 case feature: the presentation is bound to the request's nonce and domain: FAIL — UnimplementedError: createPresentation
 case feature: an expired credential is refused: FAIL — UnimplementedError: createPresentation
-case xstack: the backend verifier accepts the wallet's presentation: FAIL — no presentation from the wallet (/tmp/tmp.JUUMuPNQWU/app/test/gate/out/vp.json: No such file or directory (os error 2))
-case xstack: the backend verifier rejects a tampered disclosed value: FAIL — no presentation from the wallet (/tmp/tmp.JUUMuPNQWU/app/test/gate/out/vp.json: No such file or directory (os error 2))
-case xstack: the backend verifier rejects the presentation replayed to another nonce or domain: FAIL — no presentation from the wallet (/tmp/tmp.JUUMuPNQWU/app/test/gate/out/vp.json: No such file or directory (os error 2))
+case xstack: the backend verifier accepts the wallet's presentation: FAIL — no presentation from the wallet (/tmp/tmp.VvLKoPYEte/app/test/gate/out/vp.json: No such file or directory (os error 2))
+case xstack: the backend verifier rejects a tampered disclosed value: FAIL — no presentation from the wallet (/tmp/tmp.VvLKoPYEte/app/test/gate/out/vp.json: No such file or directory (os error 2))
+case xstack: the backend verifier rejects the presentation replayed to another nonce or domain: FAIL — no presentation from the wallet (/tmp/tmp.VvLKoPYEte/app/test/gate/out/vp.json: No such file or directory (os error 2))
 axis b: FAIL 0/7
 
 ==================================================================

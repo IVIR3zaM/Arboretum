@@ -10,7 +10,7 @@ NN=$1
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT=$(git -C "$HERE" rev-parse --show-toplevel)
 KIT="$ROOT/.plan/2026-09-27-credentials-practice-cloud-build/scripts/cold"
-CLONE=/tmp/cold-N17-train
+CLONE=/tmp/cold-N17-train2
 T="$HERE/train"
 PROMPT="$T/prompts/turn-$NN.txt"
 [ -f "$PROMPT" ] || { echo "turn.sh: missing $PROMPT" >&2; exit 2; }

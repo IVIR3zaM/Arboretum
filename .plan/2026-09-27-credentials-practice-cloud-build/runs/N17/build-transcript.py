@@ -4,7 +4,7 @@
 Per turn, in order: the learner's prompt (verbatim), the assistant's final reply (verbatim, from the
 turn's stream-json slice), its tool-call count and jail audit line; then any outcome-checker
 checkpoint taken after that turn (unit summary + grade axes, read from the captured files), any
-staging event (staging.log), and the trainer's note. Voided attempts are listed where they happened.
+staging event (staging.txt), and the trainer's note. Voided attempts are listed where they happened.
 """
 import json, os, re, subprocess, sys
 
@@ -50,7 +50,7 @@ for name in sorted(os.listdir(CK)):
     ck_after.setdefault(int(m.group(1)), []).append(name)
 
 staging = {}
-for line in open(os.path.join(T, 'staging.log'), encoding='utf-8'):
+for line in open(os.path.join(T, 'staging.txt'), encoding='utf-8'):
     m = re.search(r'checkpoints/(\d+)-', line)
     if m:
         staging.setdefault(int(m.group(1)), []).append(line.strip())
@@ -63,10 +63,10 @@ w = out.append
 w('# Ordered transcript — credentials, TRAIN mode (calibration run)\n')
 w('Learner prompts and trainer notes written by the operator, who had golden access (AGENTS.md rule 10): '
   'this is a **calibration run**, not a learner grade. Assistant: a cold `claude -p --model opus` session '
-  'in `/tmp/cold-N17-train` (outside the repo), resumed turn after turn. Checkpoints are the outcome '
+  'in `/tmp/cold-N17-train2` (outside the repo), resumed turn after turn. Checkpoints are the outcome '
   "checker's runs of practice.json's commands.install/test/grade on a throwaway copy; the assistant never "
   'saw a score. Verbatim sources: `train/turn-NN/` (prompt.txt, transcript.jsonl, audit.txt, diff.patch), '
-  '`train/checkpoints/*/` (unit.txt, grade.txt), `train/trainer/`, `train/staging.log`.\n')
+  '`train/checkpoints/*/` (unit.txt, grade.txt), `train/trainer/`, `train/staging.txt`.\n')
 
 def emit_ck(n):
     for name in ck_after.get(n, []):

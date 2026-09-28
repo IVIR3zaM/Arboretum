@@ -23,159 +23,8 @@ index 0000000..8f63412
 +
 +**Your job:** get revocation callbacks arriving for every customer's subscribers — not just the
 +account that complained.
-diff --git a/backend/src/notifier.rs b/backend/src/notifier.rs
-index 41efb54..b5c79f9 100644
---- a/backend/src/notifier.rs
-+++ b/backend/src/notifier.rs
-@@ -5,28 +5,35 @@
- //! subscribed to the issuing tenant's changes. A subscription is a tenant
- //! setting of kind [`WEBHOOK_KIND`] whose value holds the endpoint `url`.
- //!
--//! The canary is a platform subscription that receives every change;
--//! [`Notifier::canary_healthy`] is the notifier's health check. Every
--//! delivery attempt is reported to the [`DeliverySink`].
-+//! The canary is a platform subscription that receives every change, sent
-+//! alongside the tenant's subscribers; [`Notifier::canary_healthy`] is the
-+//! notifier's health check. Every subscriber's outcome — delivered, refused,
-+//! unreachable or out of time — is reported to the [`DeliverySink`].
- 
- use std::sync::atomic::{AtomicBool, Ordering};
- use std::sync::{Arc, Mutex};
- use std::time::Duration;
- 
- use serde_json::json;
-+use tokio::task::JoinSet;
-+use tokio::time::Instant;
- 
- use crate::settings::{Setting, SettingsStore};
- use crate::status::StatusChange;
- use crate::webhook::WebhookTransport;
- 
--/// How long one status change may take to fan out.
--pub const DISPATCH_BUDGET: Duration = Duration::from_secs(10);
-+/// How long after a change arrives every delivery must be settled. The
-+/// runtime abandons the invocation at 10 s (`timeout_seconds`); the rest is
-+/// margin for the runtime's own overhead.
-+pub const DELIVERY_DEADLINE: Duration = Duration::from_secs(8);
- 
- /// Setting kind of a webhook subscription.
- pub const WEBHOOK_KIND: &str = "webhook";
- 
- pub const CANARY_ID: &str = "canary";
--pub const CANARY_URL: &str = "https://example.com/webhooks/status";
-+/// A receiver on the platform's own domain, reached over the same egress as
-+/// relying parties (PI-STD-014).
-+pub const CANARY_URL: &str = "https://status-canary.membership-platform.example/webhooks/status";
- 
- #[derive(Debug, Clone, PartialEq, Eq)]
- pub struct Subscription {
-@@ -126,57 +133,64 @@ impl Notifier {
-         self
-     }
- 
--    /// Whether the canary acknowledged the most recent change.
-+    /// Whether the canary acknowledged the most recent change, sent through
-+    /// the same fan-out, after the same subscription lookup, as the tenant's
-+    /// subscribers.
-     pub fn canary_healthy(&self) -> bool {
-         self.canary_ok.load(Ordering::SeqCst)
-     }
- 
-     /// Sends `change` to the platform subscribers and to every subscriber of
--    /// the issuing tenant.
-+    /// the issuing tenant, all at once, each bounded by [`DELIVERY_DEADLINE`].
-     pub async fn notify(&self, change: &StatusChange) {
-+        let deadline = Instant::now() + DELIVERY_DEADLINE;
-         let tenant = change.issuer.as_str();
--        let body = payload(change);
--
--        let fan_out = async {
--            for sub in &self.platform {
--                let delivered = self.dispatch(tenant, sub, &body).await;
--                if sub.id == CANARY_ID {
--                    self.canary_ok.store(delivered, Ordering::SeqCst);
--                }
--            }
--            for sub in self.subscriptions(tenant).await {
--                self.dispatch(tenant, &sub, &body).await;
--            }
--        };
--
--        if tokio::time::timeout(DISPATCH_BUDGET, fan_out).await.is_err() {
--            eprintln!("notifier: {tenant}: fan-out for {} did not finish within {DISPATCH_BUDGET:?}", change.credential_id);
-+        let body: Arc<[u8]> = payload(change).into();
-+        let subscriptions = self.subscriptions(tenant).await;
-+
-+        let mut deliveries = JoinSet::new();
-+        let platform = self.platform.iter().map(|sub| (true, sub.clone()));
-+        for (is_platform, sub) in platform.chain(subscriptions.into_iter().map(|sub| (false, sub))) {
-+            let (transport, sink, tenant, body) = (self.transport.clone(), self.sink.clone(), tenant.to_string(), body.clone());
-+            deliveries.spawn(async move {
-+                let delivered = dispatch(&*transport, &*sink, &tenant, &sub, &body, deadline).await;
-+                is_platform && sub.id == CANARY_ID && delivered
-+            });
-         }
-+        let mut canary_delivered = false;
-+        while let Some(result) = deliveries.join_next().await {
-+            canary_delivered |= result.unwrap_or(false);
-+        }
-+        self.canary_ok.store(canary_delivered, Ordering::SeqCst);
-     }
- 
--    /// The tenant's webhook subscriptions.
-+    /// The tenant's webhook subscriptions, through the `tenant-kind` index.
-     async fn subscriptions(&self, tenant: &str) -> Vec<Subscription> {
--        let mut subscriptions = Vec::new();
--        let mut cursor: Option<String> = None;
--        loop {
--            let page = self.settings.query(tenant, cursor.as_deref()).await;
--            subscriptions.extend(page.items.iter().filter(|s| s.kind == WEBHOOK_KIND).filter_map(Subscription::from_setting));
--            match page.next {
--                Some(next) => cursor = Some(next),
--                None => return subscriptions,
--            }
--        }
-+        self.settings.query_kind(tenant, WEBHOOK_KIND).await.iter().filter_map(Subscription::from_setting).collect()
-     }
-+}
- 
--    /// POSTs `body` to `sub` and reports the outcome; `true` if delivered.
--    async fn dispatch(&self, tenant: &str, sub: &Subscription, body: &[u8]) -> bool {
--        let outcome = match self.transport.post(&sub.url, body).await {
--            Ok(status) if (200..300).contains(&status) => Outcome::Delivered { status },
--            Ok(status) => Outcome::Failed { reason: format!("HTTP {status}") },
--            Err(error) => Outcome::Failed { reason: error.to_string() },
--        };
--        let delivered = matches!(outcome, Outcome::Delivered { .. });
--        self.sink.record(DeliveryEvent { tenant: tenant.to_string(), subscription: sub.id.clone(), outcome });
--        delivered
--    }
-+/// POSTs `body` to `sub` unless `deadline` has passed, waits for the answer no
-+/// longer than `deadline`, and reports the outcome; `true` if delivered.
-+async fn dispatch(
-+    transport: &dyn WebhookTransport,
-+    sink: &dyn DeliverySink,
-+    tenant: &str,
-+    sub: &Subscription,
-+    body: &[u8],
-+    deadline: Instant,
-+) -> bool {
-+    let answer = match Instant::now() < deadline {
-+        true => tokio::time::timeout_at(deadline, transport.post(&sub.url, body)).await.ok(),
-+        false => None,
-+    };
-+    let outcome = match answer {
-+        Some(Ok(status)) if (200..300).contains(&status) => Outcome::Delivered { status },
-+        Some(Ok(status)) => Outcome::Failed { reason: format!("HTTP {status}") },
-+        Some(Err(error)) => Outcome::Failed { reason: error.to_string() },
-+        None => Outcome::Failed { reason: format!("no answer within {DELIVERY_DEADLINE:?} of the change") },
-+    };
-+    let delivered = matches!(outcome, Outcome::Delivered { .. });
-+    sink.record(DeliveryEvent { tenant: tenant.to_string(), subscription: sub.id.clone(), outcome });
-+    delivered
- }
 diff --git a/backend/src/resolver.rs b/backend/src/resolver.rs
-index 837f7d0..c203fd0 100644
+index 837f7d0..be264cf 100644
 --- a/backend/src/resolver.rs
 +++ b/backend/src/resolver.rs
 @@ -76,9 +76,9 @@ pub fn did_key_for(key: &VerifyingKey) -> String {
@@ -185,7 +34,7 @@ index 837f7d0..c203fd0 100644
 -/// host's `/.well-known/` directory, with any further segments of the
 -/// identifier as subdirectories. A port is written percent-encoded in the host
 -/// segment (`example.com%3A8443`).
-+/// path the identifier's further segments spell out, or under the host's
++/// path the further segments of the identifier spell out, or under the host's
 +/// `/.well-known/` directory when there are none. A port is written
 +/// percent-encoded in the host segment (`example.com%3A8443`).
  pub fn did_web_url(did: &str) -> Result<String, ResolveError> {
@@ -204,33 +53,34 @@ index 837f7d0..c203fd0 100644
          url.push('/');
          url.push_str(segment);
 diff --git a/backend/src/store.rs b/backend/src/store.rs
-index 6806b9b..a87d635 100644
+index 6806b9b..d155c3d 100644
 --- a/backend/src/store.rs
 +++ b/backend/src/store.rs
-@@ -65,9 +65,9 @@ impl Store {
+@@ -65,9 +65,8 @@ impl Store {
          self.lock().issuers.insert(issuer.did.clone(), issuer);
      }
  
 -    /// Issuer documents are self-contained, as with the peer DIDs issuers
 -    /// first onboarded with: keys and service endpoints travel with the
 -    /// document, so the copy recorded at onboarding is all verification needs.
-+    /// The issuer as recorded at onboarding. Its `document` is the copy
-+    /// resolved then; verification resolves the issuer's DID afresh, since a
-+    /// `did:web` issuer's keys are whatever it publishes now.
++    /// The onboarding record for `did`. Its `document` is the copy resolved at
++    /// onboarding; verification resolves the issuer's current document instead.
      pub fn onboarded_issuer(&self, did: &str) -> Option<OnboardedIssuer> {
          self.lock().issuers.get(did).cloned()
      }
 diff --git a/backend/src/verifier.rs b/backend/src/verifier.rs
-index 3915c73..7472365 100644
+index 3915c73..cf0c02b 100644
 --- a/backend/src/verifier.rs
 +++ b/backend/src/verifier.rs
-@@ -193,11 +193,9 @@ impl Verifier {
+@@ -193,11 +193,11 @@ impl Verifier {
          })
      }
  
 -    /// The DID document an issuer's credentials are checked against.
 +    /// The DID document an issuer's credentials are checked against: the one
-+    /// its DID resolves to now, so a rotated key takes effect at the next check.
++    /// the issuer's DID resolves to now. A `did:web` issuer rotates keys by
++    /// replacing its hosted document, so the copy recorded at onboarding is
++    /// never used; if the document cannot be resolved, verification fails.
      pub fn resolve_issuer(&self, did: &str) -> Result<Document, VerifyError> {
 -        if let Some(issuer) = self.store.onboarded_issuer(did) {
 -            return Ok(issuer.document);
@@ -238,691 +88,763 @@ index 3915c73..7472365 100644
          Ok(self.resolver.resolve(did)?)
      }
  }
-diff --git a/backend/tests/ticket_4127.rs b/backend/tests/ticket_4127.rs
+diff --git a/backend/tests/callbacks.rs b/backend/tests/callbacks.rs
 new file mode 100644
-index 0000000..acb652d
+index 0000000..8b42253
 --- /dev/null
-+++ b/backend/tests/ticket_4127.rs
-@@ -0,0 +1,224 @@
-+//! TICKET-1 (support #4127): members of approved clubs are refused at the door.
++++ b/backend/tests/callbacks.rs
+@@ -0,0 +1,177 @@
++//! TICKET-2 reproduction: revocation callbacks must reach every subscriber of
++//! the revoking tenant, whatever the size of the tenant's settings and however
++//! one subscriber's endpoint behaves, and a green health check must mean
++//! callbacks are reaching subscribers.
 +//!
-+//! A `did:web` issuer's keys are whatever its domain serves now
-+//! (`reference/did-web-method.md` §3.3, §4). These tests take each approved
-+//! issuer's currently published document from `reference/infra/hosted-dids/`
-+//! — the copy of the document bucket — and check the door against it.
-+//!
-+//! The repository holds a private key for Harbour Club only. For the other
-+//! clubs, the member-path test publishes a copy of the club's current document
-+//! (same DID, key id, path and services) with the key bytes replaced by a test
-+//! key, so a credential can be signed with "the key the club publishes".
-+
-+mod common;
-+
-+use std::path::PathBuf;
-+use std::sync::Arc;
-+
-+use credentials_backend::issuer::Issuer;
-+use credentials_backend::resolver::{did_key_for, did_web_url, Resolver};
-+use credentials_backend::transport::MirrorTransport;
-+use credentials_backend::verifier::{Verifier, VerifyError};
-+use ed25519_dalek::SigningKey;
-+use serde_json::Value;
-+
-+use common::*;
-+
-+/// Every issuer approved to issue `MembershipCredential`
-+/// (`reference/trust-registry.md`, "Current records", export 2026-09-01).
-+const APPROVED_ISSUERS: [&str; 4] = [
-+    "did:web:members.harbourclub.example",
-+    "did:web:issuer.cedarrowing.example",
-+    "did:web:guild.northfield.example:chapters:north",
-+    "did:web:badges.kestrel-league.example",
-+];
-+
-+fn hosted_dids_root() -> PathBuf {
-+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../reference/infra/hosted-dids")
-+}
-+
-+/// The bucket object key a `did:web` document is published under
-+/// (`reference/infra/did-hosting.md`): `<host>/.well-known/did.json` for a bare
-+/// host, `<host>/<p1>/<p2>/did.json` for a DID with a path.
-+fn object_key(did: &str) -> String {
-+    let mut segments = did.strip_prefix("did:web:").unwrap().split(':');
-+    let host = segments.next().unwrap().replace("%3A", ":");
-+    let path: Vec<&str> = segments.collect();
-+    if path.is_empty() {
-+        format!("{host}/.well-known/did.json")
-+    } else {
-+        format!("{host}/{}/did.json", path.join("/"))
-+    }
-+}
-+
-+/// The document the club's domain serves now.
-+fn published_document(did: &str) -> Value {
-+    let path = hosted_dids_root().join(object_key(did));
-+    let body = std::fs::read(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
-+    serde_json::from_slice(&body).unwrap()
-+}
-+
-+/// `(verification method id, publicKeyMultibase)` of the first `assertionMethod` key in `doc`.
-+fn published_assertion_key(doc: &Value) -> (String, String) {
-+    let id = doc["assertionMethod"][0].as_str().unwrap().to_string();
-+    let vm = doc["verificationMethod"].as_array().unwrap().iter().find(|vm| vm["id"] == id.as_str()).unwrap();
-+    (id, vm["publicKeyMultibase"].as_str().unwrap().to_string())
-+}
-+
-+/// A scratch copy of the document bucket, removed on drop.
-+struct Bucket {
-+    root: PathBuf,
-+}
-+
-+impl Bucket {
-+    fn new(name: &str) -> Self {
-+        let root = std::env::temp_dir().join(format!("ticket-4127-{name}-{}", std::process::id()));
-+        let _ = std::fs::remove_dir_all(&root);
-+        Bucket { root }
-+    }
-+
-+    fn publish(&self, did: &str, doc: &Value) {
-+        let path = self.root.join(object_key(did));
-+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
-+        std::fs::write(path, serde_json::to_vec_pretty(doc).unwrap()).unwrap();
-+    }
-+}
-+
-+impl Drop for Bucket {
-+    fn drop(&mut self) {
-+        let _ = std::fs::remove_dir_all(&self.root);
-+    }
-+}
-+
-+/// The member's path, for every approved club: the club signs a membership
-+/// credential with the key it publishes now, the member presents it at the
-+/// door, and the door must accept it.
-+#[test]
-+fn every_approved_club_s_members_are_admitted_with_a_credential_signed_by_its_current_key() {
-+    let bucket = Bucket::new("door");
-+    let mut refused = Vec::new();
-+
-+    for (i, did) in APPROVED_ISSUERS.iter().enumerate() {
-+        let mut doc = published_document(did);
-+        let (key_id, published_key) = published_assertion_key(&doc);
-+
-+        let seed = if *did == HARBOUR_DID {
-+            // Harbour's real key: its published document is used unchanged.
-+            seed(HARBOUR_SEED)
-+        } else {
-+            // Same document, key bytes replaced by a key this test can sign with.
-+            let seed = [0xA0 + i as u8; 32];
-+            let test_key = did_key_for(&SigningKey::from_bytes(&seed).verifying_key());
-+            let test_key = test_key.trim_start_matches("did:key:").to_string();
-+            for vm in doc["verificationMethod"].as_array_mut().unwrap() {
-+                if vm["publicKeyMultibase"] == published_key.as_str() {
-+                    vm["publicKeyMultibase"] = Value::String(test_key.clone());
-+                }
-+            }
-+            seed
-+        };
-+        bucket.publish(did, &doc);
-+
-+        let store = store();
-+        let club = Issuer::new(did, &key_id, &seed);
-+        let holder = Holder::new(1);
-+        let issued = club.issue(&store, &membership_request(&holder)).unwrap();
-+        let vp = holder.present(&issued, &["member"], NONCE, DOMAIN);
-+
-+        let door = Verifier::new(Resolver::new(Arc::new(MirrorTransport::new(&bucket.root))), store).with_clock(|| NOW);
-+        match door.verify_presentation(&submission("req-1", vp), NONCE, DOMAIN) {
-+            Ok(verified) => assert_eq!(verified.credential.issuer, *did),
-+            Err(e) => refused.push(format!("{did} (signed with {key_id}): {e}")),
-+        }
-+    }
-+
-+    assert!(refused.is_empty(), "members refused at the door:\n  {}", refused.join("\n  "));
-+}
-+
-+/// Unmodified published data: the key the door checks a club's credentials
-+/// against must be the key the club's domain serves now.
-+#[test]
-+fn the_door_checks_each_approved_club_against_the_key_it_publishes_now() {
-+    let door = Verifier::new(Resolver::new(Arc::new(MirrorTransport::new(hosted_dids_root()))), store());
-+    let mut mismatched = Vec::new();
-+
-+    for did in APPROVED_ISSUERS {
-+        let (published_id, published_key) = published_assertion_key(&published_document(did));
-+        let checked = match door.resolve_issuer(did) {
-+            Ok(doc) => doc
-+                .verification_method
-+                .iter()
-+                .map(|vm| format!("{} {}", vm.id, vm.property_set["publicKeyMultibase"].as_str().unwrap_or("?")))
-+                .collect::<Vec<_>>()
-+                .join(", "),
-+            Err(e) => format!("error: {e}"),
-+        };
-+        let expected = format!("{published_id} {published_key}");
-+        if checked != expected {
-+            mismatched.push(format!("{did}\n      publishes: {expected}\n      door uses: {checked}"));
-+        }
-+    }
-+
-+    assert!(mismatched.is_empty(), "door is not using the published key:\n  {}", mismatched.join("\n  "));
-+}
-+
-+/// A club rotates after its members have been through the door: the next
-+/// check uses the new key, and a credential signed with the retired key is
-+/// refused (`reference/did-web-method.md` §4: a key no longer in the served
-+/// document is not a key of the DID).
-+#[test]
-+fn a_rotation_takes_effect_at_the_next_door_check() {
-+    let bucket = Bucket::new("rotation");
-+    let did = HARBOUR_DID;
-+    let mut doc = published_document(did);
-+    bucket.publish(did, &doc);
-+
-+    let store = store();
-+    let door = Verifier::new(Resolver::new(Arc::new(MirrorTransport::new(&bucket.root))), store.clone()).with_clock(|| NOW);
-+    let holder = Holder::new(1);
-+    let old_club = harbour();
-+    let old = old_club.issue(&store, &membership_request(&holder)).unwrap();
-+    door.verify_presentation(&submission("req-1", holder.present(&old, &["member"], NONCE, DOMAIN)), NONCE, DOMAIN)
-+        .expect("admitted before the rotation");
-+
-+    // The club retires key-1 and publishes key-2.
-+    let new_seed = [0xB7; 32];
-+    let new_id = format!("{did}#key-2");
-+    let new_key = did_key_for(&SigningKey::from_bytes(&new_seed).verifying_key()).trim_start_matches("did:key:").to_string();
-+    doc["verificationMethod"][0]["id"] = Value::String(new_id.clone());
-+    doc["verificationMethod"][0]["publicKeyMultibase"] = Value::String(new_key);
-+    doc["authentication"][0] = Value::String(new_id.clone());
-+    doc["assertionMethod"][0] = Value::String(new_id.clone());
-+    bucket.publish(did, &doc);
-+
-+    let new = Issuer::new(did, &new_id, &new_seed).issue(&store, &membership_request(&holder)).unwrap();
-+    door.verify_presentation(&submission("req-2", holder.present(&new, &["member"], NONCE, DOMAIN)), NONCE, DOMAIN)
-+        .expect("a credential signed with the new key is admitted");
-+    let err = door
-+        .verify_presentation(&submission("req-3", holder.present(&old, &["member"], NONCE, DOMAIN)), NONCE, DOMAIN)
-+        .unwrap_err();
-+    assert!(matches!(err, VerifyError::UnknownKey(ref id) if id == HARBOUR_KEY_ID), "{err:?}");
-+}
-+
-+/// `did:web` with a path: no `/.well-known` (`reference/did-web-method.md` §3.2
-+/// step 4 and its examples; `reference/infra/did-hosting.md`).
-+#[test]
-+fn did_web_with_a_path_maps_to_the_path_without_well_known() {
-+    assert_eq!(
-+        did_web_url("did:web:w3c-ccg.github.io:user:alice").unwrap(),
-+        "https://w3c-ccg.github.io/user/alice/did.json"
-+    );
-+    assert_eq!(
-+        did_web_url("did:web:guild.northfield.example:chapters:north").unwrap(),
-+        "https://guild.northfield.example/chapters/north/did.json"
-+    );
-+}
-+
-+/// Every approved club's published document resolves from the bucket copy.
-+#[test]
-+fn every_approved_club_s_published_document_resolves() {
-+    let resolver = Resolver::new(Arc::new(MirrorTransport::new(hosted_dids_root())));
-+    let failed: Vec<String> =
-+        APPROVED_ISSUERS.iter().filter_map(|did| resolver.resolve(did).err().map(|e| format!("{did}: {e}"))).collect();
-+    assert!(failed.is_empty(), "published documents that do not resolve:\n  {}", failed.join("\n  "));
-+}
-diff --git a/backend/tests/ticket_4163.rs b/backend/tests/ticket_4163.rs
-new file mode 100644
-index 0000000..b3dc54f
---- /dev/null
-+++ b/backend/tests/ticket_4163.rs
-@@ -0,0 +1,199 @@
-+//! TICKET-2 (support #4163): revocation callbacks never arrive for a customer
-+//! with a lot of settings, while the webhook health check stays green.
-+//!
-+//! What support has confirmed: when a customer revokes a credential, every
-+//! relying party subscribed to that customer's status changes is told,
-+//! whatever the size of the customer's account and however any one relying
-+//! party's endpoint is behaving; and a green health check means callbacks are
-+//! reaching customers.
-+//!
-+//! Time is paused, so every page read (`settings::PAGE_READ_LATENCY`) and
-+//! endpoint round trip (`Endpoint::TYPICAL_LATENCY`) costs what it would in
-+//! production without the test waiting for it.
-+
++//! Time is paused: the notifier's `DISPATCH_BUDGET` stands in for the
++//! function's hard `timeout_seconds: 10` (reference/infra/webhook-config.yaml),
++//! and `SettingsStore` charges its per-page read latency.
 +use std::sync::Arc;
 +use std::time::Duration;
 +
-+use credentials_backend::notifier::{MemorySink, Notifier, CANARY_URL, WEBHOOK_KIND};
++use credentials_backend::notifier::{MemorySink, Notifier, WEBHOOK_KIND};
 +use credentials_backend::settings::{Setting, SettingsStore};
 +use credentials_backend::status::StatusChange;
 +use credentials_backend::webhook::{Endpoint, HermeticTransport};
 +use serde_json::json;
 +
-+/// The newly onboarded league from the ticket.
 +const LEAGUE: &str = "did:web:badges.kestrel-league.example";
 +
-+/// Settings in the league's partition besides its webhook subscriptions: the
-+/// largest account we have onboarded (`reference/infra/webhook-config.yaml`
-+/// reads them 100 to a page).
++/// Settings a large account carries besides its webhooks: 250 pages of 100.
 +const LARGE_ACCOUNT_SETTINGS: usize = 25_000;
 +
 +struct Rig {
 +    settings: Arc<SettingsStore>,
 +    transport: Arc<HermeticTransport>,
-+    sink: Arc<MemorySink>,
 +    notifier: Notifier,
 +}
 +
 +fn rig() -> Rig {
 +    let settings = Arc::new(SettingsStore::new());
 +    let transport = Arc::new(HermeticTransport::new());
-+    let sink = Arc::new(MemorySink::default());
-+    let notifier = Notifier::new(settings.clone(), transport.clone(), sink.clone());
-+    Rig { settings, transport, sink, notifier }
++    let notifier = Notifier::new(settings.clone(), transport.clone(), Arc::new(MemorySink::default()));
++    Rig { settings, transport, notifier }
 +}
 +
 +impl Rig {
-+    fn preferences(&self, tenant: &str, count: usize) {
++    fn with_other_settings(self, count: usize) -> Self {
 +        for i in 0..count {
-+            self.settings.put(Setting::new(tenant, &format!("pref/{i:06}"), "preference", json!({ "n": i })));
++            self.settings.put(Setting::new(LEAGUE, &format!("pref/{i:06}"), "preference", json!({ "n": i })));
 +        }
++        self
 +    }
 +
-+    /// Subscribes relying party `id` to `tenant`'s changes, answering as `endpoint`.
-+    fn subscribe(&self, tenant: &str, id: &str, endpoint: Endpoint) -> String {
-+        let url = format!("https://{id}.relying-party.test/hooks/status");
-+        self.settings.put(Setting::new(tenant, &format!("webhook/{id}"), WEBHOOK_KIND, json!({ "url": url })));
++    /// Subscribes `id` at a URL answered as `endpoint`; returns the URL.
++    fn subscriber(&self, id: &str, endpoint: Endpoint) -> String {
++        let url = format!("https://{id}.rp.example/hooks/status");
++        self.settings.put(Setting::new(LEAGUE, &format!("webhook/{id}"), WEBHOOK_KIND, json!({ "url": url })));
 +        self.transport.route(&url, endpoint);
 +        url
 +    }
 +
-+    /// The subscriber URLs among `urls` that were not told.
-+    fn not_told<'a>(&self, urls: &'a [String]) -> Vec<&'a str> {
-+        urls.iter().filter(|url| self.transport.received(url).is_empty()).map(String::as_str).collect()
++    async fn revoke(&self) {
++        self.notifier
++            .notify(&StatusChange {
++                credential_id: "urn:uuid:00000000-0000-4000-8000-000000000001".into(),
++                issuer: LEAGUE.into(),
++                status_list: format!("{LEAGUE}#revocation"),
++                status_index: 1,
++                revoked: true,
++            })
++            .await;
++    }
++
++    fn missed<'a>(&self, urls: &'a [String]) -> Vec<&'a str> {
++        urls.iter().filter(|url| self.transport.received(url).len() != 1).map(String::as_str).collect()
 +    }
 +}
 +
-+fn revocation(tenant: &str) -> StatusChange {
-+    StatusChange {
-+        credential_id: "urn:uuid:4163aaaa-0000-4000-8000-000000000001".into(),
-+        issuer: tenant.into(),
-+        status_list: format!("{tenant}#revocation"),
-+        status_index: 42,
-+        revoked: true,
-+    }
++fn healthy_subscribers(rig: &Rig, count: usize) -> Vec<String> {
++    (0..count).map(|i| rig.subscriber(&format!("rp-{i:03}"), Endpoint::ok())).collect()
++}
++
++// --- an account with a lot of settings --------------------------------------
++
++#[tokio::test(start_paused = true)]
++async fn every_subscriber_of_a_large_account_is_notified() {
++    let rig = rig().with_other_settings(LARGE_ACCOUNT_SETTINGS);
++    let urls = healthy_subscribers(&rig, 3);
++
++    rig.revoke().await;
++
++    assert_eq!(rig.missed(&urls), Vec::<&str>::new(), "subscribers that did not receive the revocation");
 +}
 +
 +#[tokio::test(start_paused = true)]
-+async fn every_subscriber_of_a_customer_with_a_lot_of_settings_is_told() {
-+    let rig = rig();
-+    rig.preferences(LEAGUE, LARGE_ACCOUNT_SETTINGS);
-+    let urls: Vec<String> = (1..=3).map(|i| rig.subscribe(LEAGUE, &format!("rp-{i}"), Endpoint::ok())).collect();
++async fn the_health_check_is_not_green_while_a_large_accounts_subscribers_miss_revocations() {
++    let rig = rig().with_other_settings(LARGE_ACCOUNT_SETTINGS);
++    let urls = healthy_subscribers(&rig, 3);
 +
-+    rig.notifier.notify(&revocation(LEAGUE)).await;
++    rig.revoke().await;
 +
-+    let missed = rig.not_told(&urls);
-+    assert!(missed.is_empty(), "{} of {} subscribers not told: {missed:?}", missed.len(), urls.len());
-+}
-+
-+#[tokio::test(start_paused = true)]
-+async fn every_one_of_a_customer_s_many_subscribers_is_told() {
-+    let rig = rig();
-+    let urls: Vec<String> = (1..=100).map(|i| rig.subscribe(LEAGUE, &format!("rp-{i:03}"), Endpoint::ok())).collect();
-+
-+    rig.notifier.notify(&revocation(LEAGUE)).await;
-+
-+    let missed = rig.not_told(&urls);
-+    assert!(missed.is_empty(), "{} of {} subscribers not told, first: {:?}", missed.len(), urls.len(), missed.first());
-+}
-+
-+#[tokio::test(start_paused = true)]
-+async fn an_endpoint_that_never_answers_does_not_stop_the_others_being_told() {
-+    let rig = rig();
-+    rig.subscribe(LEAGUE, "rp-1-hung", Endpoint::Hang);
-+    let others: Vec<String> = (2..=3).map(|i| rig.subscribe(LEAGUE, &format!("rp-{i}"), Endpoint::ok())).collect();
-+
-+    rig.notifier.notify(&revocation(LEAGUE)).await;
-+
-+    let missed = rig.not_told(&others);
-+    assert!(missed.is_empty(), "healthy subscribers not told: {missed:?}");
-+}
-+
-+#[tokio::test(start_paused = true)]
-+async fn a_slow_endpoint_does_not_stop_the_others_being_told() {
-+    let rig = rig();
-+    rig.subscribe(LEAGUE, "rp-1-slow", Endpoint::slow(Duration::from_secs(12)));
-+    let others: Vec<String> = (2..=3).map(|i| rig.subscribe(LEAGUE, &format!("rp-{i}"), Endpoint::ok())).collect();
-+
-+    rig.notifier.notify(&revocation(LEAGUE)).await;
-+
-+    let missed = rig.not_told(&others);
-+    assert!(missed.is_empty(), "healthy subscribers not told: {missed:?}");
-+}
-+
-+#[tokio::test(start_paused = true)]
-+async fn every_subscriber_s_delivery_outcome_is_reported() {
-+    let rig = rig();
-+    rig.preferences(LEAGUE, LARGE_ACCOUNT_SETTINGS);
-+    let ids = ["rp-1", "rp-2", "rp-3"];
-+    for id in ids {
-+        rig.subscribe(LEAGUE, id, Endpoint::ok());
-+    }
-+
-+    rig.notifier.notify(&revocation(LEAGUE)).await;
-+
-+    let reported: Vec<String> = rig.sink.events().into_iter().filter(|e| e.tenant == LEAGUE).map(|e| e.subscription).collect();
-+    let unreported: Vec<&str> = ids.iter().copied().filter(|id| !reported.iter().any(|r| r == id)).collect();
-+    assert!(unreported.is_empty(), "no outcome recorded for {unreported:?}; sink holds {:?}", rig.sink.events());
-+}
-+
-+/// The canary targets an endpoint the platform operates, never a name
-+/// reserved for documentation (`reference/infra/reserved-domains.md`).
-+#[test]
-+fn the_canary_does_not_target_a_reserved_domain() {
-+    let host = url::Url::parse(CANARY_URL).unwrap().host_str().unwrap().to_string();
-+    for reserved in ["example.com", "example.net", "example.org"] {
-+        assert!(host != reserved && !host.ends_with(&format!(".{reserved}")), "canary targets {host} ({reserved} is reserved)");
-+    }
-+}
-+
-+/// When the delivery path cannot run for a change — here the subscriber list
-+/// alone outlasts the time the invocation has — the health check is not
-+/// green, and every subscriber still has a recorded outcome.
-+#[tokio::test(start_paused = true)]
-+async fn the_health_check_is_not_green_when_the_delivery_path_cannot_run_in_time() {
-+    let rig = rig();
-+    let ids: Vec<String> = (0..20_000).map(|i| format!("rp-{i:05}")).collect();
-+    for id in &ids {
-+        rig.subscribe(LEAGUE, id, Endpoint::ok());
-+    }
-+
-+    rig.notifier.notify(&revocation(LEAGUE)).await;
-+
-+    let reported: std::collections::HashSet<String> =
-+        rig.sink.events().into_iter().filter(|e| e.tenant == LEAGUE).map(|e| e.subscription).collect();
-+    let unreported = ids.iter().filter(|id| !reported.contains(*id)).count();
++    let missed = rig.missed(&urls);
 +    assert!(
-+        !rig.notifier.canary_healthy() && unreported == 0,
-+        "canary_healthy() == {}, {unreported} of {} subscribers have no recorded outcome",
-+        rig.notifier.canary_healthy(),
-+        ids.len()
++        missed.is_empty() || !rig.notifier.canary_healthy(),
++        "health check green while {} of {} subscribers missed the revocation: {missed:?}",
++        missed.len(),
++        urls.len()
 +    );
 +}
 +
-+/// "A green health check means callbacks are reaching customers."
++/// Control: the same account with a fifth of the settings.
 +#[tokio::test(start_paused = true)]
-+async fn the_health_check_is_not_green_while_subscribers_miss_callbacks() {
-+    let mut observed = Vec::new();
++async fn every_subscriber_of_a_mid_sized_account_is_notified() {
++    let rig = rig().with_other_settings(5_000);
++    let urls = healthy_subscribers(&rig, 3);
 +
-+    // The ticket's customer: a lot of settings, healthy endpoints.
-+    let large = rig();
-+    large.preferences(LEAGUE, LARGE_ACCOUNT_SETTINGS);
-+    let urls: Vec<String> = (1..=3).map(|i| large.subscribe(LEAGUE, &format!("rp-{i}"), Endpoint::ok())).collect();
-+    large.notifier.notify(&revocation(LEAGUE)).await;
-+    observed.push(("large account", large.notifier.canary_healthy(), large.not_told(&urls).len(), urls.len()));
++    rig.revoke().await;
 +
-+    // A small customer with one relying party that never answers.
-+    let hung = rig();
-+    hung.subscribe(LEAGUE, "rp-1-hung", Endpoint::Hang);
-+    let urls: Vec<String> = (2..=3).map(|i| hung.subscribe(LEAGUE, &format!("rp-{i}"), Endpoint::ok())).collect();
-+    hung.notifier.notify(&revocation(LEAGUE)).await;
-+    observed.push(("hung endpoint", hung.notifier.canary_healthy(), hung.not_told(&urls).len(), urls.len()));
++    assert_eq!(rig.missed(&urls), Vec::<&str>::new(), "subscribers that did not receive the revocation");
++}
 +
-+    let contradictions: Vec<String> = observed
++// --- one subscriber's endpoint misbehaving ----------------------------------
++
++#[tokio::test(start_paused = true)]
++async fn a_subscriber_that_never_answers_does_not_stop_the_others() {
++    let rig = rig();
++    rig.subscriber("a-silent", Endpoint::Hang);
++    let urls = vec![rig.subscriber("b-healthy", Endpoint::ok()), rig.subscriber("c-healthy", Endpoint::ok())];
++
++    rig.revoke().await;
++
++    assert_eq!(rig.missed(&urls), Vec::<&str>::new(), "healthy subscribers that did not receive the revocation");
++}
++
++#[tokio::test(start_paused = true)]
++async fn a_slow_subscriber_does_not_stop_the_others() {
++    let rig = rig();
++    rig.subscriber("a-slow", Endpoint::slow(Duration::from_secs(30)));
++    let urls = vec![rig.subscriber("b-healthy", Endpoint::ok()), rig.subscriber("c-healthy", Endpoint::ok())];
++
++    rig.revoke().await;
++
++    assert_eq!(rig.missed(&urls), Vec::<&str>::new(), "healthy subscribers that did not receive the revocation");
++}
++
++#[tokio::test(start_paused = true)]
++async fn the_health_check_is_not_green_while_a_silent_subscriber_blocks_the_others() {
++    let rig = rig();
++    let silent = rig.subscriber("a-silent", Endpoint::Hang);
++    let mut urls = vec![silent];
++    urls.push(rig.subscriber("b-healthy", Endpoint::ok()));
++
++    rig.revoke().await;
++
++    let missed = rig.missed(&urls);
++    assert!(
++        missed.is_empty() || !rig.notifier.canary_healthy(),
++        "health check green while {} of {} subscribers missed the revocation: {missed:?}",
++        missed.len(),
++        urls.len()
++    );
++}
++
++/// Control: the silent subscriber sorts after the healthy ones.
++#[tokio::test(start_paused = true)]
++async fn healthy_subscribers_sorted_before_a_silent_one_are_notified() {
++    let rig = rig();
++    let urls = vec![rig.subscriber("a-healthy", Endpoint::ok()), rig.subscriber("b-healthy", Endpoint::ok())];
++    rig.subscriber("z-silent", Endpoint::Hang);
++
++    rig.revoke().await;
++
++    assert_eq!(rig.missed(&urls), Vec::<&str>::new(), "healthy subscribers that did not receive the revocation");
++}
++
++// --- an account with a lot of subscribers ----------------------------------
++
++#[tokio::test(start_paused = true)]
++async fn every_subscriber_of_an_account_with_many_subscribers_is_notified() {
++    let rig = rig();
++    let urls = healthy_subscribers(&rig, 100);
++
++    rig.revoke().await;
++
++    let missed = rig.missed(&urls);
++    assert!(missed.is_empty(), "{} of {} subscribers did not receive the revocation", missed.len(), urls.len());
++}
+diff --git a/backend/tests/published_keys.rs b/backend/tests/published_keys.rs
+new file mode 100644
+index 0000000..b46e442
+--- /dev/null
++++ b/backend/tests/published_keys.rs
+@@ -0,0 +1,261 @@
++//! TICKET-1 reproduction: the door must accept a credential signed with the
++//! key an approved issuer publishes today.
++//!
++//! The documents are the hosted copies in `reference/infra/hosted-dids/`,
++//! served through a `StaticTransport` at the URL the did:web spec maps each
++//! DID to (did-web-method.md §3.2), so the transport holds exactly what the
++//! issuer's domain serves.
++//!
++//! Only Harbour Club's private key is known to the suite. For the other
++//! issuers the door tests serve the hosted document with its published key
++//! swapped for a test key (same DID, same verification method id, same
++//! relationships and services): the situation after the issuer rotated to a
++//! key we can sign with. `the_door_checks_*_against_the_document_served_today`
++//! use the real published keys and need no signing.
++mod common;
++
++use std::sync::Arc;
++
++use credentials_backend::issuer::Issuer;
++use credentials_backend::resolver::{did_key_for, did_web_url, ResolveError, Resolver};
++use credentials_backend::store::Store;
++use credentials_backend::transport::StaticTransport;
++use credentials_backend::verifier::{VerifyError, Verifier};
++use ed25519_dalek::SigningKey;
++use serde_json::Value;
++
++use common::*;
++
++struct Published {
++    did: &'static str,
++    /// Where did-web-method.md §3.2 says the document is served.
++    url: &'static str,
++    document: &'static str,
++}
++
++const HARBOUR: Published = Published {
++    did: "did:web:members.harbourclub.example",
++    url: "https://members.harbourclub.example/.well-known/did.json",
++    document: include_str!("../../reference/infra/hosted-dids/members.harbourclub.example/.well-known/did.json"),
++};
++
++const CEDAR: Published = Published {
++    did: "did:web:issuer.cedarrowing.example",
++    url: "https://issuer.cedarrowing.example/.well-known/did.json",
++    document: include_str!("../../reference/infra/hosted-dids/issuer.cedarrowing.example/.well-known/did.json"),
++};
++
++const NORTHFIELD: Published = Published {
++    did: "did:web:guild.northfield.example:chapters:north",
++    url: "https://guild.northfield.example/chapters/north/did.json",
++    document: include_str!("../../reference/infra/hosted-dids/guild.northfield.example/chapters/north/did.json"),
++};
++
++const KESTREL: Published = Published {
++    did: "did:web:badges.kestrel-league.example",
++    url: "https://badges.kestrel-league.example/.well-known/did.json",
++    document: include_str!("../../reference/infra/hosted-dids/badges.kestrel-league.example/.well-known/did.json"),
++};
++
++fn parsed(published: &Published) -> Value {
++    serde_json::from_str(published.document).unwrap()
++}
++
++/// The one verification method the hosted document lists: (id, publicKeyMultibase).
++fn published_key(document: &Value) -> (String, String) {
++    let vm = &document["verificationMethod"][0];
++    (vm["id"].as_str().unwrap().to_string(), vm["publicKeyMultibase"].as_str().unwrap().to_string())
++}
++
++fn multibase(key: &SigningKey) -> String {
++    did_key_for(&key.verifying_key()).trim_start_matches("did:key:").to_string()
++}
++
++/// A verifier over `store` whose transport serves `documents`.
++fn door(store: Arc<Store>, documents: &[(&str, String)]) -> Verifier {
++    let transport = documents.iter().fold(StaticTransport::default(), |t, (url, body)| t.with(url, body.clone()));
++    Verifier::new(Resolver::new(Arc::new(transport)), store).with_clock(|| NOW)
++}
++
++/// Serves `published` with its key replaced by `key`, then presents a
++/// credential that issuer signs with `key` at the door.
++fn present_at_door(published: &Published, key: &SigningKey) {
++    let mut document = parsed(published);
++    document["verificationMethod"][0]["publicKeyMultibase"] = Value::String(multibase(key));
++    let (key_id, _) = published_key(&document);
++
++    let store = store();
++    let verifier = door(store.clone(), &[(published.url, document.to_string())]);
++    let issuer = Issuer::new(published.did, &key_id, &key.to_bytes());
++    let holder = Holder::new(1);
++    let issued = issuer.issue(&store, &membership_request(&holder)).unwrap();
++    let vp = holder.present(&issued, &["member"], NONCE, DOMAIN);
++
++    let result = verifier.verify_presentation(&submission("req-1", vp), NONCE, DOMAIN);
++    assert!(
++        result.is_ok(),
++        "door refused a credential {} signed with {key_id}, the key its document lists: {:?}",
++        published.did,
++        result.unwrap_err()
++    );
++}
++
++// --- the door, one test per approved issuer -------------------------------
++
++#[test]
++fn the_door_accepts_harbour_signed_with_its_published_key() {
++    let key = SigningKey::from_bytes(&seed(HARBOUR_SEED));
++    assert_eq!(multibase(&key), published_key(&parsed(&HARBOUR)).1, "HARBOUR_SEED is the published key");
++    present_at_door(&HARBOUR, &key);
++}
++
++#[test]
++fn the_door_accepts_cedar_rowing_signed_with_a_key_its_document_lists() {
++    present_at_door(&CEDAR, &SigningKey::from_bytes(&[0xC1; 32]));
++}
++
++#[test]
++fn the_door_accepts_northfield_north_signed_with_a_key_its_document_lists() {
++    present_at_door(&NORTHFIELD, &SigningKey::from_bytes(&[0xC2; 32]));
++}
++
++#[test]
++fn the_door_accepts_kestrel_signed_with_a_key_its_document_lists() {
++    present_at_door(&KESTREL, &SigningKey::from_bytes(&[0xC3; 32]));
++}
++
++/// Harbour has not rotated yet; this is the day it does.
++#[test]
++fn the_door_accepts_harbour_after_it_rotates_its_key() {
++    present_at_door(&HARBOUR, &SigningKey::from_bytes(&[0xC4; 32]));
++}
++
++// --- refusals the fix introduces on purpose --------------------------------
++
++/// Harbour signs with the key it published at onboarding; the served
++/// document is `document`. The credential must not verify.
++fn harbour_old_key_credential_against(document: Value) -> VerifyError {
++    let store = store();
++    let verifier = door(store.clone(), &[(HARBOUR.url, document.to_string())]);
++    let holder = Holder::new(1);
++    let issued = harbour().issue(&store, &membership_request(&holder)).unwrap();
++    let vp = holder.present(&issued, &["member"], NONCE, DOMAIN);
++    match verifier.verify_presentation(&submission("req-1", vp), NONCE, DOMAIN) {
++        Ok(_) => panic!("door accepted a credential signed with {HARBOUR_KEY_ID}, a key Harbour no longer serves"),
++        Err(e) => e,
++    }
++}
++
++/// did-web-method.md §4: a key that no longer appears in the served document
++/// is not a key of the DID. Rotation that keeps the verification method id.
++#[test]
++fn the_door_refuses_a_key_the_issuer_replaced_under_the_same_id() {
++    let mut document = parsed(&HARBOUR);
++    document["verificationMethod"][0]["publicKeyMultibase"] = Value::String(multibase(&SigningKey::from_bytes(&[0xC5; 32])));
++    let err = harbour_old_key_credential_against(document);
++    assert!(matches!(err, VerifyError::BadSignature(_)), "{err:?}");
++}
++
++/// Rotation to a new verification method id; the old id is gone.
++#[test]
++fn the_door_refuses_a_key_id_the_issuer_no_longer_lists() {
++    let new_id = format!("{HARBOUR_DID}#key-2");
++    let mut document = parsed(&HARBOUR);
++    document["verificationMethod"][0]["id"] = Value::String(new_id.clone());
++    document["verificationMethod"][0]["publicKeyMultibase"] = Value::String(multibase(&SigningKey::from_bytes(&[0xC6; 32])));
++    document["authentication"] = serde_json::json!([new_id]);
++    document["assertionMethod"] = serde_json::json!([new_id]);
++    let err = harbour_old_key_credential_against(document);
++    assert!(matches!(err, VerifyError::UnknownKey(ref id) if id == HARBOUR_KEY_ID), "{err:?}");
++}
++
++/// Fail closed: no document served means no verification, even for an
++/// onboarded issuer signing with the key it onboarded with.
++#[test]
++fn the_door_refuses_when_the_issuer_document_cannot_be_fetched() {
++    let store = store();
++    let verifier = door(store.clone(), &[]);
++    let issued = harbour().issue(&store, &membership_request(&Holder::new(1))).unwrap();
++    let err = verifier.verify_credential(&issued.credential).expect_err("door accepted without a served document");
++    assert!(matches!(err, VerifyError::Resolve(ResolveError::Transport(_))), "{err:?}");
++}
++
++// --- the document the door checks against, with the real published keys -
++
++fn assert_checks_against_served_document(published: &Published) {
++    let served = parsed(published);
++    let verifier = door(store(), &[(published.url, published.document.to_string())]);
++    let document = verifier.resolve_issuer(published.did).unwrap_or_else(|e| panic!("{}: {e}", published.did));
++
++    let keys: Vec<(String, String)> = document
++        .verification_method
 +        .iter()
-+        .filter(|(_, healthy, missed, _)| *healthy && *missed > 0)
-+        .map(|(case, _, missed, total)| format!("{case}: canary_healthy() == true, {missed} of {total} subscribers not told"))
++        .map(|vm| (vm.id.to_string(), vm.property_set["publicKeyMultibase"].as_str().unwrap_or_default().to_string()))
 +        .collect();
-+    assert!(contradictions.is_empty(), "health check green while callbacks are missing:\n  {}", contradictions.join("\n  "));
++    assert_eq!(keys, vec![published_key(&served)], "{}: keys the door checks against vs keys served today", published.did);
++
++    let site = document.service.iter().find_map(|s| s.service_endpoint.get_uri());
++    assert_eq!(
++        site.as_deref(),
++        served["service"][0]["serviceEndpoint"].as_str(),
++        "{}: LinkedDomains shown to door staff vs served today",
++        published.did
++    );
++}
++
++#[test]
++fn the_door_checks_harbour_against_the_document_served_today() {
++    assert_checks_against_served_document(&HARBOUR);
++}
++
++#[test]
++fn the_door_checks_cedar_rowing_against_the_document_served_today() {
++    assert_checks_against_served_document(&CEDAR);
++}
++
++#[test]
++fn the_door_checks_northfield_north_against_the_document_served_today() {
++    assert_checks_against_served_document(&NORTHFIELD);
++}
++
++#[test]
++fn the_door_checks_kestrel_against_the_document_served_today() {
++    assert_checks_against_served_document(&KESTREL);
++}
++
++// --- did:web URL mapping: did-web-method.md §3.2 examples ------------------
++
++#[test]
++fn did_web_url_matches_the_spec_example_for_a_bare_domain() {
++    assert_eq!(did_web_url("did:web:w3c-ccg.github.io").unwrap(), "https://w3c-ccg.github.io/.well-known/did.json");
++}
++
++#[test]
++fn did_web_url_matches_the_spec_example_for_a_path() {
++    assert_eq!(did_web_url("did:web:w3c-ccg.github.io:user:alice").unwrap(), "https://w3c-ccg.github.io/user/alice/did.json");
++}
++
++#[test]
++fn did_web_url_matches_the_spec_example_for_a_port() {
++    assert_eq!(did_web_url("did:web:example.com%3A3000").unwrap(), "https://example.com:3000/.well-known/did.json");
++}
++
++#[test]
++fn did_web_url_matches_the_spec_example_for_a_port_and_a_path() {
++    assert_eq!(
++        did_web_url("did:web:example.com%3A3000:user:alice").unwrap(),
++        "https://example.com:3000/user/alice/did.json"
++    );
++}
++
++#[test]
++fn did_web_url_for_northfield_is_where_its_document_is_hosted() {
++    assert_eq!(did_web_url(NORTHFIELD.did).unwrap(), NORTHFIELD.url);
++}
++
++#[test]
++fn northfield_resolves_from_its_hosted_url() {
++    let transport = StaticTransport::default().with(NORTHFIELD.url, NORTHFIELD.document);
++    let document = Resolver::new(Arc::new(transport)).resolve(NORTHFIELD.did);
++    assert!(document.is_ok(), "{:?}", document.err().map(|e| e.to_string()));
 +}
 diff --git a/research-notes.md b/research-notes.md
 new file mode 100644
-index 0000000..a9473ed
+index 0000000..30889fe
 --- /dev/null
 +++ b/research-notes.md
-@@ -0,0 +1,247 @@
+@@ -0,0 +1,304 @@
 +# Research notes — `reference/`
 +
-+Everything I found in `reference/`, with a citation for each point. These notes only say what the
-+reference documents say. I compared them against our code in a separate reply; that comparison
-+isn't in this file. The "Open questions" section at the end lists things these documents don't
-+answer.
-+
-+## 0. What `reference/` is
-+
-+- It's a vendor snapshot of external specs, service contracts and infra config. The owning teams
-+  keep the originals, and this copy is synced from them. — `reference/README.md:3-6`
-+- It's read-only. Local edits get overwritten on the next sync. — `reference/README.md:8`
-+- The contents table lists six items: `did-web-method.md`, `trust-registry.md`,
-+  `infra/did-hosting.md`, `infra/hosted-dids/`, `infra/webhook-config.yaml` and
-+  `infra/reserved-domains.md`. — `reference/README.md:12-19`
-+
-+## 1. `did:web` method (`reference/did-web-method.md`)
-+
-+- It's based on the W3C CCG did:web spec and DID Core 1.0, "as implemented by the platform". — `:3-4`
-+- A DID must start with `did:web:`. — §1, `:8`
-+- The identifier is a domain plus an optional path, with each `/` written as `:`. No IP
-+  addresses. A port has to be percent-encoded as `%3A`, and every segment is percent-decoded
-+  before use. — §2, `:12-22`
-+- **Resolution algorithm** (§3.2, `:33-43`):
-+  1. Strip `did:web:`.
-+  2. Split on `:`.
-+  3. Percent-decode each segment.
-+  4. **Only if there are no path segments**, append `/.well-known`.
-+  5. Append `/did.json`.
-+  6. Prefix `https://`.
-+  7. GET the URL.
-+  8. The document's `id` must equal the DID.
-+- Worked examples (§3.2 table, `:45-50`):
-+  - `did:web:w3c-ccg.github.io:user:alice` → `https://w3c-ccg.github.io/user/alice/did.json`.
-+    There's no `.well-known` when a path is present.
-+  - `did:web:example.com%3A3000` → `https://example.com:3000/.well-known/did.json`.
-+- HTTPS only, with no fallback to HTTP. The GET is the **only** source of the document. "the
-+  document is not derivable from the identifier". — `:52-53`
-+- **Update:** the controller replaces the document at its URL. Keys are added, rotated and
-+  removed this way, and no history is exposed. "the document currently served at the URL **is**
-+  the DID document." — §3.3, `:57-60`
-+- **Deactivate:** remove the document. After that, resolution fails. — §3.4, `:64-65`
-+- **Verifying a proof** (§4, `:69-76`): the verifier resolves the DID *when it verifies the
-+  proof*. It then dereferences `verificationMethod`, checks that the method is listed under the
-+  right relationship (`assertionMethod` for an issuer, `authentication` for a holder), and
-+  verifies against a `Multikey` / `publicKeyMultibase` Ed25519 key (`0xed01`).
-+- "A key that no longer appears in the document served at the DID's URL is not a key of the DID.
-+  A proof is valid only if it verifies against a verification method in the current document."
-+  — §4, `:78-79`
-+- Caching is allowed within the `Cache-Control` lifetime the host returns. — §4, `:81`
-+- Controllers are expected to rotate keys. Rotation takes effect for every verifier as soon as
-+  the new document is served. — §5, `:87-88`
-+- There's no self-certification. Unlike `did:key` and `did:peer`, the identifier carries no key
-+  material. — §5, `:89-90`
-+- `did:webvh` exists but "is not used on the platform". — §5, `:91-93`
-+
-+## 2. Trust Registry contract (`reference/trust-registry.md`)
-+
-+- It's run by the Governance team. It implements TRQP and is based on `affinidi-trust-registry-rs`.
-+  — `:3-5`
-+- The registry is the authority on which issuers are trusted to issue which credentials.
-+  "An issuer being onboarded, having a resolvable DID, or having signed a credential correctly
-+  does not make it trusted; a registry record does." — `:9-11`
-+- A record is keyed on the entity's DID. Its fields are `entity_id`, `authority_id` (=
-+  `did:web:governance.membership-platform.example`), `action` (`issue`), `resource` (e.g.
-+  `MembershipCredential`) and `status` (`active` / `suspended` / `withdrawn`). — `:13-22`
-+- The interface is `POST /authorization`. The request and response shapes are at `:26-48`.
-+  `authorized` is true only when the record's status is `active`. An unknown `entity_id` returns
-+  `200` with `authorized: false`, not an error. — `:50-51`
-+- `POST /recognition` is for authorities and isn't used by relying parties. — `:53-54`
-+- **Invariant** (`:58-62`):
-+  - A relying party must query the registry, at verification time, for the credential's `issuer`
-+    DID, action `issue` and the credential's type.
-+  - It must refuse the credential unless `authorized` is `true`.
-+  - Consumers must **not** keep their own list of trusted issuers. Records can be suspended or
-+    withdrawn without notice.
-+  - An answer may be cached for at most 300 s.
-+- DID document changes (rotated keys, moved endpoints) don't change the registry record. "The
-+  record follows the DID." — `:64-65`
-+- Export dated 2026-09-01: all four issuers are `active` for `issue` / `MembershipCredential`.
-+  — `:69-74`
-+
-+  | entity_id | since |
-+  |---|---|
-+  | `did:web:members.harbourclub.example` | 2025-03-14 |
-+  | `did:web:issuer.cedarrowing.example` | 2025-05-02 |
-+  | `did:web:guild.northfield.example:chapters:north` | 2025-06-20 |
-+  | `did:web:badges.kestrel-league.example` | 2025-09-08 |
-+
-+## 3. DID hosting (`reference/infra/did-hosting.md`)
-+
-+- Issuers publish their `did:web` documents through the platform bucket
-+  `s3://issuer-did-documents-prod`, which has versioning on, behind CloudFront `E2T9QK4ZC1MX7B`.
-+  — `:3-9`
-+- The object key is `<host>/<path>`, "exactly the path part of the DID's HTTPS URL". — `:10`
-+  - `did:web:<host>` → `<host>/.well-known/did.json`. — `:11`
-+  - `did:web:<host>:<p1>:<p2>` → `<host>/<p1>/<p2>/did.json`. There's **no** `.well-known` when a
-+    path is present. — `:12`
-+- It's served with `Content-Type: application/did+json` and `Cache-Control: max-age=300`. — `:13-14`
-+- Only the issuer console writes objects, with one IAM role per issuer. — `:15`
-+- Adding, rotating or retiring a key, or changing an endpoint, writes a new object version and
-+  invalidates the CDN path. The old version stays in bucket history but "is no longer served".
-+  — `:17-20`
-+- `hosted-dids/` is a copy of the bucket's **current** objects. — `:22`
-+
-+## 4. Hosted DID documents (`reference/infra/hosted-dids/`)
-+
-+This is the current published state, per `did-hosting.md:22`. Every document uses `Multikey`, and
-+each has a single key listed under both `authentication` and `assertionMethod`.
-+
-+| DID | Object path | Key id | `publicKeyMultibase` | LinkedDomains |
-+|---|---|---|---|---|
-+| `did:web:members.harbourclub.example` | `members.harbourclub.example/.well-known/did.json` | `#key-1` | `z6MkjgN85p…vt6N` | `https://harbourclub.example/` |
-+| `did:web:issuer.cedarrowing.example` | `issuer.cedarrowing.example/.well-known/did.json` | `#key-2` | `z6MkvbwHpL…uRq9` | `https://cedarrowing.example/` |
-+| `did:web:guild.northfield.example:chapters:north` | `guild.northfield.example/chapters/north/did.json` (no `.well-known`) | `#signing` | `z6MkoBtQgt…MReJ7` | `https://guild.northfield.example/` |
-+| `did:web:badges.kestrel-league.example` | `badges.kestrel-league.example/.well-known/did.json` | `#key-2026` | `z6MksRrY1T…HZq1` | `https://kestrel-league.example/members/` |
-+
-+Line references: each file's `verificationMethod` is at `:7-14`, and its `service` is at `:21-27`.
-+
-+## 5. status-notifier deployment (`reference/infra/webhook-config.yaml`)
-+
-+- This is a snapshot of `services/status-notifier/deploy.yaml`, owned by Platform Infrastructure,
-+  for production in eu-west-1. — `:1-8`
-+- **Trigger:** one invocation per status-change event (`batch_size: 1`,
-+  `starting_position: latest`). — `:10-14`
-+- **Timeout:** `timeout_seconds: 10` is a **hard** limit. "The runtime terminates the invocation
-+  when it is reached; work still in progress at that point is abandoned." — `:20-22`
-+- **No retries:** `maximum_retry_attempts: 0`, `maximum_event_age_seconds: 60`,
-+  `on_failure_destination: none`. — `:24-27`
-+- `reserved_concurrency: 20`. — `:23`
-+- **Network:** public egress through NAT, with `outbound_connect_timeout_ms: 2000`. — `:29-31`
-+- **`tenant-settings` table** (`:33-44`):
-+  - Partition key `tenant` (the issuer DID), sort key `setting_id`.
-+  - `query_page_size: 100`.
-+  - GSI `tenant-kind-index` (partition `tenant`, sort `kind`, projection all).
-+  - The service has read-only access.
-+- **Alarms:** `alarms: []`, i.e. none are configured. — `:51-53`
-+
-+## 6. Reserved domains standard PI-STD-014 (`reference/infra/reserved-domains.md`)
-+
-+- A reserved documentation or testing name must not appear as a live endpoint in any production
-+  config or code path. That includes webhooks, callbacks, health probes, synthetic monitoring,
-+  and "the targets of any check whose result is reported as the state of a platform service".
-+  — `:8-11`
-+- The reserved names are `example.com`, `example.net` and `example.org` (RFC 2606 §3). — `:15-22`
-+- These names resolve, and an IANA server may answer. Traffic to them leaves the platform, and "a
-+  response from one says nothing about the state of any platform service." — `:24-26`
-+- What to use instead:
-+  - For probes: an endpoint the platform operates, reached over the same path as the real
-+    traffic.
-+  - For tests: an in-process or loopback stub. — `:30-34`
-+- Enforcement is config linting of `deploy.yaml` files only. — `:38`
-+- Note: this doc lists only the three second-level names. It doesn't mention `.example` as a TLD.
-+
-+## Open questions (the reference docs don't answer these)
-+
-+- None of these documents explains the ticket's phrase "re-approved last month". The registry
-+  export (`trust-registry.md:69-74`) shows only the original `since` dates.
-+- None of them says when each issuer rotated its key. `did-hosting.md:19-20` says the history
-+  exists in bucket versioning, but we don't have a copy of it.
-+- It isn't stated which component production uses as the `DocumentTransport` (a real HTTPS
-+  client vs. a mirror). The only transports in the repo are `MirrorTransport` and
-+  `StaticTransport`.
++Notes from reading every file under `reference/` against the code in `backend/` and `app/`.
++For each source: the rules the code must obey, then where the code (or its READMEs and comments)
++disagrees. "Probe" means I checked the behaviour with a throwaway test run on a scratch copy of
++`backend/`; nothing in the repo was changed. The baseline `cargo test` passes (68 tests).
 +
 +---
 +
-+# TICKET-2 (#4163) — revocation callbacks never arrive
++## `reference/README.md`
 +
-+Nothing in `reference/` changed since the notes above. This section pulls together what bears on
-+TICKET-2: first the reference facts, then what the code does. The code facts are separate so you
-+can tell which source each claim comes from. Where something is my inference, it says so.
++**Rules**
++- `reference/` is a vendor snapshot that the owning teams keep in sync. It is **read-only**: local
++  edits are overwritten on the next sync. Fixes go in `backend/` and `app/`, never here.
++- It describes itself as "the specifications they implement, the contracts of the services they
++  call, and the configuration of the infrastructure they run against." Where the code disagrees
++  with `reference/`, the code is the one that has to change.
 +
-+## T2.1 From `reference/`
++**Disagreements:** none by itself. Note that `MirrorTransport::from_env()`
++(`backend/src/transport.rs:43`) reads `reference/infra/hosted-dids/` as its default data. That is
++fine as long as nothing writes to it.
 +
-+- **Hard 10 s limit.** One invocation handles one status-change event (`batch_size: 1`). The
-+  invocation is killed at `timeout_seconds: 10`, and "work still in progress at that point is
-+  abandoned". — `infra/webhook-config.yaml:10-14, 20-22`
-+- **Nothing retries or catches an abandoned event.** `maximum_retry_attempts: 0` and
-+  `on_failure_destination: none`. — `infra/webhook-config.yaml:24-27`
-+- **Outbound timeout covers the connect only.** `outbound_connect_timeout_ms: 2000` is the only
-+  timeout configured for outbound traffic. The config says nothing about a response or read
-+  timeout. *(Inference: an endpoint that accepts the connection and never answers is not cut
-+  off by this setting.)* — `infra/webhook-config.yaml:29-31`
-+- **`tenant-settings` table.**
-+  - The partition key is `tenant`, the issuer DID. — `infra/webhook-config.yaml:35`
-+  - A Query returns 100 items per page. — `:38`
-+  - A GSI, `tenant-kind-index` (partition `tenant`, sort `kind`, projection `all`), exists for
-+    looking up one kind of setting directly. — `:39-43`
-+- **No alarms are configured** (`alarms: []`). Logs go to `/platform/status-notifier` at level
-+  `info`, with 14-day retention. — `infra/webhook-config.yaml:46-53`
-+- **Probes must not target reserved domains.** A probe or health-check target must be "an
-+  endpoint the platform operates, reached over the same path as the traffic it vouches for".
-+  Reserved names must not be the target of "any check whose result is reported as the state of
-+  a platform service". A response from `example.com` "says nothing about the state of any
-+  platform service". — `infra/reserved-domains.md:8-11, 24-26, 33`
-+- **Linting only covers `deploy.yaml`.** It rejects reserved names in `deploy.yaml` files only.
-+  A URL constant in service code is not linted. — `infra/reserved-domains.md:38`
++---
 +
-+## T2.2 From the code
++## `reference/did-web-method.md` — the `did:web` method
 +
-+- **Order of work in `Notifier::notify`** (`backend/src/notifier.rs:136-155`):
-+  1. POST to each platform subscriber. The canary is first (`:118`, `:141-146`).
-+  2. Read the tenant's full subscription list (`:147`).
-+  3. POST to each subscriber, one at a time, awaiting each call (`:147-149`).
-+  4. The whole sequence runs inside `tokio::time::timeout(DISPATCH_BUDGET)`, where
-+     `DISPATCH_BUDGET` = 10 s (`:23`, `:152`).
-+- **How subscriptions are read.** `subscriptions()` pages through the tenant's **whole** settings
-+  partition with `query()` (`notifier.rs:158-169`). Each page costs `PAGE_READ_LATENCY` = 50 ms
-+  and holds up to `PAGE_SIZE` = 100 items (`settings.rs:17, 20, 80-81`). It never uses
-+  `query_kind()`, the lookup through the `tenant-kind` index (`settings.rs:100-113`).
-+- **No per-call timeout.** `dispatch()` awaits `transport.post` with nothing around it
-+  (`notifier.rs:172-181`). `Endpoint::Hang` never resolves (`webhook.rs:120`).
-+- **When the budget runs out**, the remaining work is dropped. Only an `eprintln!` is written
-+  (`notifier.rs:152-154`). Subscribers that were never attempted get no `DeliveryEvent`.
-+- **What the health check reads.** `canary_healthy()` returns `canary_ok`
-+  (`notifier.rs:130-132`). `canary_ok` is set only from the canary's own POST result
-+  (`:143-145`), and that POST happens before the tenant's subscriptions are read.
-+- **Where the canary points.**
-+  - In production it is `CANARY_URL` = `https://example.com/webhooks/status`
-+    (`notifier.rs:29`).
-+  - In tests, `HermeticTransport::new()` routes that host to an instant 200
-+    (`webhook.rs:84-87`).
-+- **What the existing tests cover.** `tests/notifier.rs` uses only "small" tenants: 12
-+  preferences and 3 subscribers, every endpoint `ok()` or `503`
-+  (`tests/notifier.rs:26-40, 116-127`).
++**Rules**
++1. **URL mapping (§3.2).** Strip `did:web:`, split on `:`, and percent-decode each segment.
++   Append `/.well-known` **only if there are no path segments**, then `/did.json`, then prefix
++   `https://`. So `did:web:host:user:alice` → `https://host/user/alice/did.json`.
++2. Resolution uses HTTPS only, with no HTTP fallback. The fetched document's `id` MUST equal the DID.
++3. The domain MUST NOT be an IP address. A port is written `%3A`.
++4. **The document currently served is the DID document (§3.3).** There is no history, and a
++   removed key is no longer a key of the DID.
++5. **Verifying (§4).** The verifier resolves the DID *when it verifies the proof*. It then
++   dereferences `verificationMethod`, checks that the method is listed under the right
++   relationship (`assertionMethod` for issuers, `authentication` for holders), and verifies the
++   Ed25519 `Multikey` signature. "A proof is valid only if it verifies against a verification
++   method in the current document."
++6. HTTP caching is allowed only within the host's `Cache-Control` lifetime.
++7. Rotation takes effect for every verifier as soon as the new document is served (§5). The
++   identifier carries no key material, so nothing can be checked from the DID alone.
 +
-+## T2.3 Measured, with `tokio` time paused (scratch run, not in the repo)
++**Disagreements**
++- **The verifier uses a copy of the document taken at onboarding, not the current one.**
++  `Verifier::resolve_issuer` (`backend/src/verifier.rs:197-202`) returns
++  `store.onboarded_issuer(did).document`, loaded from `backend/data/onboarded-issuers.json`. It
++  only resolves live for DIDs that are *not* onboarded. This breaks rules 4, 5 and 7.
++  The comment at `backend/src/store.rs:68-70` justifies it ("issuer documents are self-contained,
++  as with the peer DIDs … the copy recorded at onboarding is all verification needs"). That is
++  true for `did:peer`/`did:key` and false for `did:web` (§5, "No self-certification").
++- **The path mapping is wrong.** `did_web_url` (`backend/src/resolver.rs:82-101`) always puts
++  `/.well-known` in front of the path segments. Probe:
++  `did:web:guild.northfield.example:chapters:north` →
++  `https://guild.northfield.example/.well-known/chapters/north/did.json`. The spec (and the hosted
++  object at `hosted-dids/guild.northfield.example/chapters/north/did.json`) says
++  `https://guild.northfield.example/chapters/north/did.json`. Live resolution of Northfield
++  therefore fails with "no document at …". The doc comment above the function states the wrong
++  rule. No test covers a DID with a path.
++- **The proof check is skipped for any other proof type.** `check_proof`
++  (`backend/src/verifier.rs:206-214`) only verifies a signature if `proof.type ==
++  "Ed25519Signature2020"`. Otherwise it returns `Ok(())`. Probe: a Harbour credential with its
++  `expires_at` pushed ten years out and `proof.type = "DataIntegrityProof"`,
++  `proofValue = "zgarbage"` → `verify_credential` returns `Ok`. Rule 5 requires the signature to
++  be verified.
++- **A holder with an unsupported DID method gets no proof check at all.**
++  `verify_presentation` ignores `ResolveError::UnsupportedMethod` for the holder
++  (`verifier.rs:122-126`). The holder-binding check (`subject == holder`) then only compares
++  strings.
++- Nothing checks the IP-address rule (3). There is no caching, which is compliant but means one
++  fetch per verification. There is also **no production HTTPS transport**: only
++  `MirrorTransport` (a local directory) and `StaticTransport` (in-memory) exist in
++  `backend/src/transport.rs`.
++- Compliant: `resolve_web` checks `id == DID`, and `MirrorTransport` refuses non-`https` URLs.
++  `listed_key` checks that the method is listed under the relationship the caller asks for.
 +
-+| Settings in partition | Subscribers | Delivered | `canary_healthy()` |
-+|---|---|---|---|
-+| 15,000 | 3 | 3/3 | true |
-+| 19,500 | 3 | 1/3 | true |
-+| 20,000 / 50,000 | 3 | 0/3 | true |
-+| 0 | 66 | 66/66 | true |
-+| 0 | 67 / 100 | 66/67, 66/100 | true |
++---
 +
-+From the constants, the budget covers about 200 page reads (10 s / 50 ms), or about 66
-+deliveries (10 s / 150 ms).
++## `reference/trust-registry.md` — Trust Registry contract
 +
-+## T2.4 Open questions for TICKET-2
++**Rules**
++1. **Only a registry record makes an issuer trusted.** Onboarding, a resolvable DID or a valid
++   signature does not.
++2. At verification time, a relying party MUST query `POST /authorization` with
++   `entity_id` = the credential's `issuer`, `authority_id` =
++   `did:web:governance.membership-platform.example`, `action` = `issue`, and
++   `resource` = the credential type (e.g. `MembershipCredential`). It MUST refuse unless
++   `authorized: true`.
++3. An unknown issuer gets `200` with `authorized: false`, which is not an error.
++   `authorized` is true only when the record's `status` is `active` (not `suspended` or `withdrawn`).
++4. **Consumers MUST NOT keep their own list of trusted issuers.** An answer may be cached for at
++   most **300 s**.
++5. "Changes to an issuer's DID document — rotated keys, moved service endpoints — do not change
++   its registry record. The record follows the DID."
++6. Current export (2026-09-01): Harbour, Cedar Rowing, Northfield North and Kestrel are all
++   `active` for `issue`/`MembershipCredential`. The `since` dates equal the `onboarded_at` dates
++   in `onboarded-issuers.json`.
 +
-+- How many settings the league actually has, and how many relying parties subscribe to it.
-+- Whether production logs under `/platform/status-notifier` show the `did not finish within`
-+  line. *(Inference: the runtime limit and `DISPATCH_BUDGET` are both 10 s, and the runtime's
-+  clock starts first, so the runtime probably kills the invocation before the line is written.)*
-+- What `example.com` actually returns to the canary's POST in production. The ticket says the
-+  health check is green, which suggests a 2xx. That can't be checked from here.
++**Disagreements**
++- **There is no registry client anywhere in the backend.** No code calls `/authorization`.
++- **The backend keeps its own list anyway.** `backend/data/onboarded-issuers.json` plus
++  `Store::onboarded_issuer` is exactly the "own list of trusted issuers" that rule 4 forbids. It
++  goes further by pinning each issuer's *key*, which rule 5 says a rotation must not affect.
++- **The list doesn't even gate trust.** A DID that is not in the list is resolved live and
++  accepted (`resolve_issuer` falls through to `resolver.resolve`). Probe: a credential issued by
++  a random `did:key` with no registry record, presented by its holder →
++  `verify_presentation` returns `Ok`. So the service both refuses trusted issuers (after
++  rotation) and accepts untrusted ones.
++- Nothing ever reads the credential type (`type` array) during verification, so the `resource`
++  dimension isn't checked either.
++- `backend/README.md` ("approved once, at onboarding, and is recorded in
++  `data/onboarded-issuers.json`") and `issuer::onboard`'s doc ("Approves an issuer") both state
++  a trust model that this contract rules out.
++
++---
++
++## `reference/infra/did-hosting.md` — how issuer DID documents are hosted
++
++**Rules**
++1. Documents live in `s3://issuer-did-documents-prod` behind CloudFront. The object key is
++   exactly the URL path: `<host>/.well-known/did.json` for a bare host, and
++   `<host>/<p1>/<p2>/did.json` for a DID with a path (no `.well-known`). This matches did:web §3.2.
++2. `Cache-Control: max-age=300`, `Content-Type: application/did+json`.
++3. **Issuers rotate keys and change service endpoints themselves, in the issuer console.** Each
++   change writes a new object version and invalidates the CDN path. Old versions are kept in the
++   bucket but **no longer served**.
++4. `hosted-dids/` is a copy of the bucket's *current* objects.
++
++**Disagreements**
++- The object-key table confirms the Northfield URL bug described above.
++- Rule 3 is the mechanism behind the drift. Issuers change their own documents without any
++  onboarding step on our side, so a snapshot taken at onboarding goes stale silently. Comparing
++  `backend/data/onboarded-issuers.json` with `hosted-dids/` (the current objects):
++
++  | Issuer | Snapshot at onboarding | Currently served | Effect with today's verifier |
++  |---|---|---|---|
++  | Harbour Club | `#key-1` `z6MkjgN8…` | same | works |
++  | Cedar Rowing | `#key-1` `z6MkfQRh…` | `#key-2` `z6MkvbwH…` | new credentials → `UnknownKey` |
++  | Northfield North | `#signing` `z6MkqSjf…` | `#signing` `z6MkoBtQ…` (same id, new key) | new credentials → `BadSignature` |
++  | Kestrel League | `#key-2025` `z6Mkttmq…` | `#key-2026` `z6MksRrY…` | new credentials → `UnknownKey` |
++
++  Kestrel's `LinkedDomains` endpoint also moved (`https://badges.kestrel-league.example/` →
++  `https://kestrel-league.example/members/`). `VerifiedCredential.issuer_site`, which is shown to
++  door staff, comes from the stale copy.
++- The 300 s cache lifetime here matches the registry's 300 s cap. Any cache the fix adds should
++  stay within it.
++
++---
++
++## `reference/infra/hosted-dids/` — the four hosted documents
++
++**Rules:** these are the current, authoritative documents (see did-hosting rule 4). Each has one
++Ed25519 `Multikey` listed under both `authentication` and `assertionMethod`, plus a
++`LinkedDomains` service. Each `id` equals its DID, and each sits at the object key the spec
++predicts.
++
++**Disagreements:** see the drift table above. Only Harbour matches the onboarding snapshot. All
++backend tests sign as Harbour (`backend/tests/common/mod.rs`) through a `StaticTransport`, which
++is why the suite stays green.
++
++---
++
++## `reference/infra/webhook-config.yaml` — `status-notifier` deployment
++
++**Rules**
++1. One invocation per status-change event (`batch_size: 1`, `starting_position: latest`).
++2. **`timeout_seconds: 10` is a hard kill:** work still running at that point is abandoned.
++3. **`maximum_retry_attempts: 0`, `on_failure_destination: none`:** the platform never retries a
++   failed invocation, and nothing catches failed events.
++4. `outbound_connect_timeout_ms: 2000` bounds *connecting*. Nothing here bounds waiting for a
++   response once connected.
++5. `tenant-settings` table: partition = tenant (issuer DID), `query_page_size: 100`, and a GSI
++   `tenant-kind-index` (tenant, kind) with full projection. Read-only access.
++6. `monitoring.alarms: []`: nothing alerts.
++
++**Disagreements**
++- `notifier::DISPATCH_BUDGET` is 10 s (`backend/src/notifier.rs:23`), the same as the hard kill.
++  The "did not finish within" log line at `notifier.rs:152-154` fires at the moment the runtime
++  kills the invocation, so in production it may never be written. Settings reads and the canary
++  POST also come out of the same 10 s.
++- Fan-out is **sequential** (`for sub in … { dispatch(…).await }`), with no per-call timeout and
++  no retries. Probes:
++  - A subscriber that accepts the connection and never answers (`Endpoint::Hang`) sorts first →
++    the whole budget is spent on it, and the next subscriber receives **nothing**. No
++    `DeliveryEvent` is recorded for either one. Only the canary is reported, as delivered.
++  - A tenant with 250 other settings and 80 healthy subscribers (150 ms each) → **65 of 80**
++    delivered before the budget ran out, while `canary_healthy()` stays `true`.
++  - Combined with rule 3, the missed subscribers are never notified.
++- `Notifier::subscriptions` pages through the tenant's *whole* partition (50 ms per page of 100,
++  filtered in memory) instead of calling `SettingsStore::query_kind` on the `tenant-kind-index`,
++  which the config provides and `settings.rs` implements.
++- `backend/README.md` says deliveries are "delivered concurrently … with failed deliveries
++  retried". Both halves are false in the code, and the infra retries nothing either.
++
++---
++
++## `reference/infra/reserved-domains.md` — PI-STD-014
++
++**Rules**
++1. Reserved names (`example.com`, `.net`, `.org`) MUST NOT be live endpoints in production
++   config or code paths. That explicitly includes webhooks, health/liveness probes, synthetic
++   monitoring, and "the targets of any check whose result is reported as the state of a platform
++   service".
++2. These names resolve to IANA, so a response from them says nothing about the platform.
++3. Use a platform-operated endpoint on the same path for probes, and an in-process or loopback
++   stub for tests. The deploy-pipeline lint only scans `deploy.yaml`, so a constant in Rust code
++   is not caught by it.
++
++**Disagreements**
++- `notifier::CANARY_URL = "https://example.com/webhooks/status"` (`backend/src/notifier.rs:29`).
++  It is the target of `canary_healthy()`, which the module doc and README describe as the
++  notifier's health check. That is exactly what rule 1 forbids. In production every status change
++  is also POSTed off-platform to IANA.
++- `HermeticTransport::new()` (`backend/src/webhook.rs:78-89`) silently routes the canary's host
++  to a local 200 stub. So in tests the canary is healthy by construction, and
++  `the_canary_reports_healthy_once_changes_are_flowing` proves nothing about real delivery.
++- Tests and docs use `.example` hosts (RFC 2606 §2, a TLD rather than one of the second-level
++  names this standard lists). That is fine for fixtures. The *production* issuer DIDs in the
++  registry are also `.example` names, but they are not in the standard's table, and they are
++  given data here rather than something we configure.
++
++---
++
++## Cross-cutting: the app vs. the backend wire format (not in `reference/`, but found while reading)
++
++- The backend issues VC 1.1 (`https://www.w3.org/2018/credentials/v1`), `Ed25519Signature2020`,
++  and unix-second `issued_at` / `not_before` / `expires_at`
++  (`backend/src/issuer.rs:125-140`).
++- The app's fixture "as the issuer service returns it" (`app/test/fixtures.dart:8`) is VC 2.0,
++  `DataIntegrityProof` / `eddsa-jcs-2022`, with ISO `validFrom` / `validUntil`.
++- `app/README.md` says JWT-VC. The code holds a JSON object (`HeldCredential.vc`), and the door
++  request fixture asks for `ldp_vc`.
++- A presentation built from the app's fixture would not pass the backend's `expires_at` /
++  `not_before` parsing. Worse, if it did, its `DataIntegrityProof` would skip signature checking
++  entirely (see `check_proof`).
++
++---
++
++## How `status-notifier` runs in production (TICKET-2)
++
++Sources: `reference/infra/webhook-config.yaml` (the production `deploy.yaml`) and
++`reference/infra/reserved-domains.md` (PI-STD-014). Each rule is paired with the code that does
++or doesn't follow it. Reproduction: `backend/tests/callbacks.rs`.
++
++### Limits
++
++| Rule (source) | Code | Obeys? |
++|---|---|---|
++| `timeout_seconds: 10` is a hard limit. "The runtime terminates the invocation when it is reached; work still in progress at that point is abandoned." (config `function`) | `notifier::DISPATCH_BUDGET = 10s` (`notifier.rs:23`) wraps the whole fan-out: canary, every settings page, every POST (`notifier.rs:140-155`) | **No.** The budget equals the kill, so it leaves no headroom. Everything not finished by 10 s is lost. The "did not finish within 10s" line (`notifier.rs:153`) races the kill and may never be logged in production. It is printed in the tests. |
++| `outbound_connect_timeout_ms: 2000` (config `network`) bounds only the connection. Nothing bounds waiting for a response. | `WebhookTransport::post` (`webhook.rs:30-32`) has no timeout, and `dispatch` (`notifier.rs:172`) waits for it without a per-call deadline | **No per-call bound.** An endpoint that accepts the connection and never answers (`Endpoint::Hang`) holds the fan-out until the 10 s kill. |
++| `batch_size: 1`: one invocation per status-change event | `Notifier::notify` handles one `StatusChange` | Yes |
++| `reserved_concurrency: 20` | Nothing in the code depends on it | n/a. It caps parallel *events*, and does nothing for fan-out *within* one event. |
++
++### Retries and failure handling
++
++| Rule | Code | Obeys? |
++|---|---|---|
++| `async_invocation.maximum_retry_attempts: 0`: the platform never re-runs a failed or timed-out invocation | The notifier never retries a failed `dispatch` either (`notifier.rs:172-181`) | **Nothing retries anywhere.** Whoever is cut off by the 10 s kill, or answers non-2xx, never gets the change. `backend/README.md` says "failed deliveries retried", which is false. |
++| `maximum_event_age_seconds: 60`, `on_failure_destination: none`: dropped events go nowhere | No dead-letter or outbox in code | **Lost events are unrecoverable**, and relying parties only catch up at their next status-list refresh (as the ticket reports). |
++| `starting_position: latest` | n/a | n/a |
++
++### Alarms and observability
++
++| Rule | Code | Obeys? |
++|---|---|---|
++| `monitoring.alarms: []`: nothing alerts | `DeliverySink` receives one event per *attempted* POST (`notifier.rs:179`) | **Silent failure.** Subscribers the fan-out never reaches (the settings read ran out the budget, or they sort after a hung endpoint) produce **no** `DeliveryEvent`. Only the attempts that started are recorded. The only production sink is whatever is injected; the repo has `MemorySink` only. |
++| `logging.level: info`, log group `/platform/status-notifier` | Only `eprintln!` on budget overrun (`notifier.rs:153`) | Partly. See the race with the kill above. |
++
++### The settings table and its index
++
++| Rule | Code | Obeys? |
++|---|---|---|
++| `tenant-settings`: partition = tenant (issuer DID), `query_page_size: 100` | `settings::PAGE_SIZE = 100` (`settings.rs:17`). `PAGE_READ_LATENCY = 50ms` per page (`settings.rs:20`) is the repo's stand-in; **the config gives no latency, so 50 ms is an assumption from the stub** | Page size matches |
++| GSI `tenant-kind-index` (tenant, kind), `projection: all`, exists to answer "settings of this kind for this tenant" | `SettingsStore::query_kind` implements it (`settings.rs:100-113`: one read per 100 *matching* items). **The notifier doesn't use it.** `Notifier::subscriptions` (`notifier.rs:158-169`) pages through the tenant's **whole partition**, filters `kind == "webhook"` in memory, and does all of that **before the first POST** | **No.** Read cost grows with the tenant's *total* settings, not its subscriber count. With 50 ms per page, a tenant with more than about 19,000 settings (plus 3 subscribers at 150 ms) spends the entire 10 s reading and no subscriber is called. |
++| `access: read`: the service never writes settings | Notifier only reads | Yes |
++
++### Which hosts it may call
++
++| Rule | Code | Obeys? |
++|---|---|---|
++| PI-STD-014: reserved names (`example.com/.net/.org`) MUST NOT be live endpoints in production, explicitly including "health and liveness probes" and "the targets of any check whose result is reported as the state of a platform service" | `CANARY_URL = "https://example.com/webhooks/status"` (`notifier.rs:29`), the target of `canary_healthy()` | **No.** In production (`egress: public`) every status change is POSTed off-platform to an IANA host, and whatever that host answers becomes our health signal. |
++| PI-STD-014: tests use "a stub the test controls" | `HermeticTransport::new()` routes the canary's host to a built-in 200 stub (`webhook.rs:84-87`). Every test gets a green canary whether or not the test set that up | Technically a stub. But it is hard-wired, so no test can observe a failing canary unless it overrides the route. |
++| The deploy lint only scans `deploy.yaml` | The canary URL is a Rust constant | Not caught by the lint. |
++
++### What the health check actually checks
++
++`Notifier::canary_healthy()` (`notifier.rs:130`) returns `canary_ok`. Only `notify`
++(`notifier.rs:141-146`) writes that flag: it is set to whether **the POST to `CANARY_URL`** for
++**the most recent** change got a 2xx. The canary is a platform subscriber, sent to **first**,
++before the tenant's settings are even read. So a green check means: "the last change was POSTed
++to example.com and something answered 2xx". It doesn't depend on:
++- whether the tenant's settings could be read within budget,
++- whether any tenant subscriber was attempted, answered or failed,
++- which tenant the change belonged to (the flag is global and overwritten by every change).
++
++Nothing in the repo calls `canary_healthy()` except tests, so whatever reports "green" in
++production lives outside the repo. `callbacks.rs` shows the check green while 3 of 3 (large
++account) and 2 of 2 (silent endpoint) subscribers missed the revocation.
++
++### Why the suite is green and nobody reproduces it locally
++
++The existing notifier tests (`backend/tests/notifier.rs`) use a tenant with 12 settings and 3
++healthy subscribers, plus one rejected (503) endpoint. None of them has a large partition, a hung
++or slow endpoint, or many subscribers. The canary is stubbed to 200.
