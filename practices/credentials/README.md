@@ -182,9 +182,11 @@ the bar.
    verify-output.* Two tickets, staged, easier first:
    - **Ticket 1.** Read [`TICKET-1.md`](TICKET-1.md). It is a customer symptom, not a file and a
      line. **Build a model of how the door decides an issuer's key is valid before you delegate a
-     fix.** Prompting "just fix it" without reproducing first will loop: it passes the local tests
-     and stays red on the grader, or it fixes the club that complained and the next one breaks.
-     **Reproduce it with a failing test first**, then fix the *root*. The grader checks the fix
+     fix.** A fix aimed at the symptom — the club that complained — can pass the local tests and
+     still stay red on the grader; that plateau is measurable only when the fix prompt comes before
+     the research pass, or in a fresh executor that has not read `reference/`. A run that fixes with
+     the research already in context tends to converge on the first try. **Reproduce it with a
+     failing test first**, then fix the *root*. The grader checks the fix
      against every approved issuer, not only the ones in the ticket.
    - **Ticket 2** (handed over when Ticket 1 lands). Read `TICKET-2.md`, again a symptom. Read the
      "what support has confirmed" paragraph as the specification: the ticket is closed when that
