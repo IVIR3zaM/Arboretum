@@ -1,7 +1,7 @@
 # N23 re-audit: scripts/cold/audit.py --explain over every recorded audit.txt under runs/,
 # each against the CLONE in its meta.env. old = the exit in the run's audit.txt; ac9049b = the
 # frozen pre-N23 audit today; new = the N23 audit. Cleared lines name their rule (a/b/c).
-# 2026-09-28T19:12:09Z
+# 2026-09-28T19:36:52Z
 
 == runs/N05/smoke (clone /tmp/cold-N05-smoke)
 old exit 0 · ac9049b exit 1 · new exit 0 · 0 surviving, 1 cleared
@@ -228,3 +228,50 @@ N17/train/turn-09-void-3: old 1, ac9049b 1, new 0, cleared a, c
 N20/probe: old 0, ac9049b 0, new 0
 
 == C4 checks: all hold
+
+## ac9049b gap census
+# per audited transcript: Bash calls holding $', a backslash-newline, a backtick, or both $(
+# and a newline (the shapes of ac9049b's accepted gaps, I2). Informational; fails nothing.
+N05/smoke: #9 (backtick)
+N11/cold: none
+N11/try1/cold: #10 (backtick)
+N11/try1/void-1: #10 (backtick)
+N13/elicited: #15 (backtick); #17 (backslash-newline); #25 (backtick)
+N13/elicited-void-1: #24 (backtick)
+N13/naive: #12 (backtick)
+N13/naive-void-1: #13 (backtick)
+N14/cold: #7 (backtick)
+N14/cold-void-1: #9 (backtick); #10 (backtick)
+N17/control: #19 (backtick); #31 (backtick); #46 (backtick)
+N17/superseded-try1/examiner: none
+N17/superseded-try1/train/turn-01: none
+N17/superseded-try1/train/turn-02: none
+N17/superseded-try1/train/turn-02-void-1: none
+N17/superseded-try1/train/turn-03: none
+N17/superseded-try1/train/turn-04: none
+N17/superseded-try1/train/turn-05: none
+N17/superseded-try1/train/turn-06: none
+N17/superseded-try1/train/turn-07: none
+N17/superseded-try1/train/turn-07-void-1: none
+N17/superseded-try1/train/turn-08: #10 (backtick, $( + newline); #23 ($( + newline)
+N17/superseded-try1/train/turn-09: #7 ($( + newline)
+N17/superseded-try1/train/turn-10: #2 (backtick)
+N17/superseded-try1/train/turn-11: #2 (backtick); #5 (backtick); #7 (backtick); #9 (backtick)
+N17/superseded-try1/train/turn-12: #3 (backtick); #5 (backtick); #6 (backtick)
+N17/superseded-try1/train/turn-12-void-1: #3 (backtick); #8 (backtick)
+N17/superseded-try1/train/turn-13: #2 (backtick); #6 (backtick)
+N17/superseded-try1/train/turn-14: #4 ($( + newline); #9 ($( + newline)
+N17/superseded-try1/train/turn-14-void-1: #11 ($( + newline)
+N17/superseded-try1/train/turn-15: none
+N17/train/turn-01: none
+N17/train/turn-02: none
+N17/train/turn-03: none
+N17/train/turn-04: none
+N17/train/turn-05: #1 (backtick)
+N17/train/turn-06: #21 (backtick)
+N17/train/turn-07: none
+N17/train/turn-08: #11 (backtick); #15 ($( + newline); #20 (backtick); #21 (backtick)
+N17/train/turn-09-void-1: #3 (backtick); #7 ($( + newline)
+N17/train/turn-09-void-2: none
+N17/train/turn-09-void-3: none
+N20/probe: none

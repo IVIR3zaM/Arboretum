@@ -1,39 +1,63 @@
-# N23 differential, recorded run (C3)
-# command: python3 scripts/cold/tests/differential.py --fuzz 50000 --seed 2328 --show-blind 5
+# N23 differential, recorded run (C2 + C3), try 1 of replan 2
+# command (from the plan dir; CASES = run.sh's case dir kept with COLD_TEST_KEEP=1 COLD_FUZZ=0):
+#   python3 scripts/cold/tests/differential.py --runs runs --cases CASES --clone CASES/clone \
+#     --fixtures scripts/cold/tests/fixtures --fuzz 50000 --seed 2328 --show-blind 8 \
+#     --gaps ansi-escaped-quote-one-line,ansi-value,continuation-cd,continuation-path,backtick-quote,backtick-quote-2,subst-newline
 # 2026-09-28, bash 5.2.21, python 3.11; one bash process per call in a fresh scratch tree per
 # transcript, the cwd carried between calls and reset to the clone when it ended outside.
 #
-# seed 2328 · 50070 transcripts (70 repros + 50000 generated) · 0 identity errors · 0 regressions
+# seed 2328 · 50178 transcripts (70 repros + 108 run.sh cases + 50000 generated) · 0 identity errors
+# · 0 regressions · 36 blind · 7 ac9049b gap cases, each escaping in real bash
 #
 # How to read it:
-# - "bash read/wrote outside the clone": a marker from outside the clone (or the host's /etc/passwd
-#   first line) in the output or in a file left in the clone, or a file outside the clone changed.
-# - identity: per transcript, COLD_AUDIT_RULES=none output is byte-identical to the frozen ac9049b
-#   audit, and with the rules on every printed VIOLATION line is an ac9049b line; each dropped one
-#   appears under --explain with its rule.
-# - regression (C3): ac9049b exits 1, the new audit exits 0, bash escaped, AND the escape goes away
-#   when the tokens behind the findings the new audit cleared are neutralized (a rerun in a fresh
-#   tree). The last condition is N23's reading of C3. Without it, the "blind" transcripts below
-#   would count. In each, the escape is one ac9049b never flagged: it persists with every cleared
-#   token neutralized. ac9049b exits 1 there only because of a false positive elsewhere in the
-#   transcript, and a rule rightly clears it. Any rule that clears anything can be paired with such a
-#   blind escape in another call, so the literal transcript-level reading cannot be met.
+# - identity (C2, I1/I2), over 158 transcripts (every recorded run under runs/ with an audit.txt, every
+#   run.sh case, the fixtures) and again on every fuzz transcript: COLD_AUDIT_RULES=none output is
+#   byte-identical to the frozen ac9049b audit; with the rules on every printed VIOLATION line is an
+#   ac9049b line, and each dropped one appears under --explain with its rule.
+# - escape evidence E of a run (C3): tree-relative items. `read <dir>` = the content marker of that
+#   outside dir's x; `name <tag>` = that outside dir's own name marker (a listing or glob of it); both
+#   found in the outputs or in a file left in the clone. `host /etc/passwd` = the host's first line.
+#   `changed <path>` = an outside path created, changed or removed.
+# - candidate: ac9049b exits 1, the new audit exits 0, E non-empty. It reruns in a fresh tree with every
+#   cleared finding's token (or part) neutralized. Regression (I3, location by location): an item of
+#   E(original) missing from E(neutralized), or a cleared token not found in its call. Otherwise the
+#   candidate is blind: every escape location is one ac9049b never flagged (an ac9049b gap), counted
+#   and not failed. The first 8 blind examples are listed below.
+# - gap lines: run.sh's expect_gap cases (ac9049b gaps accepted under I2), each replayed in real bash;
+#   both audits exit 0 and bash escapes (E shown).
 #
-  blind escape, fuzz #246: ac9049b 1 only through findings the rules clear
+differential: identity over 158 transcript(s): ok; cleared lines {'a': 43, 'b': 2, 'c': 22}; exit changed: N05/smoke (1->0), N17/train/turn-09-void-1 (1->0), N17/train/turn-09-void-2 (1->0), N17/train/turn-09-void-3 (1->0), case heredoc-cat-append (1->0), case heredoc-cat-file-rust (1->0), case heredoc-tee-file (1->0), case newline-cd-carry (1->0), case newline-cd-inside (1->0), case newline-cd-src (1->0), case replay-n17-turn-09-void-1 (1->0), case replay-n17-turn-09-void-2 (1->0), case replay-n17-turn-09-void-3 (1->0), case url-authority (1->0), fixture n17-turn-09-void-1 (1->0), fixture n17-turn-09-void-2 (1->0), fixture n17-turn-09-void-3 (1->0)
+  gap ansi-escaped-quote-one-line: ac9049b exit 0, new exit 0; bash escapes: read p/q/r
+  gap ansi-value: ac9049b exit 0, new exit 0; bash escapes: host /etc/passwd
+  gap backtick-quote-2: ac9049b exit 0, new exit 0; bash escapes: read p/q/r
+  gap backtick-quote: ac9049b exit 0, new exit 0; bash escapes: read p/q/r
+  gap continuation-cd: ac9049b exit 0, new exit 0; bash escapes: read p/q/r
+  gap continuation-path: ac9049b exit 0, new exit 0; bash escapes: host /etc/passwd
+  gap subst-newline: ac9049b exit 0, new exit 0; bash escapes: read p/q/r
+  blind escape, fuzz #246: ac9049b 1 only through findings the rules clear; evidence read p/q/r
     call: 'echo $";cd ..;"\ncat https://h.example/../x'
     call: "echo start\n\ntee t.rs <<'EOF' >/dev/null && cat t.txt\n`cat sub/../x`\nEOF"
     call: "cat < $'../x'"
-  blind escape, fuzz #2269: ac9049b 1 only through findings the rules clear
+  blind escape, fuzz #2269: ac9049b 1 only through findings the rules clear; evidence changed home/t.txt
     call: "eval 'echo hi > $HOME/t.txt';\nbash <<'EOF'\ncd a/b\ncat ../../x\nEOF"
     call: 'echo start;\necho "(" ; echo ")";\ncd nonexist; cat x; cat x;\ncat > t.rs <<-EOF\n\thttps://h.example/../../x\n\tsee ../../q/r/x here\n\tEOF\ncd a/b/c/d'
     call: 'echo start;\nls ../../src/x'
-  blind escape, fuzz #2291: ac9049b 1 only through findings the rules clear
+  blind escape, fuzz #2291: ac9049b 1 only through findings the rules clear; evidence read p/q/r
     call: 'X=1\ncat https://h.example/../x 2>/dev/null && cd $S || cat ../src/x'
     call: 'X=1\ngrep -h . src/../../x'
-  blind escape, fuzz #2765: ac9049b 1 only through findings the rules clear
+  blind escape, fuzz #2765: ac9049b 1 only through findings the rules clear; evidence changed p/q/r/side/t.txt
     call: "X=$'}'\n\necho `c[d] nonexist` && X=1\n\necho hi > lnk/t.txt"
     call: "echo hi >> src/t.txt || cat > t.txt <<'EOF' && cat t.txt\na / b\nEOF"
-  blind escape, fuzz #4893: ac9049b 1 only through findings the rules clear
+  blind escape, fuzz #4893: ac9049b 1 only through findings the rules clear; evidence read p/q/r
     call: 'X=1'
     call: 'cat lnk/../x 2>/dev/null && cat https://h.example/../x 2>/dev/null && cd src && cat src/lnk/../x 2>/dev/null'
-differential fuzz: seed 2328, 50070 transcripts (70 repros + 50000 generated), 99884 Bash calls; bash read/wrote outside the clone in 24767; ac9049b flagged 24185 of them, the new audit 24152; ac9049b 1 -> new 0 in 625 (cleared lines {'a': 1285, 'b': 2778, 'c': 2996}), 33 of them with an escape ac9049b never flagged (it persists with every cleared token neutralized); identity errors 0; regressions 0 (282s)
+  blind escape, fuzz #5003: ac9049b 1 only through findings the rules clear; evidence changed p/q/r/t.txt, name p.q.r.side
+    call: 'cd $S/sub && cat ../src/x 2>/dev/null; cat ../src/x 2>/dev/null'
+    call: 'D=cd'
+    call: "ls lnk 2>/dev/null; cd -\ntee ../t.txt <<'EOF' >/dev/null && cat t.txt\nhttps://h.example/../../x\nEOF"
+  blind escape, fuzz #5116: ac9049b 1 only through findings the rules clear; evidence changed p/q/r/t.txt, read p/q/r
+    call: 'cat https://h.example/../../x 2>/dev/null; cd $S | ls ../x; ls ../x'
+    call: 'for i in 1; do ( cat "../x" 2>/dev/null ); done; echo hi >> ../t.txt && grep -h . \\.\\./x\necho x | echo "("; case y in y) cat a/../../x 2>/dev/null;; esac'
+  blind escape, fuzz #5501: ac9049b 1 only through findings the rules clear; evidence changed p/q/r/t.txt
+    call: 'S=/tmp/cold-diff-hm87miou/tmpljquz7hn/T1/p/q/r/clone/src/sub && cd $S/sub\ncat >> ../t.txt <<EOF\na / b\nEOF'
+differential fuzz: seed 2328, 50178 transcripts (70 repros + 108 run.sh cases + 50000 generated; 4 run.sh case(s) without a Bash call not replayed), 100027 Bash calls; bash read/wrote outside the clone in 24291; ac9049b flagged 23708 of them, the new audit 23672; ac9049b 1 -> new 0 in 635 (cleared lines {'a': 1302, 'b': 2780, 'c': 3005}), 36 of them blind (every escape location persists with every cleared token neutralized: ac9049b never flagged it); ac9049b gap cases 7; identity errors 0; regressions 0 (332s)

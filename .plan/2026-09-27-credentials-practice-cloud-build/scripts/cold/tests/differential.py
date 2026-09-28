@@ -16,16 +16,24 @@ every quoting form, ( ), { }, $( ), backticks, case/if/for/while, functions, com
 continuations, heredocs of each kind, assignments, cds to existing, missing, symlinked and `..` dirs —
 plus every repro of run.sh's must-exit-1 cases. Each transcript runs in its own scratch tree:
   T/, T/p/, T/p/q/, T/p/q/r/, T/p/q/r/side/ and HOME=T/home are outside the clone, each holding `x`
-  (content OUTSIDE-MARK) and a file named OUTSIDE-MARK-name; the clone T/p/q/r/clone holds x, src/,
+  (content `OUTSIDE-MARK <that dir>`) and a file named OUTSIDE-MARK-name-<dir tag> (p/q -> p.q, T ->
+  root), so every outside location has its own marker; the clone T/p/q/r/clone holds x, src/,
   src/sub/, sub/, a/b/c/d/, app/, backend/, https:/h.example/ (also in src/), and lnk -> T/p/q/r/side.
 Each call is one bash process started in the carried cwd (the Bash tool's model: only the cwd
 persists), reset to the clone if it ended outside. After the run both audits read the transcript
-and the tree. Bash read outside the clone if its output (or a file it left in the clone) holds a
-marker (or the host's /etc/passwd first line), or a file outside the clone changed. A regression is
-ac9049b exit 1, new exit 0, bash read or wrote outside the clone, and that escape is one the cleared
-findings name: it goes away when their tokens are neutralized and the transcript reruns in a fresh
-tree. An escape that persists is one ac9049b never flagged (its exit 1 came only from findings the
-rules clear); those are counted and shown (--show-blind), not failed. The generator never makes a
+and the tree. The escape evidence E of a run is a set of items, tree-relative: `read <dir>` (the
+content marker of <dir>'s x), `name <tag>` (the name marker of a dir, i.e. a listing or glob of it)
+found in the outputs or in a file left in the clone, `host /etc/passwd` (the host's first line), and
+`changed <path>` (an outside path created, changed or removed). A candidate is a transcript where
+ac9049b exits 1, the new audit exits 0 and E is non-empty; it reruns in a fresh tree with every
+cleared finding's token (or part) neutralized. A regression (C3, location by location) is an item of
+E(original) missing from E(neutralized), or a cleared token that is not in its call. A candidate
+with no missing item is an escape ac9049b never flagged (blind): counted and shown (--show-blind),
+not failed.
+--cases also replays every run.sh case's Bash calls in real bash the same way (the run.sh clone path
+becomes the tree's clone, the real HOME the tree's HOME); --gaps NAMES checks that each named case
+(run.sh's expect_gap cases, the ac9049b gaps under I2) exits 0 on both audits and escapes in bash
+(E non-empty). The generator never makes a
 directory (so rule (a)'s accepted residual, a cd target the call itself creates, cannot occur), and
 it runs a file the transcript wrote only through bash, sh, source/. or ./file (the runners rule (c)
 checks; D23 leaves other ways to run written content unaudited, as with the Write tool).
@@ -450,8 +458,34 @@ def build_tree(root):
               os.path.join(root, "p", "q", "r"), side, home]:
         with open(os.path.join(d, "x"), "w") as fh:
             fh.write(MARK + " " + d + "\n")
-        open(os.path.join(d, MARK + "-name"), "w").close()
+        open(os.path.join(d, f"{MARK}-name-{dir_tag(root, d)}"), "w").close()
     return clone, home
+
+
+def dir_tag(root, d):
+    """An outside dir as a file-name tag: T -> root, T/p/q -> p.q."""
+    rel = os.path.relpath(d, root)
+    return "root" if rel == "." else rel.replace(os.sep, ".")
+
+
+CONTENT_MARK = re.compile(re.escape(MARK) + r" (/[A-Za-z0-9._/+-]*)")
+NAME_MARK = re.compile(re.escape(MARK) + r"-name-([A-Za-z0-9.]+)")
+
+
+def evidence(root, text, before, after):
+    """The escape evidence E of a run, as a set of tree-relative items."""
+    items = set()
+    for m in CONTENT_MARK.finditer(text):
+        rel = os.path.relpath(m.group(1), root)
+        items.add("read " + (rel if not rel.startswith("..") else m.group(1)))
+    for m in NAME_MARK.finditer(text):
+        items.add("name " + m.group(1))
+    if HOST_MARK is not None and HOST_MARK in text:
+        items.add("host /etc/passwd")
+    for p in set(before) | set(after):
+        if before.get(p, b"\0missing") != after.get(p, b"\0missing"):
+            items.add("changed " + os.path.relpath(p, root))
+    return items
 
 
 def outside_snapshot(root, clone):
@@ -522,12 +556,12 @@ def write_transcript(path, calls, clone):
 
 
 def escapes(root, clone, home, work, calls):
-    """Run the calls in bash in the tree; return (bash read or wrote outside the clone, outputs)."""
+    """Run the calls in bash in the tree; return (the escape evidence E, outputs)."""
     before = outside_snapshot(root, clone)
     outputs = run_bash(calls, clone, home, work)
     after = outside_snapshot(root, clone)
     text = "\n".join(outputs) + "\n" + clone_text(clone)
-    return MARK in text or (HOST_MARK is not None and HOST_MARK in text) or before != after, outputs
+    return evidence(root, text, before, after), outputs
 
 
 BOUNDARY = r"""\s'"`;|&<>()"""
@@ -540,11 +574,12 @@ def neutralize(command, word, extra=""):
     return pat.subn("_neutral_", command)
 
 
-def attributable(case_calls, transcript, root, clone, home, work):
-    """ac9049b 1, new 0 and bash escaped: is the escape one the cleared findings name? Neutralize
-    each cleared finding's token (or its part) in its call and rerun in a fresh tree. If bash
-    still escapes, the escape is one ac9049b never flagged (its exit 1 came from findings the
-    rules rightly clear), so it is not a regression. A token that cannot be found counts as one."""
+def attributable(case_calls, transcript, root, clone, home, work, found_e):
+    """ac9049b 1, new 0 and bash escaped (E = found_e non-empty): is any escape location one the
+    cleared findings name? Neutralize each cleared finding's token (or its part) in its call and
+    rerun in a fresh tree. An item of E that is missing from the rerun's E is a regression; if every
+    item persists, each is one ac9049b never flagged (its exit 1 came from findings the rules rightly
+    clear) and the candidate is blind. A token that cannot be found counts as a regression."""
     saved_home = os.environ.get("HOME")
     os.environ["HOME"] = home
     try:
@@ -567,23 +602,46 @@ def attributable(case_calls, transcript, root, clone, home, work):
     root2 = os.path.join(work, "T2")          # a fresh tree, same path length as T1
     clone2, home2 = build_tree(root2)
     still, _ = escapes(root2, clone2, home2, work, [c.replace(root, root2) for c in calls])
-    return (not still), ("the escape goes away with the cleared tokens neutralized" if not still
-                         else "the escape persists with the cleared tokens neutralized: ac9049b never flagged it")
+    missing = sorted(found_e - still)
+    if missing:
+        return True, ("escape location(s) gone with the cleared tokens neutralized: "
+                      + ", ".join(missing))
+    return False, "every escape location persists with the cleared tokens neutralized: ac9049b never flagged it"
+
+
+def case_calls(path, clone):
+    """The Bash calls of a run.sh case transcript, as templates: its clone path becomes {C} and the
+    real HOME {H}. None if the case has no Bash call."""
+    with open(path, encoding="utf-8") as fh:
+        lines = [json.loads(ln) for ln in fh if ln.strip()]
+    home = os.environ.get("HOME", "")
+    calls = []
+    for block in NEW.tool_uses(lines):
+        if block.get("name") != "Bash":
+            continue
+        c = str((block.get("input") or {}).get("command", "")).replace(clone, "{C}")
+        if home and home != "/":
+            c = re.sub(re.escape(home) + r"(?![A-Za-z0-9._-])", "{H}", c)
+        calls.append(c)
+    return calls or None
 
 
 def fuzz_case(job):
-    seed, i, base = job
+    seed, i, base, label, template = job
     work = tempfile.mkdtemp(dir=base)
     try:
         root = os.path.join(work, "T1")
         clone, home = build_tree(root)
         ctx = {"C": clone, "R": root, "H": home}
-        if i < len(REPROS):
+        if template is not None:
+            calls, kind = [c.replace("{C}", clone).replace("{H}", home) for c in template], label
+        elif i < len(REPROS):
             calls, kind = REPROS[i], "repro"
         else:
             r = random.Random(f"{seed}:{i}")
             calls, kind = [gen_call(r, ctx) for _ in range(r.randint(1, 3))], "fuzz"
-        escaped, outputs = escapes(root, clone, home, work, calls)
+        found_e, outputs = escapes(root, clone, home, work, calls)
+        escaped = bool(found_e)
         transcript = os.path.join(work, "t.jsonl")
         write_transcript(transcript, calls, clone)
         saved_home = os.environ.get("HOME")
@@ -595,10 +653,10 @@ def fuzz_case(job):
         candidate = old_rc == 1 and new_rc == 0 and escaped
         regression, why = False, ""
         if candidate:
-            regression, why = attributable(calls, transcript, root, clone, home, work)
+            regression, why = attributable(calls, transcript, root, clone, home, work, found_e)
         return {"i": i, "kind": kind, "calls": calls, "escaped": escaped, "old": old_rc,
                 "new": new_rc, "cleared": cleared, "errors": errors, "candidate": candidate,
-                "regression": regression, "why": why,
+                "regression": regression, "why": why, "evidence": sorted(found_e),
                 "outputs": outputs if (errors or candidate) else None}
     finally:
         shutil.rmtree(work, ignore_errors=True)
@@ -616,6 +674,7 @@ def main():
     ap.add_argument("--record", help="append the fuzz summary to this file")
     ap.add_argument("--show-blind", type=int, default=0, help="print this many blind-escape examples")
     ap.add_argument("--only", help="comma list of fuzz case numbers to run (a replay)")
+    ap.add_argument("--gaps", default="", help="comma list of --cases names that are ac9049b gaps")
     args = ap.parse_args()
     if (args.cases or args.fixtures) and not args.clone:
         ap.error("--cases/--fixtures need --clone")
@@ -637,21 +696,46 @@ def main():
                   f"{'ok' if not failures else f'{failures} error(s)'}; cleared lines "
                   f"{dict(sorted(per_rule.items()))}; exit changed: {', '.join(flipped) or 'none'}")
 
+        gaps = [g for g in args.gaps.split(",") if g]
         if args.fuzz:
             started = time.time()
             base = tempfile.mkdtemp(prefix="cold-diff-")
             try:
                 todo = [int(x) for x in args.only.split(",")] if args.only else \
                     range(len(REPROS) + args.fuzz)
-                jobs = [(args.seed, i, base) for i in todo]
-                stats = {"cases": 0, "repros": 0, "calls": 0, "escaped": 0, "old_caught": 0,
+                jobs = [(args.seed, i, base, None, None) for i in todo]
+                replayed, no_bash = set(), []
+                if args.cases and not args.only:      # every run.sh case, replayed in real bash
+                    for f in sorted(os.listdir(args.cases)):
+                        if not f.endswith(".jsonl"):
+                            continue
+                        template = case_calls(os.path.join(args.cases, f), args.clone)
+                        if template is None:
+                            no_bash.append(f[:-6])
+                            continue
+                        replayed.add(f[:-6])
+                        jobs.append((args.seed, -1, base, "case " + f[:-6], template))
+                for g in gaps:
+                    if g not in replayed:
+                        print(f"differential FAIL: gap case {g} is not a replayed run.sh case")
+                        failures += 1
+                stats = {"cases": 0, "repros": 0, "runsh": 0, "calls": 0, "escaped": 0, "old_caught": 0,
                          "new_caught": 0, "old1_new0": 0, "regressions": 0, "errors": 0, "blind": 0}
-                blind_examples = []
+                blind_examples, gap_lines = [], []
                 cleared_total = {}
                 with multiprocessing.Pool(args.jobs) as pool:
                     for res in pool.imap_unordered(fuzz_case, jobs, chunksize=16):
                         stats["cases"] += 1
                         stats["repros"] += res["kind"] == "repro"
+                        stats["runsh"] += res["kind"].startswith("case ")
+                        if res["kind"].startswith("case ") and res["kind"][5:] in gaps:
+                            ok = res["old"] == 0 and res["new"] == 0 and res["escaped"]
+                            gap_lines.append(f"  gap {res['kind'][5:]}: ac9049b exit {res['old']}, new exit "
+                                             f"{res['new']}; bash escapes: {', '.join(res['evidence']) or 'NO'}")
+                            if not ok:
+                                failures += 1
+                                gap_lines[-1] = "differential FAIL:" + gap_lines[-1][1:] + \
+                                    " (a gap case must exit 0 on both audits and escape in bash)"
                         stats["calls"] += len(res["calls"])
                         if res["escaped"]:
                             stats["escaped"] += 1
@@ -670,6 +754,7 @@ def main():
                             failures += 1
                             what = "; ".join(res["errors"]) or f"REGRESSION: ac9049b 1, new 0, bash escaped; {res['why']}"
                             print(f"differential FAIL: {res['kind']} #{res['i']}: {what}")
+                            print(f"    evidence: {', '.join(res['evidence']) or 'none'}")
                             for c in res["calls"]:
                                 print(f"    call: {c!r}")
                             for o in res["outputs"] or ():
@@ -677,16 +762,22 @@ def main():
             finally:
                 shutil.rmtree(base, ignore_errors=True)
             summary = (f"differential fuzz: seed {args.seed}, {stats['cases']} transcripts "
-                       f"({stats['repros']} repros + {stats['cases'] - stats['repros']} generated), "
+                       f"({stats['repros']} repros + {stats['runsh']} run.sh cases + "
+                       f"{stats['cases'] - stats['repros'] - stats['runsh']} generated; "
+                       f"{len(no_bash)} run.sh case(s) without a Bash call not replayed), "
                        f"{stats['calls']} Bash calls; bash read/wrote outside the clone in "
                        f"{stats['escaped']}; ac9049b flagged {stats['old_caught']} of them, the new "
                        f"audit {stats['new_caught']}; ac9049b 1 -> new 0 in {stats['old1_new0']} "
                        f"(cleared lines {dict(sorted(cleared_total.items()))}), {stats['blind']} of "
-                       f"them with an escape ac9049b never flagged (it persists with every cleared "
-                       f"token neutralized); identity errors {stats['errors']}; regressions "
+                       f"them blind (every escape location persists with every cleared token "
+                       f"neutralized: ac9049b never flagged it); ac9049b gap cases {len(gap_lines)}; "
+                       f"identity errors {stats['errors']}; regressions "
                        f"{stats['regressions']} ({time.time() - started:.0f}s)")
+            for ln in sorted(gap_lines):
+                print(ln)
             for res in blind_examples:
-                print(f"  blind escape, fuzz #{res['i']}: ac9049b 1 only through findings the rules clear")
+                print(f"  blind escape, {res['kind']} #{res['i']}: ac9049b 1 only through findings the rules "
+                      f"clear; evidence {', '.join(res['evidence'])}")
                 for c in res["calls"]:
                     print(f"    call: {c[:300]!r}")
             print(summary)

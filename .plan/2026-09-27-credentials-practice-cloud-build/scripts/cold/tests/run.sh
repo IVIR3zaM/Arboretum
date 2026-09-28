@@ -63,12 +63,15 @@ $out"
   echo "ok  $name (exit $rc${old_want:+, ac9049b exit $old_want})"
 }
 
-# expect_gap <case> — a real escape (bash reads outside the clone) that the ac9049b audit never
-# flagged. The N23 audit keeps ac9049b as its verdict engine and can only drop findings, so it cannot
-# flag it either: both must exit 0. These are try-2 cases that the replan's architecture cannot turn
-# into exit 1; they stay here as a record of the base pass's gaps, not as a pass.
+# expect_gap <case> — an ac9049b gap, accepted under N23's invariant I2 (never stronger): a real
+# escape (bash reads outside the clone) that the ac9049b audit never flagged. The N23 audit keeps
+# ac9049b as its verdict engine and adds no finding, so it misses it too: both must exit 0. They are
+# recorded, not fixed (adding detection is outside D23); differential.py (--gaps) replays each in
+# real bash and fails unless it really escapes there.
+GAPS=""
 expect_gap() {
   local name=$1 rc old_rc
+  GAPS="${GAPS:+$GAPS,}$name"
   python3 "$AUDIT" "$TMP/$name.jsonl" "$CLONE" >/dev/null 2>&1; rc=$?
   python3 "$OLD_AUDIT" "$TMP/$name.jsonl" "$CLONE" >/dev/null 2>&1; old_rc=$?
   if [ "$rc" -ne 0 ] || [ "$old_rc" -ne 0 ]; then
@@ -504,7 +507,8 @@ if git -C "$HERE" cat-file -e ac9049b 2>/dev/null; then   # skipped outside the 
   fi
 fi
 if python3 "$HERE/differential.py" --runs "$PLAN/runs" --cases "$TMP" --clone "$CLONE" \
-     --fixtures "$HERE/fixtures" --fuzz "${COLD_FUZZ:-2000}" --seed "${COLD_FUZZ_SEED:-23}"; then
+     --fixtures "$HERE/fixtures" --fuzz "${COLD_FUZZ:-2000}" --seed "${COLD_FUZZ_SEED:-23}" \
+     --gaps "$GAPS"; then
   echo "ok  differential"
 else
   fail "differential.py found identity errors or regressions (above)"
