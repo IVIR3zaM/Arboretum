@@ -85,7 +85,7 @@ budgets: 2 tries per brief · 2 replans per node
 | N15 | README, practice.json, examiner docs, probes | exec | N11,N13,N14 | opus/opus | 2 | 0 | DONE | |
 | N22 | scrub clone taxonomy tags + leak guard scans taxonomy | exec | N15 | sonnet/opus | 1 | 0 | DONE | |
 | N16 | fresh reviewer: solvable at XL | check | N15,N22 | -/opus | 1 | 1 | DONE | |
-| N23 | cold kit audit fix: (a)(b)(c) as clearances over the unchanged ac9049b audit | exec | N20 | opus/opus | 1 | 1 | RUNNING | |
+| N23 | cold kit audit fix: (a)(b)(c) as clearances over the unchanged ac9049b audit | exec | N20 | opus/opus | 1 | 2 | REPLAN | blocked: brief contradicts itself (7 exit-1 run.sh cases exit 0 on ac9049b; clearance-only audit cannot flag them; C3 transcript regression unmeetable if ac9049b misses an escape) |
 | N17 | fresh calibration train run + proof, resume at turn 09 (control stands) | exec | N16,N23 | opus/opus | 1 | 2 | TODO | |
 | N18 | merge into main + delete stale branches | exec | N17 | sonnet/opus | 0 | 0 | TODO | |
 | N19 | plan acceptance (CONTRACT checklist) | check | N18 | -/opus | 0 | 0 | TODO | |
