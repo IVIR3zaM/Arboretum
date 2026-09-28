@@ -1,6 +1,6 @@
 # Credentials practice, built in the cloud with agent-verified traps
 status: RUNNING
-created: 2026-09-27 · updated: 2026-09-27
+created: 2026-09-27 · updated: 2026-09-28
 goal: practices/credentials/ is a runnable, graded, proof-recorded Cedar practice built from its DESIGN.md (practices/credentials/DESIGN.md:1-524), orchestrated from a Claude Code cloud session, Ticket 1's FM-13 trap is verified by the contract test (generator/CONTRACT.md:174-176; D13 T1), and Ticket 2 and the feature trap are each shown to bite a real cold agent
 verify: bash .plan/2026-09-27-credentials-practice-cloud-build/scripts/verify.sh
 commit: per-node
@@ -68,7 +68,8 @@ budgets: 2 tries per brief · 2 replans per node
 | N13 | real agent: feature naive vs elicited | check | N05,N08,N10,N20 | -/opus | 1 | 1 | DONE | |
 | N14 | real agent: Ticket 2 bites | check | N05,N12 | -/opus | 1 | 0 | DONE | |
 | N15 | README, practice.json, examiner docs, probes | exec | N11,N13,N14 | opus/opus | 2 | 0 | DONE | |
-| N16 | fresh reviewer: solvable at XL | check | N15 | -/opus | 1 | 0 | REPLAN | fail C3 |
+| N22 | scrub clone taxonomy tags + leak guard scans taxonomy | exec | N15 | sonnet/opus | 1 | 0 | RUNNING | |
+| N16 | fresh reviewer: solvable at XL | check | N15,N22 | -/opus | 0 | 1 | TODO | |
 | N17 | control run + calibration train proof | exec | N16 | opus/opus | 0 | 0 | TODO | |
 | N18 | merge into main + delete stale branches | exec | N17 | sonnet/opus | 0 | 0 | TODO | |
 | N19 | plan acceptance (CONTRACT checklist) | check | N18 | -/opus | 0 | 0 | TODO | |
