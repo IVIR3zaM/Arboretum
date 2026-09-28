@@ -20,9 +20,20 @@ err() { echo "verify FAIL: $1" >&2; status=1; }
 # FEATURE-REQUEST.md contain no warning marker. Scans only git-shippable files (tracked, plus
 # untracked-not-ignored): gitignored build output (target/, build/, .dart_tool/) never reaches a
 # clone or a commit, and Flutter/Cargo caches embed absolute repo paths that would trip the guard.
+# The same loop also runs a taxonomy scan over the same file set: a Context id (FM-NN/BP-NN,
+# case-sensitive), an exercise-taxonomy word (failure mode(s), best practice(s), arboretum,
+# kata(s), learner(s), examiner(s), calibration, trap/traps/trapped, planted, golden —
+# case-insensitive), or a Context tree name (read from the dirs under context/, case-insensitive)
+# followed by "practice", "context", "tier" or "@". Each hit names the file, the line and the
+# matched term — nothing the clone ships may cite the exercise that grades it.
 check_leak_guard() {
   [ -d "$PRACTICE" ] || return 0
-  local f rel base
+  local trees id_re='\b(FM|BP)-[0-9]+\b'
+  local word_re='\b(failure mode(s)?|best practice(s)?|arboretum|kata(s)?|learner(s)?|examiner(s)?|calibration|trap(s|ped)?|planted|golden)\b'
+  trees=$(find context -mindepth 1 -maxdepth 1 -type d -printf '%f\n' 2>/dev/null | paste -sd '|' -)
+  local tree_re=""
+  [ -n "$trees" ] && tree_re="\b($trees)\b[[:space:]-]*\b(practice|context|tier)\b|\b($trees)@"
+  local f rel base ln m
   while IFS= read -r -d '' f; do
     [ -f "$f" ] || continue   # tracked but deleted in the worktree
     rel=${f#"$PRACTICE"/}
@@ -35,6 +46,20 @@ check_leak_guard() {
     fi
     if grep -lE '_solutions|grade\.sh|grader|\.plan' -- "$f" >/dev/null 2>&1; then
       err "leak guard: $f — mentions _solutions, grade.sh, grader or .plan"
+    fi
+    while IFS=: read -r ln m; do
+      [ -n "$ln" ] || continue
+      err "leak guard: $f:$ln — matches Context id \"$m\""
+    done < <(grep -noE "$id_re" -- "$f" 2>/dev/null)
+    while IFS=: read -r ln m; do
+      [ -n "$ln" ] || continue
+      err "leak guard: $f:$ln — matches exercise-taxonomy term \"$m\""
+    done < <(grep -noiE "$word_re" -- "$f" 2>/dev/null)
+    if [ -n "$tree_re" ]; then
+      while IFS=: read -r ln m; do
+        [ -n "$ln" ] || continue
+        err "leak guard: $f:$ln — matches Context tree label \"$m\""
+      done < <(grep -noiE "$tree_re" -- "$f" 2>/dev/null)
     fi
   done < <(git ls-files -z --cached --others --exclude-standard -- "$PRACTICE")
 

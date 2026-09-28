@@ -1,6 +1,6 @@
 // Smoke test: imports the pinned Affinidi packages `ssi` and `dcql` and
-// exercises one offline, non-network call from each — proving the deps are
-// real, pinned, and wired up (FM-08). No did:web resolution, no I/O.
+// exercises one offline, non-network call from each, checking that both
+// packages resolve and are wired up correctly. No did:web resolution, no I/O.
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ssi/ssi.dart';

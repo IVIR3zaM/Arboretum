@@ -68,7 +68,7 @@ budgets: 2 tries per brief · 2 replans per node
 | N13 | real agent: feature naive vs elicited | check | N05,N08,N10,N20 | -/opus | 1 | 1 | DONE | |
 | N14 | real agent: Ticket 2 bites | check | N05,N12 | -/opus | 1 | 0 | DONE | |
 | N15 | README, practice.json, examiner docs, probes | exec | N11,N13,N14 | opus/opus | 2 | 0 | DONE | |
-| N22 | scrub clone taxonomy tags + leak guard scans taxonomy | exec | N15 | sonnet/opus | 1 | 0 | RUNNING | |
+| N22 | scrub clone taxonomy tags + leak guard scans taxonomy | exec | N15 | sonnet/opus | 1 | 0 | VERIFYING | |
 | N16 | fresh reviewer: solvable at XL | check | N15,N22 | -/opus | 0 | 1 | TODO | |
 | N17 | control run + calibration train proof | exec | N16 | opus/opus | 0 | 0 | TODO | |
 | N18 | merge into main + delete stale branches | exec | N17 | sonnet/opus | 0 | 0 | TODO | |

@@ -1,8 +1,7 @@
 //! Smoke test: builds a DID Document type from `affinidi-did-common`.
 //!
-//! This proves the crate is a real, pinned, non-vendored dependency (FM-08) and
-//! that it supplies DID / DID-Document *types* only — no resolver behaviour is
-//! exercised here.
+//! Checks that the crate resolves and supplies DID / DID-Document *types* only —
+//! no resolver behaviour is exercised here, and nothing touches the network.
 
 use affinidi_did_common::Document;
 
