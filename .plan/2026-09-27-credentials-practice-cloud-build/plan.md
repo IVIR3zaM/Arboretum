@@ -47,6 +47,20 @@ budgets: 2 tries per brief · 2 replans per node
   - N11 closes on the committed evidence, with no re-run. Ticket 2 (N14) stays the trap that is shown to bite a real cold agent.
   | confirmed · recommend: as stated · alt A: cold T1 re-run on sonnet (D12 alt), falling back to this if it converges · alt B: plant again (N11 has no replans left)
 - D22 (N17 blocked) The try-1 calibration train run's trainer note after turn 5 named which count was wrong (harness/DESIGN.md §3), and turn 6 acted on it; rewinding/editing that recorded session was refused as transcript tampering. The human authorizes a brand-new train run from turn 1 in a new clone and a new session (never a rewind or edit of the old one); the try-1 run is kept intact under runs/N17/superseded-try1/ as evidence; the proof is regenerated from the new run, and every evidence file it cites is committable (no gitignored *.log) | confirmed · recommend: fresh run · alt: keep run and disclose the defect
+- D23 (N17 replan 2) The fresh run's turn 09 was voided 3x (runs/N17/train/turn-09-void-1..3/audit.txt) by audit false positives. With the flags separated by cause:
+  - (i) A pure bug. shlex drops newlines (scripts/cold/audit.py:106-114, SEPARATORS :36), so a `cd` on line 2 is missed and every later `..` resolves from the clone. Fixing this clears void-1 and most of void-3.
+  - (ii) A policy question. Some flags would survive (i): `/tmp/does-not-exist-root` and a `https://h.example/../../etc/passwd` probe in Rust test source (void-2 #5), and a `" / "` format string (void-3 #1). All three sit in `cat > file <<'EOF'` bodies. N20 made these bodies path-checked (tests/run.sh:124-126), but the same text written with the Write tool is never checked (audit.py:364-379).
+  Proposal: a fix node N23 (opus/opus) before N17 that does these:
+  - (a) Treat an unquoted newline as a command separator.
+  - (b) Stop path-checking `//`-prefixed parts, such as URL authorities after `scheme:`. This matches looks_absolute (audit.py:281-288).
+  - (c) Audit a heredoc body that goes only into `cat`/`tee` redirected to a file the same way as Write content. Its target path is still checked, an unquoted body's $(...) is still checked as shell, and bodies fed to an interpreter or shell keep every check. Move test :124-126 to a `python3 -` form so it keeps its exit-1 coverage.
+  - Tests: each voided turn-09 command passes, and real escapes still exit 1. That covers a newline `cd ..`, `S=/x` on a new line followed by `cat $S/../../etc/passwd`, and a `python3 -` body opening /etc/hostname.
+  - Then N17 resumes as below:
+    - Re-audit turns 01-08 with the fixed audit.py. They must stay clean; any new flag means BLOCKED.
+    - Re-audit void-1..3 into a committed file. They stay voids and are never reinstated.
+    - Re-run turn 09 with the same prompt from `/tmp/cold-N17-snap2/turn-09`, under the brief's existing void protocol. This counts as consistent with D22, because a voided attempt is not part of the recorded session.
+    - If the container was reclaimed (clone, session store or snapshot gone), `git mv` the partial run to runs/N17/superseded-try2/ and start a brand-new run from turn 1 per D22.
+  | proposed · recommend: as stated, (a)+(b)+(c) · alt A: (a)+(b) only (the audit is no weaker, but void-2/3's flags would recur, and N17 has no replans left) · alt B: never re-run a voided turn, and restart from turn 1 now
 
 ## Graph
 
@@ -71,6 +85,6 @@ budgets: 2 tries per brief · 2 replans per node
 | N15 | README, practice.json, examiner docs, probes | exec | N11,N13,N14 | opus/opus | 2 | 0 | DONE | |
 | N22 | scrub clone taxonomy tags + leak guard scans taxonomy | exec | N15 | sonnet/opus | 1 | 0 | DONE | |
 | N16 | fresh reviewer: solvable at XL | check | N15,N22 | -/opus | 1 | 1 | DONE | |
-| N17 | fresh calibration train run + proof (control stands) | exec | N16 | opus/opus | 1 | 2 | REPLAN | blocked: cold/audit.py false positive (newline after S=<scratch> not a separator) voided turn 09 3x; audit.py outside Write paths |
+| N17 | fresh calibration train run + proof (control stands) | exec | N16 | opus/opus | 1 | 2 | WAITING | ask: D23 |
 | N18 | merge into main + delete stale branches | exec | N17 | sonnet/opus | 0 | 0 | TODO | |
 | N19 | plan acceptance (CONTRACT checklist) | check | N18 | -/opus | 0 | 0 | TODO | |
