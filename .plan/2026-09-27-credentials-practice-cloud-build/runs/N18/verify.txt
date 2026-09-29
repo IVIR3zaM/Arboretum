@@ -1,0 +1,283 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.15s
+     Running unittests src/lib.rs (target/debug/deps/credentials_backend-1af51d82f00e601c)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/credential.rs (target/debug/deps/credential-ec9c0b1f57fabc21)
+
+running 7 tests
+test canonical_form_writes_integral_numbers_without_a_fraction ... ok
+test canonical_form_escapes_only_what_json_requires ... ok
+test canonical_form_orders_keys_by_utf16_code_units ... ok
+test canonical_form_sorts_keys_and_drops_whitespace ... ok
+test disclosure_digest_is_sha256_of_the_canonical_triple ... ok
+test signing_input_excludes_the_proof ... ok
+test signed_documents_verify_and_tampering_is_detected ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/did_document.rs (target/debug/deps/did_document-ad850f70b52295ca)
+
+running 1 test
+test builds_a_did_document_from_affinidi_did_common ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/issuer.rs (target/debug/deps/issuer-cf56cb650edfafa6)
+
+running 9 tests
+test onboarding_fails_when_the_document_is_unavailable ... ok
+test onboarding_records_the_published_document ... ok
+test holders_must_be_did_key ... ok
+test an_expiry_before_issuance_is_refused ... ok
+test issuance_is_recorded_in_the_store ... ok
+test issued_credentials_carry_the_wire_fields ... ok
+test claims_are_carried_only_as_salted_digests ... ok
+test the_issuer_proof_verifies_with_the_issuer_key ... ok
+test every_issue_uses_fresh_salts ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/notifier.rs (target/debug/deps/notifier-5ea8cf601a772db4)
+
+running 6 tests
+test a_rejected_delivery_is_reported_as_failed ... ok
+test the_notification_carries_the_status_change ... ok
+test every_subscriber_of_the_tenant_is_notified_once ... ok
+test each_delivery_is_reported_to_the_sink ... ok
+test the_canary_reports_healthy_once_changes_are_flowing ... ok
+test other_tenants_subscribers_are_not_notified ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/resolver.rs (target/debug/deps/resolver-621d2950d5524d4e)
+
+running 13 tests
+test did_key_with_a_non_ed25519_codec_is_rejected ... ok
+test did_peer_with_an_unknown_numalgo_is_rejected ... ok
+test did_web_maps_a_bare_domain_to_the_well_known_path ... ok
+test did_web_rejects_an_empty_host ... ok
+test did_web_maps_an_encoded_port ... ok
+test did_web_reports_a_missing_document ... ok
+test unsupported_methods_are_reported ... ok
+test did_peer_0_decodes_its_inception_key ... ok
+test did_key_decodes_to_a_single_ed25519_key ... ok
+test did_web_fetches_the_hosted_document ... ok
+test did_web_rejects_a_document_for_another_did ... ok
+test did_peer_2_decodes_keys_by_purpose_and_its_service ... ok
+test mirror_transport_serves_documents_from_its_root ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/settings.rs (target/debug/deps/settings-c730e69c07473b33)
+
+running 4 tests
+test a_page_read_takes_the_tables_read_latency ... ok
+test putting_a_setting_again_replaces_it ... ok
+test the_kind_index_returns_only_settings_of_that_kind ... ok
+test a_query_returns_the_tenants_settings_a_page_at_a_time ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/status.rs (target/debug/deps/status-7fe77da0ea16fb48)
+
+running 7 tests
+test allocation_hands_out_distinct_indexes ... ok
+test a_new_list_has_nothing_revoked ... ok
+test setting_a_bit_only_touches_that_index ... ok
+test the_encoded_list_round_trips ... ok
+test revoking_an_unknown_credential_fails ... ok
+test revoking_a_credential_flips_its_status ... ok
+test revoking_one_credential_leaves_the_others_valid ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/store.rs (target/debug/deps/store-bd0b8ce197a27d88)
+
+running 5 tests
+test a_new_store_is_empty ... ok
+test credential_records_round_trip ... ok
+test status_indexes_are_unique_per_list ... ok
+test onboarded_issuers_are_looked_up_by_did ... ok
+test onboarding_data_loads_every_approved_issuer ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/verifier.rs (target/debug/deps/verifier-2ddcc5dfe68c2bb1)
+
+running 16 tests
+test a_credential_without_an_issuer_is_malformed ... ok
+test a_presentation_for_another_nonce_is_rejected ... ok
+test a_presentation_for_another_domain_is_rejected ... ok
+test a_proof_by_a_key_the_issuer_does_not_list_is_rejected ... ok
+test a_credential_that_is_not_yet_valid_is_rejected ... ok
+test a_credential_verifies_on_its_own ... ok
+test a_presentation_discloses_only_the_requested_claims ... ok
+test a_credential_presented_by_another_holder_is_rejected ... ok
+test a_tampered_credential_is_rejected ... ok
+test the_issuer_document_is_the_one_harbour_publishes ... ok
+test an_expired_credential_is_rejected ... ok
+test a_revoked_credential_is_rejected ... ok
+test a_tampered_disclosure_is_rejected ... ok
+test a_presentation_signed_by_someone_else_is_rejected ... ok
+test every_claim_can_be_disclosed ... ok
+test the_same_submission_is_accepted_once ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests credentials_backend
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+00:00 +0: loading /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart
+00:00 +0: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/smoke_test.dart: generates an Ed25519 key pair via the ssi package
+00:00 +1: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: shows an empty wallet
+00:00 +2: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: shows an empty wallet
+00:00 +3: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: shows an empty wallet
+00:00 +4: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: shows an empty wallet
+00:00 +5: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: shows an empty wallet
+00:00 +6: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: shows an empty wallet
+00:00 +7: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: shows an empty wallet
+00:00 +8: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: shows an empty wallet
+00:00 +9: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: shows an empty wallet
+00:00 +10: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: shows an empty wallet
+00:00 +11: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: shows an empty wallet
+00:00 +12: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: shows an empty wallet
+00:00 +13: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: shows an empty wallet
+00:00 +14: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/holder_key_test.dart: two generated keys have different DIDs
+00:00 +15: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: lists held credentials by type and issuer
+00:00 +16: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: lists held credentials by type and issuer
+00:00 +17: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: lists held credentials by type and issuer
+00:00 +18: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: requesting a membership adds it to the list
+00:00 +19: /Users/mohammadrezamaghoul/github/IVIR3zaM/Arboretum/practices/credentials/app/test/credential_list_test.dart: a failed request shows an error
+00:00 +20: All tests passed!
+ok  outside-read (exit 1, ac9049b exit 1)
+ok  outside-bash (exit 1, ac9049b exit 1)
+ok  cd-escape (exit 1, ac9049b exit 1)
+ok  dotdot-escape (exit 1, ac9049b exit 1)
+ok  webfetch (exit 1, ac9049b exit 1)
+ok  websearch (exit 1, ac9049b exit 1)
+ok  clean (exit 0)
+ok  heredoc-dart-tilde (exit 0)
+ok  heredoc-python-tilde (exit 0)
+ok  heredoc-python-tilde-apostrophe (exit 0)
+ok  heredoc-python-abs (exit 1, ac9049b exit 1)
+ok  heredoc-bash-home (exit 1, ac9049b exit 1)
+ok  cmdline-ls-home (exit 1, ac9049b exit 1)
+ok  cmdline-cat-home (exit 1, ac9049b exit 1)
+ok  read-cli-spill (exit 1, ac9049b exit 1)
+ok  bash-cli-scratchpad (exit 1, ac9049b exit 1)
+ok  heredoc-data-home-dotdot (exit 1, ac9049b exit 1)
+ok  heredoc-data-home-dotdot (exit 1, ac9049b exit 1)
+ok  heredoc-pipe-shell (exit 1, ac9049b exit 1)
+ok  heredoc-unquoted-subst (exit 1, ac9049b exit 1)
+ok  heredoc-in-subst (exit 0)
+ok  newline-cd-inside (exit 0, ac9049b exit 1)
+ok  newline-cd-escape (exit 1, ac9049b exit 1)
+ok  newline-var-dotdot (exit 1, ac9049b exit 1)
+ok  newline-cd-then-escape (exit 1, ac9049b exit 1)
+ok  newline-in-quotes (exit 1, ac9049b exit 1)
+ok  newline-continuation (exit 1, ac9049b exit 1)
+ok  url-authority (exit 0, ac9049b exit 1)
+ok  cmdline-abs-dotdot (exit 1, ac9049b exit 1)
+ok  heredoc-cat-file-rust (exit 0, ac9049b exit 1)
+ok  heredoc-cat-append (exit 0, ac9049b exit 1)
+ok  heredoc-tee-file (exit 0, ac9049b exit 1)
+ok  heredoc-cat-target-home (exit 1, ac9049b exit 1)
+ok  heredoc-cat-target-dotdot (exit 1, ac9049b exit 1)
+ok  heredoc-cat-file-subst (exit 1, ac9049b exit 1)
+ok  heredoc-cat-stdout (exit 1, ac9049b exit 1)
+ok  heredoc-cat-file-piped (exit 1, ac9049b exit 1)
+ok  heredoc-tee-piped (exit 1, ac9049b exit 1)
+ok  heredoc-cat-stderr-only (exit 1, ac9049b exit 1)
+ok  heredoc-cat-after-subst (exit 1, ac9049b exit 1)
+ok  heredoc-cat-continued (exit 1, ac9049b exit 1)
+ok  heredoc-cat-file-then-shell (exit 1, ac9049b exit 1)
+ok  heredoc-tee-stdout (exit 1, ac9049b exit 1)
+ok  heredoc-cat-file-in-subst (exit 1, ac9049b exit 1)
+ok  newline-in-array (exit 1, ac9049b exit 1)
+ok  url-word-escape (exit 1, ac9049b exit 1)
+ok  double-slash-dotdot (exit 1, ac9049b exit 1)
+ok  ansi-escaped-quote (exit 1, ac9049b exit 1)
+ok  ansi-escaped-quote-assign (exit 1, ac9049b exit 1)
+gap ansi-escaped-quote-one-line (ac9049b gap: exit 0 on both audits)
+ok  ansi-fake-heredoc (exit 1, ac9049b exit 1)
+ok  ansi-escaped-backslash (exit 1, ac9049b exit 1)
+gap ansi-value (ac9049b gap: exit 0 on both audits)
+ok  dollar-dq (exit 1, ac9049b exit 1)
+ok  dq-continuation (exit 1, ac9049b exit 1)
+gap continuation-cd (ac9049b gap: exit 0 on both audits)
+gap continuation-path (ac9049b gap: exit 0 on both audits)
+ok  comment-after-paren (exit 1, ac9049b exit 1)
+ok  comment-after-continuation (exit 1, ac9049b exit 1)
+gap backtick-quote (ac9049b gap: exit 0 on both audits)
+gap backtick-quote-2 (ac9049b gap: exit 0 on both audits)
+ok  subst-case (exit 1, ac9049b exit 1)
+ok  subshell-case (exit 1, ac9049b exit 1)
+gap subst-newline (ac9049b gap: exit 0 on both audits)
+ok  brace-sq (exit 1, ac9049b exit 1)
+ok  brace-dq-sq (exit 1, ac9049b exit 1)
+ok  brace-newline (exit 1, ac9049b exit 1)
+ok  heredoc-body-cd (exit 1, ac9049b exit 1)
+ok  newline-cd-src (exit 0, ac9049b exit 1)
+ok  newline-cd-carry (exit 0, ac9049b exit 1)
+ok  newline-cd-missing (exit 1, ac9049b exit 1)
+ok  newline-cd-then-missing (exit 1, ac9049b exit 1)
+ok  cross-call-missing (exit 1, ac9049b exit 1)
+ok  if-then-cd (exit 1, ac9049b exit 1)
+ok  function-cd (exit 1, ac9049b exit 1)
+ok  quoted-paren-cd (exit 1, ac9049b exit 1)
+ok  subshell-sq-close (exit 1, ac9049b exit 1)
+ok  subshell-ansi-close (exit 1, ac9049b exit 1)
+ok  subshell-backtick-close (exit 1, ac9049b exit 1)
+ok  subshell-brace-close (exit 1, ac9049b exit 1)
+ok  subshell-case-close (exit 1, ac9049b exit 1)
+ok  subst-case-close (exit 1, ac9049b exit 1)
+ok  quoted-separator-cd (exit 1, ac9049b exit 1)
+ok  escaped-separator-cd (exit 1, ac9049b exit 1)
+ok  conditional-cd (exit 1, ac9049b exit 1)
+ok  piped-cd (exit 1, ac9049b exit 1)
+ok  background-cd (exit 1, ac9049b exit 1)
+ok  exit-then-cd (exit 1, ac9049b exit 1)
+ok  set-e-cd (exit 1, ac9049b exit 1)
+ok  syntax-error-cd (exit 1, ac9049b exit 1)
+ok  variable-command-cd (exit 1, ac9049b exit 1)
+ok  glob-command-cd (exit 1, ac9049b exit 1)
+ok  cdpath-cd (exit 1, ac9049b exit 1)
+ok  ifs-cd (exit 1, ac9049b exit 1)
+ok  trap-cd (exit 1, ac9049b exit 1)
+ok  symlink-cd (exit 1, ac9049b exit 1)
+ok  symlink-token (exit 1, ac9049b exit 1)
+ok  symlink-made (exit 1, ac9049b exit 1)
+ok  pushd-stack (exit 1, ac9049b exit 1)
+ok  chdir-option (exit 1, ac9049b exit 1)
+ok  url-file-scheme (exit 1, ac9049b exit 1)
+ok  url-climb (exit 1, ac9049b exit 1)
+ok  heredoc-glued-delim (exit 1, ac9049b exit 1)
+ok  cat-function (exit 1, ac9049b exit 1)
+ok  hash-cat (exit 1, ac9049b exit 1)
+ok  heredoc-subst-quoted-paren (exit 1, ac9049b exit 1)
+ok  heredoc-file-run (exit 1, ac9049b exit 1)
+ok  heredoc-file-run-later (exit 1, ac9049b exit 1)
+ok  heredoc-file-exec (exit 1, ac9049b exit 1)
+ok  heredoc-file-python (exit 1, ac9049b exit 1)
+ok  replay-n17-turn-09-void-1 (exit 0, ac9049b exit 1)
+ok  replay-n17-turn-09-void-2 (exit 0, ac9049b exit 1)
+ok  replay-n17-turn-09-void-3 (exit 0, ac9049b exit 1)
+ok  frozen ac9049b copy is byte-identical to ac9049b:.plan/2026-09-27-credentials-practice-cloud-build/scripts/cold/audit.py
+differential: identity over 171 transcript(s): ok; cleared lines {'a': 41, 'b': 2, 'c': 26}; exit changed: N05/smoke (1->0), N17/superseded-try2/train/turn-09-void-2 (1->0), N17/train/turn-08 (1->0), case heredoc-cat-append (1->0), case heredoc-cat-file-rust (1->0), case heredoc-tee-file (1->0), case newline-cd-carry (1->0), case newline-cd-inside (1->0), case newline-cd-src (1->0), case replay-n17-turn-09-void-1 (1->0), case replay-n17-turn-09-void-2 (1->0), case replay-n17-turn-09-void-3 (1->0), case url-authority (1->0), fixture n17-turn-09-void-1 (1->0), fixture n17-turn-09-void-2 (1->0), fixture n17-turn-09-void-3 (1->0)
+  gap ansi-escaped-quote-one-line: ac9049b exit 0, new exit 0; bash escapes: read p/q/r
+  gap ansi-value: ac9049b exit 0, new exit 0; bash escapes: host /etc/passwd
+  gap backtick-quote-2: ac9049b exit 0, new exit 0; bash escapes: read p/q/r
+  gap backtick-quote: ac9049b exit 0, new exit 0; bash escapes: read p/q/r
+  gap continuation-cd: ac9049b exit 0, new exit 0; bash escapes: read p/q/r
+  gap continuation-path: ac9049b exit 0, new exit 0; bash escapes: host /etc/passwd
+  gap subst-newline: ac9049b exit 0, new exit 0; bash escapes: read p/q/r
+differential fuzz: seed 23, 2178 transcripts (70 repros + 108 run.sh cases + 2000 generated; 4 run.sh case(s) without a Bash call not replayed), 4312 Bash calls; bash read/wrote outside the clone in 1158; ac9049b flagged 1134 of them, the new audit 1129; ac9049b 1 -> new 0 in 39 (cleared lines {'a': 57, 'b': 108, 'c': 135}), 5 of them blind (every escape location persists with every cleared token neutralized: ac9049b never flagged it); ac9049b gap cases 7; identity errors 0; regressions 0 (49s)
+ok  differential
+cold tests: all passed
+portable test: checked 9 path(s), all present

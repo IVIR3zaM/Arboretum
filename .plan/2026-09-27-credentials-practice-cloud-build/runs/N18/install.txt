@@ -1,0 +1,32 @@
+Building flutter tool...
+Resolving dependencies...
+Downloading packages...
+Got dependencies.
+[1/10] Material Fonts                                            1,595ms
+[2/10] Gradle Wrapper                                              136ms
+[3/10] Flutter SDK
+  ├─ [1/5] sky_engine                                              551ms
+  ├─ [2/5] flutter_gpu                                             297ms
+  ├─ [3/5] flutter_patched_sdk                                     914ms
+  ├─ [4/5] flutter_patched_sdk_product                             840ms
+  └─ [5/5] darwin-arm64                                             6.9s
+[4/10] iOS USB Artifact: libimobiledevice                          288ms
+[5/10] iOS USB Artifact: libusbmuxd                                190ms
+[6/10] iOS USB Artifact: libplist                                  209ms
+[7/10] iOS USB Artifact: openssl                                   822ms
+[8/10] iOS USB Artifact: libimobiledeviceglue                      199ms
+[9/10] iOS USB Artifact: ios-deploy                                207ms
+[10/10] darwin-arm64/font-subset                                   685ms
+Resolving dependencies...
+Downloading packages...
+  ecdsa 0.1.2 (0.2.0 available)
+  elliptic 0.3.12 (0.4.0 available)
+  equatable 2.1.0 (3.0.0 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.18.3 (1.19.0 available)
+  ssi 3.9.6 (4.3.0 available)
+  test_api 0.7.12 (0.7.14 available)
+  vector_math 2.4.0 (2.4.3 available)
+Got dependencies!
+8 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
