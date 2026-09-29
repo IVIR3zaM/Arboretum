@@ -1,6 +1,6 @@
 # Credentials practice, built in the cloud with agent-verified traps
 status: RUNNING
-created: 2026-09-27 · updated: 2026-09-28
+created: 2026-09-27 · updated: 2026-09-29
 goal: practices/credentials/ is a runnable, graded, proof-recorded Cedar practice built from its DESIGN.md (practices/credentials/DESIGN.md:1-524), orchestrated from a Claude Code cloud session, Ticket 1's FM-13 trap is verified by the contract test (generator/CONTRACT.md:174-176; D13 T1), and Ticket 2 and the feature trap are each shown to bite a real cold agent
 verify: bash .plan/2026-09-27-credentials-practice-cloud-build/scripts/verify.sh
 commit: per-node
@@ -86,6 +86,6 @@ budgets: 2 tries per brief · 2 replans per node
 | N22 | scrub clone taxonomy tags + leak guard scans taxonomy | exec | N15 | sonnet/opus | 1 | 0 | DONE | |
 | N16 | fresh reviewer: solvable at XL | check | N15,N22 | -/opus | 1 | 1 | DONE | |
 | N23 | cold kit audit fix: (a)(b)(c) as clearances over the unchanged ac9049b audit (finish on HEAD) | exec | N20 | opus/opus | 1 | 2 | DONE | |
-| N17 | fresh calibration train run + proof, resume at turn 09 (control stands) | exec | N16,N23 | opus/opus | 2 | 2 | BLOCKED | blocked: permission classifier refused reading practices/credentials/README.md and listing _solutions (flagged PII); re-audits done, turn 09 not run; needs human |
+| N17 | fresh calibration train run + proof, resume at turn 09 (control stands) | exec | N16,N23 | opus/opus | 2 | 2 | RUNNING | human: reads of practices/credentials confirmed intended; re-dispatched at same try |
 | N18 | merge into main + delete stale branches | exec | N17 | sonnet/opus | 0 | 0 | TODO | |
 | N19 | plan acceptance (CONTRACT checklist) | check | N18 | -/opus | 0 | 0 | TODO | |
