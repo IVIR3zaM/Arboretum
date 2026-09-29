@@ -1,5 +1,5 @@
 # Credentials practice, built in the cloud with agent-verified traps
-status: RUNNING
+status: DONE
 created: 2026-09-27 · updated: 2026-09-29
 goal: practices/credentials/ is a runnable, graded, proof-recorded Cedar practice built from its DESIGN.md (practices/credentials/DESIGN.md:1-524), orchestrated from a Claude Code cloud session, Ticket 1's FM-13 trap is verified by the contract test (generator/CONTRACT.md:174-176; D13 T1), and Ticket 2 and the feature trap are each shown to bite a real cold agent
 verify: bash .plan/2026-09-27-credentials-practice-cloud-build/scripts/verify.sh
@@ -88,4 +88,4 @@ budgets: 2 tries per brief · 2 replans per node
 | N23 | cold kit audit fix: (a)(b)(c) as clearances over the unchanged ac9049b audit (finish on HEAD) | exec | N20 | opus/opus | 1 | 2 | DONE | |
 | N17 | fresh calibration train run + proof, resume at turn 09 (control stands) | exec | N16,N23 | opus/opus | 2 | 2 | DONE | |
 | N18 | merge into main + delete stale branches | exec | N17 | sonnet/opus | 1 | 0 | DONE | |
-| N19 | plan acceptance (CONTRACT checklist) | check | N18 | -/opus | 1 | 0 | VERIFYING | |
+| N19 | plan acceptance (CONTRACT checklist) | check | N18 | -/opus | 1 | 0 | DONE | |
