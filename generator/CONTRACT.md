@@ -74,7 +74,11 @@ point at Alder; substitute `context/<tree>/` for whichever version you were give
    build** in `_solutions/` (`FEATURE-FIX.md` + a reference build dir) that clears the whole gate,
    so the gate is provably passable. The naive-vs-elicited proof that this discriminates is step 10
    and the acceptance checklist.
-8. **Write `TICKET.md`** as a symptom with no method and no mention of the grader, `README.md`
+8. **Write `TICKET.md`** — or, for a fix phase that needs more than one bug report, an **ordered
+   ticket queue** (`TICKET-1.md`, `TICKET-2.md`, …, staged per `AGENTS.md` rule 4 /
+   `harness/DESIGN.md` §0: the clone starts with the first ticket, and each next ticket is staged
+   in only once the previous ticket's fix lands) — as a symptom with no method and no mention of
+   the grader, `README.md`
    (the learner's briefing, which the harness keeps out of the clone — this is where the coaching
    goes), `rubric.md`, and `practice.json` (fill the template — including
    `commands.{install,test,grade}` for the stack, invoked so that nothing inside the clone

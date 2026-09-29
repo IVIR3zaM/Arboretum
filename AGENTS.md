@@ -40,16 +40,24 @@ These come from [`harness/DESIGN.md`](harness/DESIGN.md §0–§3). Follow them 
    and `practice.json` names the planted bug and the traps outright. An assistant that reads
    either one is being coached, and the traps stop testing anything. **What the clone holds is
    the service repo plus the work item of the moment** — the source, the tests, the stack
-   manifest, and whichever of `TICKET.md` / `FEATURE-REQUEST.md` the learner has reached (rule 4)
-   — so the assistant meets the task the way an engineer would.
+   manifest, and whichever work item(s) the learner has reached — `TICKET.md` (or the current
+   ticket of an ordered queue) and, once staged, `FEATURE-REQUEST.md` (rule 4) — so the assistant
+   meets the task the way an engineer would.
    `_solutions/`, `README.md`, `practice.json` and the Context stay aside as the **examiner's**
    golden context; the learner reads the README before the session, not through the assistant.
-4. **Deliver the work items one phase at a time.** The learner never holds the ticket and the
-   feature request at once — that is not how work arrives, and a clone containing both lets the
-   assistant read ahead, plan around a brief nobody has given it yet, and blunt the phase it has
-   not reached. Stage them: the clone starts with `TICKET.md` only; `FEATURE-REQUEST.md` is copied
-   in when phase 3 begins. Each phase's prompts are the learner's; the harness holds the rest back.
-   **A Cedar `reference/` is the exception — it is in the clone from the start.** It is the
+4. **Deliver the work items one phase at a time.** The learner never holds two tickets, or a
+   ticket and the feature request, at once — that is not how work arrives, and a clone containing
+   more than the current item lets the assistant read ahead, plan around a brief nobody has given
+   it yet, and blunt the phase it has not reached. A practice with a single `TICKET.md` keeps that
+   behaviour exactly: the clone starts with `TICKET.md` only, and `FEATURE-REQUEST.md` is copied in
+   when phase 3 begins. A practice may instead need an **ordered ticket queue** —
+   `TICKET-1.md`, `TICKET-2.md`, and so on — in which case the clone starts with the first ticket
+   only; each next ticket is staged in once the previous ticket's fix **lands** (its phase closes —
+   the grader/tests for that ticket go green); `FEATURE-REQUEST.md`, if the practice has one, still
+   arrives at phase 3, after the last ticket. Each phase's prompts are the learner's; the harness
+   holds the rest back.
+   **A Cedar `reference/` is the exception — it is in the clone from the start, and is never part
+   of this queue.** It is the
    external documentation an engineer already has on day one, the packages usually read it at
    runtime, and handing it over when the research pass is due would itself announce that the local
    repo is not the whole story — the exact judgement FM-16 measures. The trap is that a
@@ -90,8 +98,17 @@ rm -rf .sessions/<stamp>/work/_solutions                          # the answer k
 rm -f  .sessions/<stamp>/work/README.md .sessions/<stamp>/work/practice.json   # the briefing + the manifest
 cp -R practices/<id>/_solutions .sessions/<stamp>/golden          # examiner only
 cp practices/<id>/practice.json .sessions/<stamp>/golden/         # examiner reads the commands from here
-mv .sessions/<stamp>/work/FEATURE-REQUEST.md .sessions/<stamp>/staged-FEATURE-REQUEST.md
-                                                                  # hand it over when phase 3 starts, not before
+
+# work-item queue: keep the FIRST ticket in work/, stage every later ticket and the feature
+# request out as staged-<name>. Unchanged for a lone TICKET.md (the loop below only ever stages
+# FEATURE-REQUEST.md, exactly as before); for an ordered TICKET-1.md, TICKET-2.md, ... queue, each
+# later ticket is staged too — hand each one back once the previous ticket's fix lands, and the
+# feature request when phase 3 starts, not before.
+FIRST=1
+{ find .sessions/<stamp>/work -maxdepth 1 -name 'TICKET*.md' | sort; find .sessions/<stamp>/work -maxdepth 1 -name 'FEATURE-REQUEST.md'; } | while IFS= read -r item; do
+  if [ "$FIRST" = 1 ]; then FIRST=0; continue; fi
+  mv "$item" ".sessions/<stamp>/staged-$(basename "$item")"
+done
 # make work/ its own git repo, so git inside the clone can't reach Arboretum's history (or _solutions/):
 git -C .sessions/<stamp>/work init -q
 git -C .sessions/<stamp>/work add -A
@@ -113,7 +130,7 @@ practice **proof** dropped in `docs/` instead of the practice's `_solutions/`) �
 | `context/<tree>/` | The abstract, versioned Context: `goals.md`, `best-practices.md`, `failure-modes.md`, `generation-spec.md`, `CHANGELOG.md`, `VERSION`, `templates/`. Domain-agnostic training theory only. | Any reference to a specific practice, its domain, or its fix (see the working rules below). |
 | `generator/` | The generation **contract** (`CONTRACT.md`) — the prompt an agent follows to turn a Context into a new practice. | Generated practices; per-practice files. |
 | `harness/` | The harness **design** (`DESIGN.md`) — the multi-agent interface and the three modes. | Session outputs; runnable code (until the Phase-2 runner, which gets its own home). |
-| `practices/<id>/` | One runnable kata, in three layers: the **work items + service repo** that get cloned (`TICKET.md`, `FEATURE-REQUEST.md`, source, tests, stack manifest); the **exercise material** that does not (`README.md` the learner's briefing, `practice.json` the manifest); and `_solutions/` (hidden). Cedar practices also hold multiple package dirs + a read-only `reference/`. A not-yet-runnable practice may be a single `DESIGN.md` blueprint. | Cross-practice or conceptual docs; anything belonging to the Context. |
+| `practices/<id>/` | One runnable kata, in three layers: the **work items + service repo** that get cloned (`TICKET.md` — or an ordered `TICKET-1.md`, `TICKET-2.md`, … queue — plus `FEATURE-REQUEST.md`, source, tests, stack manifest); the **exercise material** that does not (`README.md` the learner's briefing, `practice.json` the manifest); and `_solutions/` (hidden). Cedar practices also hold multiple package dirs + a read-only `reference/`. A not-yet-runnable practice may be a single `DESIGN.md` blueprint. | Cross-practice or conceptual docs; anything belonging to the Context. |
 | `practices/<id>/_solutions/` | The answer key, hidden from the learner: hidden grader/acceptance tests, `grade.*`, `trap-manifest.md`, `rubric.md`, `feature-qa.md`, `FIX.md`, `FEATURE-FIX.md` + `feature-reference/` (a reference elicited build of the phase-3 feature), **proof files** (`proof-<mode>-<YYYY-MM-DD>.html`), and Cedar's `context-map.md` / `doc-drift-ledger.md`. A **finished** practice ships only what runs, grades, and proves it (the proof is the record of a run) — build logs, run diaries, and a maintenance backlog of mis-calibrations do not live here; they stay in git history (a run's own session artifacts live under the gitignored `.sessions/`). | Build logs, run-by-run diaries, a running "misbehaviors" backlog, or any dev/maintenance notes. |
 | `docs/` | Product & conceptual prose *about* Arboretum: `CONCEPT.md`, `PRIOR-ART.md`, `DISTRIBUTION.md`, `TREE-NAMING.md`. | Per-practice files, proofs, run outputs, or any generated/session artifact. |
 | `one-pager/` | The standalone static marketing site (`index.html`). | App/harness code. |

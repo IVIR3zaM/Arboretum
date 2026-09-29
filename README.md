@@ -80,6 +80,8 @@ Then work the five phases in [`practices/deliveries/README.md`](practices/delive
 - [`practices/deliveries/`](practices/deliveries/) — the seed kata (aligned to `alder@1.2.0`).
 - [`practices/fulfillment/`](practices/fulfillment/) — an XL Cedar kata: inventory availability &
   order confirmation, React + TS/Node full stack (aligned to `cedar@1.1.0`).
+- [`practices/credentials/`](practices/credentials/) — an XL Cedar kata: verifiable-credential
+  issuance, presentation & revocation, Rust + Flutter/Dart, two staged tickets (aligned to `cedar@1.2.0`).
 
 ## What this is not
 Not an assessment/hiring tool, not a course, not domain-locked. See [`docs/CONCEPT.md`](docs/CONCEPT.md).
