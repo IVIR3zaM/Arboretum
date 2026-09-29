@@ -1,241 +1,269 @@
 diff --git a/research-notes.md b/research-notes.md
 new file mode 100644
-index 0000000..d749b1a
+index 0000000..2ae69aa
 --- /dev/null
 +++ b/research-notes.md
-@@ -0,0 +1,235 @@
-+# Research notes — `reference/`
+@@ -0,0 +1,263 @@
++# Research notes (read-only pass, 2026-09-29)
 +
-+Notes from reading every file under `reference/` against the code in `backend/` and `app/`.
-+For each source: the rules the code must obey, then where the code (or its READMEs and comments)
-+disagrees. "Probe" means I checked the behaviour with a throwaway test run on a scratch copy of
-+`backend/`; nothing in the repo was changed. The baseline `cargo test` passes (68 tests).
++This is a reading pass. No source, test or README was changed. Paths are relative to the repo root.
++Anything marked **(guess)** is inference and hasn't been checked.
 +
-+---
-+
-+## `reference/README.md`
-+
-+**Rules**
-+- `reference/` is a vendor snapshot that the owning teams keep in sync. It is **read-only**: local
-+  edits are overwritten on the next sync. Fixes go in `backend/` and `app/`, never here.
-+- It describes itself as "the specifications they implement, the contracts of the services they
-+  call, and the configuration of the infrastructure they run against." Where the code disagrees
-+  with `reference/`, the code is the one that has to change.
-+
-+**Disagreements:** none by itself. Note that `MirrorTransport::from_env()`
-+(`backend/src/transport.rs:43`) reads `reference/infra/hosted-dids/` as its default data. That is
-+fine as long as nothing writes to it.
++Checks run (all outside the repo, in the session scratchpad):
++- `cargo test` in `backend/`: 68 passed.
++- `flutter test` in `app/`: 20 passed.
++- A throwaway crate that uses the backend's own `Resolver` + `MirrorTransport` to resolve every
++  onboarded issuer against `reference/infra/hosted-dids/`. Results are in §1.3.
 +
 +---
 +
-+## `reference/did-web-method.md` — the `did:web` method
++## 1. System map
 +
-+**Rules**
-+1. **URL mapping (§3.2).** Strip `did:web:`, split on `:`, and percent-decode each segment.
-+   Append `/.well-known` **only if there are no path segments**, then `/did.json`, then prefix
-+   `https://`. So `did:web:host:user:alice` → `https://host/user/alice/did.json`.
-+2. Resolution uses HTTPS only, with no HTTP fallback. The fetched document's `id` MUST equal the DID.
-+3. The domain MUST NOT be an IP address. A port is written `%3A`.
-+4. **The document currently served is the DID document (§3.3).** There is no history, and a
-+   removed key is no longer a key of the DID.
-+5. **Verifying (§4).** The verifier resolves the DID *when it verifies the proof*. It then
-+   dereferences `verificationMethod`, checks that the method is listed under the right
-+   relationship (`assertionMethod` for issuers, `authentication` for holders), and verifies the
-+   Ed25519 `Multikey` signature. "A proof is valid only if it verifies against a verification
-+   method in the current document."
-+6. HTTP caching is allowed only within the host's `Cache-Control` lifetime.
-+7. Rotation takes effect for every verifier as soon as the new document is served (§5). The
-+   identifier carries no key material, so nothing can be checked from the DID alone.
++### 1.1 Backend: credential from issuance to the door decision
 +
-+**Disagreements**
-+- **The verifier uses a copy of the document taken at onboarding, not the current one.**
-+  `Verifier::resolve_issuer` (`backend/src/verifier.rs:197-202`) returns
-+  `store.onboarded_issuer(did).document`, loaded from `backend/data/onboarded-issuers.json`. It
-+  only resolves live for DIDs that are *not* onboarded. This breaks rules 4, 5 and 7.
-+  The comment at `backend/src/store.rs:68-70` justifies it ("issuer documents are self-contained,
-+  as with the peer DIDs … the copy recorded at onboarding is all verification needs"). That is
-+  true for `did:peer`/`did:key` and false for `did:web` (§5, "No self-certification").
-+- **The path mapping is wrong.** `did_web_url` (`backend/src/resolver.rs:82-101`) always puts
-+  `/.well-known` in front of the path segments. Probe:
-+  `did:web:guild.northfield.example:chapters:north` →
-+  `https://guild.northfield.example/.well-known/chapters/north/did.json`. The spec (and the hosted
-+  object at `hosted-dids/guild.northfield.example/chapters/north/did.json`) says
-+  `https://guild.northfield.example/chapters/north/did.json`. Live resolution of Northfield
-+  therefore fails with "no document at …". The doc comment above the function states the wrong
-+  rule. No test covers a DID with a path.
-+- **The proof check is skipped for any other proof type.** `check_proof`
-+  (`backend/src/verifier.rs:206-214`) only verifies a signature if `proof.type ==
-+  "Ed25519Signature2020"`. Otherwise it returns `Ok(())`. Probe: a Harbour credential with its
-+  `expires_at` pushed ten years out and `proof.type = "DataIntegrityProof"`,
-+  `proofValue = "zgarbage"` → `verify_credential` returns `Ok`. Rule 5 requires the signature to
-+  be verified.
-+- **A holder with an unsupported DID method gets no proof check at all.**
-+  `verify_presentation` ignores `ResolveError::UnsupportedMethod` for the holder
-+  (`verifier.rs:122-126`). The holder-binding check (`subject == holder`) then only compares
-+  strings.
-+- Nothing checks the IP-address rule (3). There is no caching, which is compliant but means one
-+  fetch per verification. There is also **no production HTTPS transport**: only
-+  `MirrorTransport` (a local directory) and `StaticTransport` (in-memory) exist in
-+  `backend/src/transport.rs`.
-+- Compliant: `resolve_web` checks `id == DID`, and `MirrorTransport` refuses non-`https` URLs.
-+  `listed_key` checks that the method is listed under the relationship the caller asks for.
++1. **Onboarding**: `issuer::onboard` (`backend/src/issuer.rs:20`) calls `Resolver::resolve`, requires
++   a non-empty `assertionMethod`, then saves an `OnboardedIssuer { did, name, onboarded_at, document }`
++   through `Store::record_onboarded_issuer`. **That saves a full copy of the DID document.** At
++   startup, `Store::from_onboarding_data` (`backend/src/store.rs:51`) loads the same records from
++   `backend/data/onboarded-issuers.json`, which is compiled in with `include_str!`.
++2. **Issuance**: `Issuer::issue` (`backend/src/issuer.rs:104`):
++   - checks that the holder is an Ed25519 `did:key`;
++   - checks that `expires_at >= not_before`;
++   - creates one salted `Disclosure` per claim and stores only the sorted digests in `credentialSubject._sd`;
++   - allocates a status index in `<issuer DID>#revocation`;
++   - builds the VC (`@context` v1, `issuer`, `issued_at`, `not_before`, `expires_at`, `credentialStatus`);
++   - signs it with `credential::sign` (`Ed25519Signature2020` over the JCS form without `proof`, `backend/src/credential.rs:55`);
++   - saves a `CredentialRecord`.
++3. **Door check**: `Verifier::verify_presentation` (`backend/src/verifier.rs:104`) runs these steps in order:
++   - Replay guard, keyed on `Submission.request_id` (the id the scanner transport sets), not on the
++     nonce or the credential (`:111`).
++   - `nonce` and `domain` must equal the values the scanner expects (`:114-119`).
++   - Holder proof: resolve `holder` and check the VP proof against its `authentication` keys. **If
++     the holder's DID method is unsupported, this check is skipped** (`:122-126`).
++   - `verify_credential` (`:155`):
++     - **Issuer resolution** is `resolve_issuer` (`:197-202`). It returns the **stored onboarding
++       copy** if the DID is onboarded. Only for DIDs that aren't onboarded does it fall back to live
++       `Resolver::resolve`.
++     - **Which keys count**: `check_proof`/`listed_key` (`:206-237`) accept a key only if the proof's
++       `verificationMethod` appears under `assertionMethod` in *that* document and decodes to an
++       Ed25519 key. **The check only runs when `proof.type == "Ed25519Signature2020"`.** Any other
++       proof type passes without a signature check (`:208`).
++     - Time window: `not_before <= now <= expires_at` (`:163-171`).
++     - Status: `Store::is_revoked(statusListId, index)` against the verifier's **in-process** store.
++       A list the store doesn't know gives `UnknownStatus` (`:173-179`).
++     - `issuer_site` is taken from the document's `LinkedDomains` service (`:181`).
++   - The credential subject must equal the holder (`:130`).
++   - Each disclosure's digest must appear in `_sd` (`:134-149`).
++   - Not checked anywhere: the trust registry, the credential `type`, or whether `statusListId`
++     belongs to the issuer.
++4. **Resolver**: `Resolver::resolve` (`backend/src/resolver.rs:47`) handles `did:key`, `did:peer:0`
++   and `did:peer:2`, which are decoded from the identifier, and `did:web`, which it fetches:
++   `did_web_url` (`:82`) builds the URL, `DocumentTransport::get` fetches it, and the document's `id`
++   must equal the DID. The transports are `MirrorTransport`, which serves the bucket layout from disk
++   (default `reference/infra/hosted-dids`, `backend/src/transport.rs:43`), and `StaticTransport`.
++   There is no HTTP transport in the repo.
++5. **Revocation**: `status::revoke_credential` (`backend/src/status.rs:89`) sets the bit and returns
++   a `StatusChange`. Side note: `StatusList::allocate` (`:35-41`) hands out indexes 1..=capacity.
++   Index 0 is never used, and the last index is outside the bitstring, so `set` does nothing and that
++   credential can't be revoked. This is minor and not related to the ticket.
 +
-+---
++### 1.2 Backend: status-change webhook notifier
 +
-+## `reference/trust-registry.md` — Trust Registry contract
++`Notifier::notify` (`backend/src/notifier.rs:136`):
++- Runs everything inside `tokio::time::timeout(DISPATCH_BUDGET = 10 s)`.
++- First the **platform subscribers, one at a time**: only the canary, `CANARY_URL =
++  https://example.com/webhooks/status` (`:29`). The canary's result sets `canary_ok`.
++- Then `subscriptions(tenant)` (`:158`), which pages through the tenant's **whole settings
++  partition** with `SettingsStore::query`, at 50 ms per 100-item page (`backend/src/settings.rs:20,80`),
++  and keeps the settings of kind `webhook`. The `tenant-kind` index (`query_kind`, `:100`) exists but
++  isn't used.
++- Each subscriber gets one POST, sequentially. There are no retries.
++- Every outcome goes to the `DeliverySink`.
++- If the 10 s budget runs out, the remaining subscribers are dropped and a line goes to `eprintln`.
++- `canary_healthy()` reports only the canary's last delivery.
 +
-+**Rules**
-+1. **Only a registry record makes an issuer trusted.** Onboarding, a resolvable DID or a valid
-+   signature does not.
-+2. At verification time, a relying party MUST query `POST /authorization` with
-+   `entity_id` = the credential's `issuer`, `authority_id` =
-+   `did:web:governance.membership-platform.example`, `action` = `issue`, and
-+   `resource` = the credential type (e.g. `MembershipCredential`). It MUST refuse unless
-+   `authorized: true`.
-+3. An unknown issuer gets `200` with `authorized: false`, which is not an error.
-+   `authorized` is true only when the record's `status` is `active` (not `suspended` or `withdrawn`).
-+4. **Consumers MUST NOT keep their own list of trusted issuers.** An answer may be cached for at
-+   most **300 s**.
-+5. "Changes to an issuer's DID document — rotated keys, moved service endpoints — do not change
-+   its registry record. The record follows the DID."
-+6. Current export (2026-09-01): Harbour, Cedar Rowing, Northfield North and Kestrel are all
-+   `active` for `issue`/`MembershipCredential`. The `since` dates equal the `onboarded_at` dates
-+   in `onboarded-issuers.json`.
++`HermeticTransport::new` (`backend/src/webhook.rs:78`) points the canary's host at a local stub that
++always answers 200, so the canary is always healthy in tests. There is no production HTTP client in
++the repo.
 +
-+**Disagreements**
-+- **There is no registry client anywhere in the backend.** No code calls `/authorization`.
-+- **The backend keeps its own list anyway.** `backend/data/onboarded-issuers.json` plus
-+  `Store::onboarded_issuer` is exactly the "own list of trusted issuers" that rule 4 forbids. It
-+  goes further by pinning each issuer's *key*, which rule 5 says a rotation must not affect.
-+- **The list doesn't even gate trust.** A DID that is not in the list is resolved live and
-+  accepted (`resolve_issuer` falls through to `resolver.resolve`). Probe: a credential issued by
-+  a random `did:key` with no registry record, presented by its holder →
-+  `verify_presentation` returns `Ok`. So the service both refuses trusted issuers (after
-+  rotation) and accepts untrusted ones.
-+- Nothing ever reads the credential type (`type` array) during verification, so the `resource`
-+  dimension isn't checked either.
-+- `backend/README.md` ("approved once, at onboarding, and is recorded in
-+  `data/onboarded-issuers.json`") and `issuer::onboard`'s doc ("Approves an issuer") both state
-+  a trust model that this contract rules out.
++### 1.3 What the resolver probe showed
 +
-+---
++| Issuer (all `active` in registry) | Stored onboarding key | Live hosted key | Live resolution |
++|---|---|---|---|
++| `members.harbourclub.example` | `#key-1` z6MkjgN8… | `#key-1` z6MkjgN8… | OK, same key |
++| `issuer.cedarrowing.example` | `#key-1` z6MkfQRh… | `#key-2` z6Mkvbw… | OK, **key rotated** |
++| `guild.northfield.example:chapters:north` | `#signing` z6MkqSjf… | `#signing` z6MkoBtQ… | **fails**: code fetches `/.well-known/chapters/north/did.json`; hosted at `/chapters/north/did.json` |
++| `badges.kestrel-league.example` | `#key-2025` z6Mkttmq… | `#key-2026` z6MksRrY… | OK, **key rotated**; `LinkedDomains` also changed |
 +
-+## `reference/infra/did-hosting.md` — how issuer DID documents are hosted
++### 1.4 App
 +
-+**Rules**
-+1. Documents live in `s3://issuer-did-documents-prod` behind CloudFront. The object key is
-+   exactly the URL path: `<host>/.well-known/did.json` for a bare host, and
-+   `<host>/<p1>/<p2>/did.json` for a DID with a path (no `.well-known`). This matches did:web §3.2.
-+2. `Cache-Control: max-age=300`, `Content-Type: application/did+json`.
-+3. **Issuers rotate keys and change service endpoints themselves, in the issuer console.** Each
-+   change writes a new object version and invalidates the CDN path. Old versions are kept in the
-+   bucket but **no longer served**.
-+4. `hosted-dids/` is a copy of the bucket's *current* objects.
-+
-+**Disagreements**
-+- The object-key table confirms the Northfield URL bug described above.
-+- Rule 3 is the mechanism behind the drift. Issuers change their own documents without any
-+  onboarding step on our side, so a snapshot taken at onboarding goes stale silently. Comparing
-+  `backend/data/onboarded-issuers.json` with `hosted-dids/` (the current objects):
-+
-+  | Issuer | Snapshot at onboarding | Currently served | Effect with today's verifier |
-+  |---|---|---|---|
-+  | Harbour Club | `#key-1` `z6MkjgN8…` | same | works |
-+  | Cedar Rowing | `#key-1` `z6MkfQRh…` | `#key-2` `z6MkvbwH…` | new credentials → `UnknownKey` |
-+  | Northfield North | `#signing` `z6MkqSjf…` | `#signing` `z6MkoBtQ…` (same id, new key) | new credentials → `BadSignature` |
-+  | Kestrel League | `#key-2025` `z6Mkttmq…` | `#key-2026` `z6MksRrY…` | new credentials → `UnknownKey` |
-+
-+  Kestrel's `LinkedDomains` endpoint also moved (`https://badges.kestrel-league.example/` →
-+  `https://kestrel-league.example/members/`). `VerifiedCredential.issuer_site`, which is shown to
-+  door staff, comes from the stale copy.
-+- The 300 s cache lifetime here matches the registry's 300 s cap. Any cache the fix adds should
-+  stay within it.
++- **Store**: `CredentialStore` (`app/lib/src/credential_store.dart:5`) is an in-memory map from
++  credential id to `HeldCredential`, plus a `holderKey` field. Nothing is saved to disk.
++- **HeldCredential** (`app/lib/src/held_credential.dart:36`): `fromIssuance` expects
++  `{"credential": {...JSON VC...}, "disclosures": [...]}`. Disclosures can be objects or
++  `[salt, name, value]` arrays. The getters are `id`, `issuer` (string or `{id}`), `holderDid`, and
++  `type` (the last entry).
++- **WalletService** (`app/lib/src/wallet_service.dart`):
++  - `holderKey()` creates the key lazily (`HolderKey`, an Ed25519 `did:key` via `ssi`).
++  - `requestCredential` (`:31`) calls the injected `IssuerClient` and refuses a credential whose
++    subject isn't this holder.
++  - **`createPresentation` (`:52`) throws `UnimplementedError`.**
++- **PresentationRequest** (`app/lib/src/presentation_request.dart`): parses an OpenID4VP-style
++  request (`client_id`, `nonce`, `dcql_query`, optional `response_uri`). `domain` is `client_id`
++  (`:41`). Nothing uses it yet.
++- The test fixture (`app/test/fixtures.dart`) is in a **different format from the one the backend
++  issues**: VC v2 context, `validFrom`/`validUntil` ISO strings, `DataIntegrityProof`/`eddsa-jcs-2022`,
++  no `credentialStatus`. The backend issues v1, unix-second `not_before`/`expires_at`,
++  `Ed25519Signature2020`. The door check in production can't be using this stub, so the member app
++  seen at the door must be something else **(guess)**.
 +
 +---
 +
-+## `reference/infra/hosted-dids/` — the four hosted documents
++## 2. Reference documents: rules and where the code differs
 +
-+**Rules:** these are the current, authoritative documents (see did-hosting rule 4). Each has one
-+Ed25519 `Multikey` listed under both `authentication` and `assertionMethod`, plus a
-+`LinkedDomains` service. Each `id` equals its DID, and each sits at the object key the spec
-+predicts.
++### `reference/did-web-method.md`
++Rules:
++- (a) URL mapping: append `/.well-known` **only if there are no path segments** (§3.2 step 4). For example,
++  `did:web:w3c-ccg.github.io:user:alice` maps to `https://w3c-ccg.github.io/user/alice/did.json`.
++- (b) The resolved `id` must equal the DID.
++- (c) HTTPS only.
++- (d) The HTTPS GET is the *only* source of the document.
++- (e) Update means replacing the document. The document currently served **is** the DID document.
++- (f) A verifier resolves the DID **when it verifies**. A key missing from the current document
++  isn't a key of the DID.
++- (g) The key must be listed under the relevant relationship (`assertionMethod` for issuers).
++- (h) Caching is allowed within `Cache-Control`.
 +
-+**Disagreements:** see the drift table above. Only Harbour matches the onboarding snapshot. All
-+backend tests sign as Harbour (`backend/tests/common/mod.rs`) through a `StaticTransport`, which
-+is why the suite stays green.
++Where the code differs:
++- (a) `did_web_url` always inserts `/.well-known` (`backend/src/resolver.rs:94`), so path-based DIDs
++  resolve to the wrong URL. That breaks Northfield (§1.3). The tests only cover a bare domain and a
++  port (`backend/tests/resolver.rs:90-100`).
++- (d)(e)(f)(h) `Verifier::resolve_issuer` (`backend/src/verifier.rs:197`) uses the document stored at
++  onboarding and never re-resolves, which is effectively an indefinite cache. The rationale in the
++  comment on `Store::onboarded_issuer` (`backend/src/store.rs:68-70`), "self-contained, as with the
++  peer DIDs", holds for `did:key`/`did:peer` and is explicitly false for `did:web` (spec §5, "No
++  self-certification").
++- (g) This holds only for `Ed25519Signature2020` proofs. Other proof types skip the check entirely
++  (`verifier.rs:208`).
++- (b)(c) Followed (`resolver.rs:66`, `transport.rs:53`).
++
++### `reference/trust-registry.md`
++Rules:
++- The registry alone decides trust.
++- A verifier must query `POST /authorization` for (issuer DID, `issue`, credential type) **at
++  verification time** and refuse unless `authorized: true`.
++- **Consumers must not keep their own list of trusted issuers.**
++- Answers can be cached for 300 s at most.
++- Key or document changes don't change the record, because the record follows the DID.
++
++Current export: all four issuers are `active` for `MembershipCredential`.
++
++Where the code differs: there's no registry client. The own list the contract forbids is exactly
++what the code has: `backend/data/onboarded-issuers.json` plus `Store::onboarded_issuer`. Worse, the
++list pins each issuer's *document and keys*, not just its DID. Issuers that aren't onboarded aren't
++refused either: `resolve_issuer` falls back to live resolution (`verifier.rs:201`), so a `did:key`
++"issuer" can sign a credential and it will pass the issuer check. It then needs a status list the
++store knows, and a reused `statusListId` isn't tied to the issuer, so an attacker can point at
++another issuer's list **(guess, not tested)**. The credential `type` is never checked.
++
++### `reference/infra/did-hosting.md`
++Rules:
++- The object key is `<host>/<path>`, exactly the path of the DID's HTTPS URL:
++  `<host>/.well-known/did.json` for a bare host, `<host>/<p1>/<p2>/did.json` for a path.
++- `Cache-Control: max-age=300`.
++- Key rotation writes a new version, and the old one is **no longer served**.
++
++Where the code differs:
++- It confirms the Northfield path mismatch above: the object is
++  `guild.northfield.example/chapters/north/did.json`.
++- It confirms that rotations happen routinely through the issuer console, which the stored copy
++  never picks up.
++- Bucket versioning is on, so the version history would show *when* Cedar, Northfield and Kestrel
++  rotated (not in the repo).
++
++### `reference/infra/hosted-dids/*`
++These are the current documents (§1.3). Three of the four differ from `backend/data/onboarded-issuers.json`:
++- Cedar: `key-1` became `key-2`.
++- Northfield: same `#signing` id, different key.
++- Kestrel: `key-2025` became `key-2026`, and `LinkedDomains` is now `https://kestrel-league.example/members/`.
++
++### `reference/infra/webhook-config.yaml`
++Rules:
++- One invocation per event.
++- **10 s hard timeout**: work still in progress is abandoned.
++- `maximum_retry_attempts: 0`, `on_failure_destination: none`.
++- Outbound connect timeout is 2 s.
++- The `tenant-settings` table has a `tenant-kind-index` GSI and 100 items per page.
++- `alarms: []`.
++
++Where the code differs:
++- `DISPATCH_BUDGET` equals the runtime limit exactly (`notifier.rs:23`). The runtime may kill the
++  invocation before the timeout branch logs, so drops can be silent **(guess)**.
++- Delivery is sequential, and the whole partition is paged instead of querying the GSI. A tenant
++  with many settings or subscribers, or one slow or hung endpoint, uses up the 10 s. Rough estimate
++  at the stub's 150 ms per call: about 60 subscribers. Everyone after that gets nothing, with no retry
++  at any layer **(estimate)**.
++- The canary is called first, so it stays "healthy" even when tenant deliveries are dropped.
++
++### `reference/infra/reserved-domains.md` (PI-STD-014)
++Rule: `example.com/net/org` must not be a live endpoint in production code paths, which explicitly
++includes health checks. Tests must use in-process or loopback stubs.
++
++Where the code differs: `CANARY_URL = https://example.com/webhooks/status` (`backend/src/notifier.rs:29`)
++is in the production code path, and `canary_healthy()` treats IANA's answer as notifier health. The
++test side complies (the hermetic stub, `webhook.rs:84-87`), and that is also why tests can't catch
++the problem. The issuer hosts use `.example`, a TLD reserved by RFC 2606 §2, which isn't on the
++PI-STD-014 list. I assume they are anonymised stand-ins in this snapshot **(guess)**.
++
++### `reference/README.md`
++Rule: `reference/` is read-only and gets overwritten on sync. Nothing in the code conflicts with it.
 +
 +---
 +
-+## `reference/infra/webhook-config.yaml` — `status-notifier` deployment
++## 3. Docs vs code
 +
-+**Rules**
-+1. One invocation per status-change event (`batch_size: 1`, `starting_position: latest`).
-+2. **`timeout_seconds: 10` is a hard kill:** work still running at that point is abandoned.
-+3. **`maximum_retry_attempts: 0`, `on_failure_destination: none`:** the platform never retries a
-+   failed invocation, and nothing catches failed events.
-+4. `outbound_connect_timeout_ms: 2000` bounds *connecting*. Nothing here bounds waiting for a
-+   response once connected.
-+5. `tenant-settings` table: partition = tenant (issuer DID), `query_page_size: 100`, and a GSI
-+   `tenant-kind-index` (tenant, kind) with full projection. Read-only access.
-+6. `monitoring.alarms: []`: nothing alerts.
++The rule I applied: for *what the system does*, the code wins. For *what it must do*, the external
++contracts in `reference/` win over our README and comments, because they're owned by the platform
++and governance teams and our service consumes them.
 +
-+**Disagreements**
-+- `notifier::DISPATCH_BUDGET` is 10 s (`backend/src/notifier.rs:23`), the same as the hard kill.
-+  The "did not finish within" log line at `notifier.rs:152-154` fires at the moment the runtime
-+  kills the invocation, so in production it may never be written. Settings reads and the canary
-+  POST also come out of the same 10 s.
-+- Fan-out is **sequential** (`for sub in … { dispatch(…).await }`), with no per-call timeout and
-+  no retries. Probes:
-+  - A subscriber that accepts the connection and never answers (`Endpoint::Hang`) sorts first →
-+    the whole budget is spent on it, and the next subscriber receives **nothing**. No
-+    `DeliveryEvent` is recorded for either one. Only the canary is reported, as delivered.
-+  - A tenant with 250 other settings and 80 healthy subscribers (150 ms each) → **65 of 80**
-+    delivered before the budget ran out, while `canary_healthy()` stays `true`.
-+  - Combined with rule 3, the missed subscribers are never notified.
-+- `Notifier::subscriptions` pages through the tenant's *whole* partition (50 ms per page of 100,
-+  filtered in memory) instead of calling `SettingsStore::query_kind` on the `tenant-kind-index`,
-+  which the config provides and `settings.rs` implements.
-+- `backend/README.md` says deliveries are "delivered concurrently … with failed deliveries
-+  retried". Both halves are false in the code, and the infra retries nothing either.
++| # | Claim (where) | Reality | Which wins |
++|---|---|---|---|
++| 1 | Issuers are `did:key`; checking needs "no registry lookup, no network call" (`backend/README.md:8-10`) | Every onboarded issuer is `did:web` (`data/onboarded-issuers.json`). The spec needs a live fetch, and the registry contract needs a live query | Code for what happens; spec + registry for what should happen. README is stale |
++| 2 | "Approved once, at onboarding, recorded in `data/onboarded-issuers.json`" (`backend/README.md:10-11`) | Describes the code accurately, but the registry contract forbids it | Registry contract |
++| 3 | `expirationDate` field (`backend/README.md:23`) | Code writes and reads `expires_at` (`issuer.rs:132`, `verifier.rs:165`) | Code (wire format) |
++| 4 | "Credentials are single-use" (`backend/README.md:32-33`) | Replay is per `request_id` only (`verifier.rs:111`). The same VP with a new request id passes if the nonce matches. The field is misleadingly named `seen_nonces` | Code describes behaviour. Whether single-use is intended is a product question (open) |
++| 5 | Notifications "delivered concurrently … failed deliveries retried" (`backend/README.md:40-41`) | Sequential, no retries in code or infra (`notifier.rs:140-150`, `webhook-config.yaml:25`) | Code + infra config |
++| 6 | "Notifier reports healthy while the canary is acknowledging" (`backend/README.md:41-42`) | True in code, but the canary is `example.com`, so the health signal is meaningless and violates PI-STD-014 | PI-STD-014 |
++| 7 | "Issuer documents are self-contained … the copy recorded at onboarding is all verification needs" (`store.rs:68-70`) | False for `did:web` | did:web spec |
++| 8 | `did_web_url` doc: `did.json` under `/.well-known/` "with any further segments … as subdirectories" (`resolver.rs:78-81`) | Accurately describes the code, but that behaviour is wrong | did:web spec §3.2 + did-hosting.md |
++| 9 | `webhook.rs:3-5`: "runs against a real HTTP client in production" | No such client in the repo. It presumably lives in a deploy wrapper **(guess)** | Unknown; the code here is only hermetic |
++| 10 | Credentials are JWT-VCs kept "exactly as issued" (`app/README.md:8-9`) | The wallet holds a JSON VC object + disclosures (`held_credential.dart:40`). The backend issues JSON-LD VCs, not JWTs | Code (both packages agree it's JSON) |
++| 11 | Wallet "keeps it on the device" (`app/README.md:4`) | `CredentialStore` is in-memory only | Code |
++| 12 | `WalletService` handles "presentations" (`app/README.md:16`, `credentials_app.dart:2`) | `createPresentation` throws `UnimplementedError` | Code |
++| 13 | App fixture "as the issuer service returns it" (`app/test/fixtures.dart:10`) | Different context, dates, proof suite and fields from `Issuer::issue` | Backend code (it is the issuer) |
++
++Tests that pass while the docs are wrong: every backend verifier test signs as Harbour Club, the one
++issuer whose stored copy still matches its hosted document (`backend/tests/common/mod.rs:19-22`).
++There's no test for a path-based `did:web`, a rotated key, or another issuer.
 +
 +---
 +
-+## `reference/infra/reserved-domains.md` — PI-STD-014
++## 4. What most likely matters for TICKET-1
 +
-+**Rules**
-+1. Reserved names (`example.com`, `.net`, `.org`) MUST NOT be live endpoints in production
-+   config or code paths. That explicitly includes webhooks, health/liveness probes, synthetic
-+   monitoring, and "the targets of any check whose result is reported as the state of a platform
-+   service".
-+2. These names resolve to IANA, so a response from them says nothing about the platform.
-+3. Use a platform-operated endpoint on the same path for probes, and an in-process or loopback
-+   stub for tests. The deploy-pipeline lint only scans `deploy.yaml`, so a constant in Rust code
-+   is not caught by it.
-+
-+**Disagreements**
-+- `notifier::CANARY_URL = "https://example.com/webhooks/status"` (`backend/src/notifier.rs:29`).
-+  It is the target of `canary_healthy()`, which the module doc and README describe as the
-+  notifier's health check. That is exactly what rule 1 forbids. In production every status change
-+  is also POSTed off-platform to IANA.
-+- `HermeticTransport::new()` (`backend/src/webhook.rs:78-89`) silently routes the canary's host
-+  to a local 200 stub. So in tests the canary is healthy by construction, and
-+  `the_canary_reports_healthy_once_changes_are_flowing` proves nothing about real delivery.
-+- Tests and docs use `.example` hosts (RFC 2606 §2, a TLD rather than one of the second-level
-+  names this standard lists). That is fine for fixtures. The *production* issuer DIDs in the
-+  registry are also `.example` names, but they are not in the standard's table, and they are
-+  given data here rather than something we configure.
-+
-+---
-+
-+## Cross-cutting: the app vs. the backend wire format (not in `reference/`, but found while reading)
-+
-+- The backend issues VC 1.1 (`https://www.w3.org/2018/credentials/v1`), `Ed25519Signature2020`,
-+  and unix-second `issued_at` / `not_before` / `expires_at`
-+  (`backend/src/issuer.rs:125-140`).
-+- The app's fixture "as the issuer service returns it" (`app/test/fixtures.dart:8`) is VC 2.0,
-+  `DataIntegrityProof` / `eddsa-jcs-2022`, with ISO `validFrom` / `validUntil`.
-+- `app/README.md` says JWT-VC. The code holds a JSON object (`HeldCredential.vc`), and the door
-+  request fixture asks for `ldp_vc`.
-+- A presentation built from the app's fixture would not pass the backend's `expires_at` /
-+  `not_before` parsing. Worse, if it did, its `DataIntegrityProof` would skip signature checking
-+  entirely (see `check_proof`).
++1. **The door checks the stored onboarding copy of each issuer's DID document instead of the live
++   one** (`verifier.rs:197-202`). Cedar and Kestrel rotated keys, so their new `#key-2`/`#key-2026`
++   aren't in the stored copy and verification should end in `UnknownKey`. Northfield kept the id but
++   changed the key, so it should end in `BadSignature`. Harbour is unchanged, so it passes. This fits
++   "old issuers fine, a re-approved batch rejected". The ticket doesn't say which clubs complained,
++   and I'm assuming "re-approved" means a key rotation; the bucket version history would confirm it
++   **(guess)**.
++2. **`did_web_url` gets path-based DIDs wrong** (`resolver.rs:94`). Northfield can't be resolved
++   live at all, so simply switching to live resolution won't fix Northfield. Re-onboarding it through
++   `onboard()` fails too.
++3. **Trust is decided by our own list, not the registry.** "Approved" in the ticket should mean
++   `authorized: true` from the registry. The code also has acceptance holes (it skips the signature
++   check for non-`Ed25519Signature2020` proofs, and trusts unknown issuers via the fallback). Any
++   change to issuer resolution has to keep these in view so the door doesn't start accepting too much.
++4. **Why nobody reproduces it**: the tests only use Harbour, with fixture documents that match its
++   stored copy. The notifier/canary problems in §2 are real but probably unrelated to the door
++   rejections. The door's status check reads the local store, not webhooks **(guess)**.

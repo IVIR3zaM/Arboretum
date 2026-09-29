@@ -10,16 +10,16 @@ NN=$1
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT=$(git -C "$HERE" rev-parse --show-toplevel)
 KIT="$ROOT/.plan/2026-09-27-credentials-practice-cloud-build/scripts/cold"
-CLONE=/tmp/cold-N17-train2
+CLONE=/tmp/cold-N17-train3
 T="$HERE/train"
 PROMPT="$T/prompts/turn-$NN.txt"
 [ -f "$PROMPT" ] || { echo "turn.sh: missing $PROMPT" >&2; exit 2; }
 S="$T/session"
 mkdir -p "$S" "$T/turn-$NN"
 BEFORE=$(wc -l < "$S/transcript.jsonl" 2>/dev/null || echo 0)
-# Run condition added after turn 02's first attempt was voided by the audit (its test wrote scratch
-# dirs through std::env::temp_dir() into /tmp, then it listed and removed them there): the process
-# temp dir points inside the jail, next to the CLI's own scratchpad, outside diff.patch.
+# Run condition, in force from turn 01 of this run (it was added mid-run in an earlier run, whose
+# tests wrote scratch dirs through std::env::temp_dir() into /tmp): the process temp dir points
+# inside the jail, next to the CLI's own scratchpad, outside diff.patch.
 export TMPDIR="$CLONE/.git/cc-tmp"
 mkdir -p "$TMPDIR"
 if [ "$NN" = "01" ]; then

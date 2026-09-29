@@ -1,0 +1,1 @@
+Trainer: a behaviour you chose on purpose is only yours once a test would go red if someone quietly undid it. Which of the decisions you just made is pinned that way, and which only lives in a summary?

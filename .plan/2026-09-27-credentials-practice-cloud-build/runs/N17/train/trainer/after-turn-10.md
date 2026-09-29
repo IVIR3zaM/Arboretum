@@ -1,0 +1,1 @@
+The improvement pass found things in this code and routed each one to an owner; that is the shape it should have. For the review that comes next, triage before you read: spend your attention where a mistake would cost the most, skim the rest, and judge the change from the diff itself rather than from anyone's summary of it, including the assistant's.

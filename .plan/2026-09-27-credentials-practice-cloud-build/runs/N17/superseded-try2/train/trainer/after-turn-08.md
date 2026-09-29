@@ -1,0 +1,1 @@
+Trainer: when a build comes back with its open choices already made, each of them was decided for you. Were any of them yours to make before the code was written, and would you make them the same way now?

@@ -1,0 +1,10 @@
+Two things this turn.
+
+First, finish Ticket 1 properly. The two behaviour changes we chose on purpose (a credential signed with a key the issuer no longer serves is refused; a document that can't be fetched means refusal) are only in your summary. Add tests that pin each of them, and show me each one failing if the matching part of the fix is reverted, then passing again. Don't change the fix itself.
+
+Second, Ticket 1 has landed and TICKET-2.md is now in the repo. Read it. Don't fix anything for it yet. I want:
+- what reference/ says about how the notifier actually runs in production (limits, retries, alarms, indexes, which hosts it may call), added to research-notes.md under its own heading, each rule next to the place in the code that does or doesn't obey it;
+- what the health check actually checks, traced through the code, and whether a green check tells us anything about real subscribers;
+- a reproduction under the ticket's conditions: a customer with a lot of settings, and a subscriber endpoint that is slow or never answers, with the health check green at the same time. Write it as failing tests, run them, and paste the real output. As before, tell me which of your new tests already pass on the current code.
+
+Then give me your model of why the big account's callbacks never arrive. If more than one thing is wrong, list each separately and say whether fixing it alone would close the ticket.

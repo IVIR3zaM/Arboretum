@@ -1,1 +1,1 @@
-Trainer: a behaviour you chose on purpose is only yours once a test would go red if someone quietly undid it. Which of the decisions you just made is pinned that way, and which only lives in a summary?
+Good driving on this one: you stated your own model before delegating, watched the failure happen before any fix, and asked for each half of the change to be shown to matter on its own. Keep the same order when the next work item arrives, and measure it against everything the work item promises, not only against the case that was reported.

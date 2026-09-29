@@ -1,0 +1,7 @@
+Before we touch anything, I want us both to understand this repo. Please don't change any code or docs in this turn.
+
+1. Map the two packages: in backend/, the path a credential takes from issuance to verification (how the verifier resolves an issuer and checks its key, expiry, status), and the status-change webhook notifier; in app/, the wallet's store and the presentation stub. Point me at the files and functions, briefly.
+2. Read everything under reference/ (every file, including the infra/ folder and the hosted documents) and write what you learn to research-notes.md at the repo root. I don't want a file listing: for each source, write down the rules it states that the code has to obey, and anything where it disagrees with what the code or its READMEs/comments assume.
+3. Reconcile the docs: go through backend/README.md, app/README.md and the code comments, and list every claim that doesn't match what the code actually does or what reference/ says. For each, say which source you'd trust and why.
+
+TICKET-1.md is in the repo. Read it, but don't start on it yet; just tell me which parts of the code and reference you think are relevant to it.

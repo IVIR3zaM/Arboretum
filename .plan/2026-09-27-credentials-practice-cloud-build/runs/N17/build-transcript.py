@@ -63,7 +63,7 @@ w = out.append
 w('# Ordered transcript — credentials, TRAIN mode (calibration run)\n')
 w('Learner prompts and trainer notes written by the operator, who had golden access (AGENTS.md rule 10): '
   'this is a **calibration run**, not a learner grade. Assistant: a cold `claude -p --model opus` session '
-  'in `/tmp/cold-N17-train2` (outside the repo), resumed turn after turn. Checkpoints are the outcome '
+  'in `/tmp/cold-N17-train3` (outside the repo), resumed turn after turn. Checkpoints are the outcome '
   "checker's runs of practice.json's commands.install/test/grade on a throwaway copy; the assistant never "
   'saw a score. Verbatim sources: `train/turn-NN/` (prompt.txt, transcript.jsonl, audit.txt, diff.patch), '
   '`train/checkpoints/*/` (unit.txt, grade.txt), `train/trainer/`, `train/staging.txt`.\n')

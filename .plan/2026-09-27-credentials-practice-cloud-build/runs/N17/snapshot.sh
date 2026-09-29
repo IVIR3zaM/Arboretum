@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# snapshot.sh save|restore <NN> — the pre-turn snapshot behind a void-attempt rollback (N17 try 2).
+# snapshot.sh save|restore <NN> — the pre-turn snapshot behind a void-attempt rollback (N17).
 #   save <NN>     before turn NN: tar the train clone (build output left out: target/, build/,
-#                 .dart_tool/ are rebuilt from source) and copy train/session/ to /tmp/cold-N17-snap2/turn-NN/
+#                 .dart_tool/ are rebuilt from source) and copy train/session/ to /tmp/cold-N17-snap3/turn-NN/
 #   restore <NN>  roll the clone and train/session/ back to that snapshot (only after the jail audit
 #                 has voided turn NN's attempt and the attempt has been kept as train/turn-NN-void-K/)
 set -euo pipefail
 [ $# -eq 2 ] || { echo "usage: snapshot.sh save|restore <NN>" >&2; exit 2; }
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-CLONE=/tmp/cold-N17-train2
+CLONE=/tmp/cold-N17-train3
 S="$HERE/train/session"
-SNAP=/tmp/cold-N17-snap2/turn-$2
+SNAP=/tmp/cold-N17-snap3/turn-$2
 EXCL=(--exclude=./backend/target --exclude=./app/build --exclude=./app/.dart_tool --exclude='./.git/cc-tmp/*/target')
 case "$1" in
   save)

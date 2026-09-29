@@ -1,8 +1,15 @@
-Right call to stop. I took the canary question to Platform Infrastructure, since they own the standard. Their answer: "We operate a health receiver for exactly this: https://canary.status.membership-platform.example/webhooks/status. It sits behind the same public egress and NAT path as relying-party traffic, and it answers 200 when it receives a status event. Keep the URL in the notifier as today; we don't want it injected at deploy time." So option (a), with that URL, and the Notifier constructor stays as it is.
+Useful list. I took the open ones to their owners this morning; here's where they landed.
 
-Your other three:
-2. Per-call bound: 5 s for the whole call, connect plus response, is fine.
-3. Budget: yes, lower DISPATCH_BUDGET to 8 s as a backstop under the 10 s kill. Anything still pending when it fires is recorded as a failed delivery, as you describe.
-4. Concurrency: uncapped per change. Put "does Platform want a cap" on the follow-up list.
+- D1: agreed. Every subscriber gets a bounded attempt inside the invocation; one that doesn't answer in time must show up as a recorded, non-delivered event our monitoring can see, not a log line. Partner Success will reword the promise to "every reachable subscriber".
+- D2/D3: no retries in this fix. The deployment says zero retries and I don't want a retry policy invented inside an incident fix. Durable redelivery (failure destination or a queue) goes to Platform as a follow-up; write it down, don't build it.
+- D4: fine. Keep our whole fan-out comfortably inside the platform's kill with a per-call timeout; don't touch the platform's limit and don't raise our budget constant to paper over it.
+- D5: bounded concurrency is fine; pick a sensible cap and say why.
+- D6: use the tenant-kind index. Platform confirms production rows carry the kind.
+- D7/D8, from Platform: the canary target they operate for this service is a receiver on the instance's loopback, http://127.0.0.1/webhooks/canary, behind the same outbound client as the real calls. The canary must vouch for the real path, so it should go out on the same path as this change's subscribers, after the lookup, and a change whose subscribers could not be read or reached in time must not leave it green. Per-customer relying-party failures come through the delivery events, not the global flag.
+- D9, D10, D11, D12: record them as follow-ups in research-notes.md with their owner. D10 is being handled by Partner Success.
 
-Your "already decided" list is right. Go ahead with the whole change, keeping it as small as that list. When you're done, show me from real output: the reproduction tests passing, the full backend and app suites, and the source diff. For each of the four faults, revert only that part, show me the test that goes red, and put it back. Also update the notes and README lines that describe the notifier's behaviour so they match what it now does.
+Now implement the TICKET-2 fix, minimal, in the notifier. Keep Notifier's public API (constructor and methods) as it is, since other code and tests construct it. Fix the stale README lines about delivery in the same change. Then:
+
+1. Run the new notifier_platform tests and the whole backend and app suites, and paste the real result lines.
+2. Show me the reproduction tests failing on the old notifier and passing on the new one, by actually running them against both, not by reasoning.
+3. For each cause you listed, point to the line of the diff that addresses it, or say it's deferred.

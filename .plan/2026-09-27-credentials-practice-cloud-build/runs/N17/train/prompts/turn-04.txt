@@ -1,10 +1,9 @@
-Two things this turn.
+On your question about the approved list: leave it as it is. Whether an unlisted issuer should be refused at the door is the same trust question as the registry, and I'm taking both to the owning team rather than changing gate behaviour inside a key-rotation fix. Please add a short "open questions / deferred" section to research-notes.md with the registry gate, the unlisted-issuer fallback and the proof-type skip, each one line, and update the notes where they now describe the old resolve and URL behaviour.
 
-First, finish Ticket 1 properly. The two behaviour changes we chose on purpose (a credential signed with a key the issuer no longer serves is refused; a document that can't be fetched means refusal) are only in your summary. Add tests that pin each of them, and show me each one failing if the matching part of the fix is reverted, then passing again. Don't change the fix itself.
+TICKET-1 has landed. A second ticket just came in: read TICKET-2.md. Same approach as before, no fixes yet:
 
-Second, Ticket 1 has landed and TICKET-2.md is now in the repo. Read it. Don't fix anything for it yet. I want:
-- what reference/ says about how the notifier actually runs in production (limits, retries, alarms, indexes, which hosts it may call), added to research-notes.md under its own heading, each rule next to the place in the code that does or doesn't obey it;
-- what the health check actually checks, traced through the code, and whether a green check tells us anything about real subscribers;
-- a reproduction under the ticket's conditions: a customer with a lot of settings, and a subscriber endpoint that is slow or never answers, with the health check green at the same time. Write it as failing tests, run them, and paste the real output. As before, tell me which of your new tests already pass on the current code.
+1. Before touching the notifier, go back to reference/ for everything that governs it (deployment config, platform limits, naming rules, anything else that applies) and add a Ticket 2 section to research-notes.md: what the platform actually does to this code at runtime, and where our code or our README assumes something different.
+2. Tell me what the health check actually checks today, end to end, and whether a green result could coexist with the customer's symptom.
+3. Reproduce the ticket under the conditions it describes, as failing tests in backend/tests/: a customer with a large account (lots of settings) and a customer where one relying party's endpoint hangs, with the health check green in both. The tests should assert what support says is promised, for every subscriber, not just the one account that complained. Use the budget and limits the platform really imposes, not our own constants. No real network.
 
-Then give me your model of why the big account's callbacks never arrive. If more than one thing is wrong, list each separately and say whether fixing it alone would close the ticket.
+Don't change anything under backend/src/ yet. Run the suite and show me the actual output of the new tests.

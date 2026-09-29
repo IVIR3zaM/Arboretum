@@ -1,5 +1,5 @@
-clone: /tmp/cold-N17-train2 (throwaway copy)
-date: 2026-09-28T14:21:21Z
+clone: /tmp/cold-N17-train3 (throwaway copy)
+date: 2026-09-29T10:33:50Z
 install: cd backend && cargo fetch --locked && cd ../app && flutter pub get --enforce-lockfile   (practice.json -> commands.install)
 ----- install output -----
   test_api 0.7.12 (0.7.14 available)
@@ -15,8 +15,8 @@ test: cd backend && cargo test --offline --locked && cd ../app && flutter test -
    Compiling quote v1.0.47
    Compiling subtle v2.6.1
    Compiling libc v0.2.189
-   Compiling cfg-if v1.0.5
    Compiling rand_core v0.10.1
+   Compiling cfg-if v1.0.5
    Compiling getrandom v0.4.3
    Compiling typenum v1.20.1
    Compiling cmov v0.5.4
@@ -32,232 +32,214 @@ test: cd backend && cargo test --offline --locked && cd ../app && flutter test -
    Compiling cpubits v0.1.1
    Compiling ff v0.14.0
    Compiling cpufeatures v0.3.1
-   Compiling base16ct v1.0.0
    Compiling group v0.14.0
-   Compiling serde_core v1.0.229
-   Compiling writeable v0.6.4
-   Compiling semver v1.0.28
+   Compiling base16ct v1.0.0
    Compiling litemap v0.8.3
+   Compiling semver v1.0.28
+   Compiling writeable v0.6.4
+   Compiling serde_core v1.0.229
    Compiling rustc_version v0.4.1
-   Compiling utf8_iter v1.0.4
    Compiling icu_properties_data v2.3.0
    Compiling icu_normalizer_data v2.3.0
+   Compiling utf8_iter v1.0.4
    Compiling curve25519-dalek v5.0.0
    Compiling serde v1.0.229
+   Compiling zmij v1.0.23
    Compiling thiserror v2.0.21
    Compiling data-encoding v2.11.1
    Compiling smallvec v1.16.2
-   Compiling zmij v1.0.23
    Compiling synstructure v0.14.0
    Compiling serde_json v1.0.151
    Compiling const-str v0.4.3
    Compiling zeroize_derive v1.5.0
    Compiling curve25519-dalek-derive v0.1.1
    Compiling match-lookup v0.1.3
-   Compiling zeroize v1.9.0
-   Compiling hybrid-array v0.4.15
    Compiling zerofrom-derive v0.1.8
    Compiling yoke-derive v0.8.3
+   Compiling zeroize v1.9.0
    Compiling zerovec-derive v0.11.6
+   Compiling hybrid-array v0.4.15
    Compiling crypto-common v0.2.2
    Compiling block-buffer v0.12.1
    Compiling zerofrom v0.1.8
    Compiling crypto-bigint v0.7.5
    Compiling yoke v0.8.3
    Compiling der v0.8.2
+   Compiling zerovec v0.11.8
    Compiling digest v0.11.3
    Compiling hmac v0.13.0
-   Compiling zerovec v0.11.8
    Compiling displaydoc v0.2.7
    Compiling hkdf v0.13.0
    Compiling signature v3.0.0
-   Compiling potential_utf v0.1.6
    Compiling spki v0.8.0
-   Compiling sec1 v0.8.1
    Compiling pkcs8 v0.11.0
+   Compiling sec1 v0.8.1
    Compiling tinystr v0.8.4
-   Compiling icu_locale_core v2.3.0
    Compiling zerotrie v0.2.5
+   Compiling icu_locale_core v2.3.0
    Compiling sha2 v0.11.0
+   Compiling potential_utf v0.1.6
    Compiling icu_collections v2.3.0
-   Compiling elliptic-curve v0.14.1
    Compiling primefield v0.14.0
-   Compiling rfc6979 v0.6.0
-   Compiling ecdsa v0.17.0
-   Compiling icu_provider v2.3.1
+   Compiling elliptic-curve v0.14.1
    Compiling wnaf v0.14.1
+   Compiling rfc6979 v0.6.0
+   Compiling icu_provider v2.3.1
    Compiling serde_derive v1.0.229
    Compiling primeorder v0.14.0
+   Compiling ecdsa v0.17.0
    Compiling icu_normalizer v2.3.0
    Compiling icu_properties v2.3.0
    Compiling data-encoding-macro-internal v0.1.19
    Compiling thiserror-impl v2.0.21
-   Compiling idna_adapter v1.2.2
    Compiling data-encoding-macro v0.1.21
    Compiling ed25519 v3.0.0
    Compiling base256emoji v1.0.2
+   Compiling idna_adapter v1.2.2
    Compiling chacha20 v0.10.2
    Compiling getrandom v0.2.17
-   Compiling itoa v1.0.18
-   Compiling memchr v2.8.3
-   Compiling base45 v3.2.0
    Compiling unsigned-varint v0.8.0
    Compiling base-x v0.2.11
+   Compiling itoa v1.0.18
    Compiling bs58 v0.5.1
    Compiling percent-encoding v2.3.2
+   Compiling memchr v2.8.3
+   Compiling base45 v3.2.0
    Compiling multibase v0.9.3
    Compiling form_urlencoded v1.2.2
-   Compiling rand v0.10.3
    Compiling rand_core v0.6.4
-   Compiling ed25519-dalek v3.0.0
+   Compiling rand v0.10.3
    Compiling idna v1.1.0
-   Compiling x25519-dalek v3.0.0
-   Compiling k256 v0.14.0
+   Compiling ed25519-dalek v3.0.0
    Compiling affinidi-encoding v0.1.6
+   Compiling x25519-dalek v3.0.0
+   Compiling p256 v0.14.0
+   Compiling k256 v0.14.0
    Compiling p384 v0.14.0
    Compiling p521 v0.14.0
-   Compiling p256 v0.14.0
-   Compiling base64 v0.23.1
    Compiling base58 v0.2.0
+   Compiling base64 v0.23.1
    Compiling url v2.5.8
    Compiling tokio-macros v2.7.2
    Compiling pin-project-lite v0.2.17
    Compiling tokio v1.53.1
    Compiling affinidi-crypto v0.2.9
    Compiling affinidi-did-common v0.4.3
-   Compiling credentials-backend v0.1.0 (/tmp/cold-N17-check.rmCfwU/backend)
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 24.03s
-     Running unittests src/lib.rs (/tmp/cold-N17-check.rmCfwU.target/debug/deps/credentials_backend-82ef79e65254530d)
+   Compiling credentials-backend v0.1.0 (/tmp/cold-N17-check.agfEH3/backend)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 32.91s
+     Running unittests src/lib.rs (/tmp/cold-N17-check.agfEH3.target/debug/deps/credentials_backend-82ef79e65254530d)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running tests/callbacks.rs (/tmp/cold-N17-check.rmCfwU.target/debug/deps/callbacks-36ef9a08d7e55e17)
-
-running 14 tests
-test a_silent_subscriber_is_recorded_as_failed_within_the_call_bound ... ok
-test a_subscriber_that_never_answers_does_not_stop_the_others ... ok
-test a_slow_subscriber_does_not_stop_the_others ... ok
-test healthy_subscribers_sorted_before_a_silent_one_are_notified ... ok
-test every_subscriber_of_an_account_with_many_subscribers_is_notified ... ok
-test the_canary_goes_to_the_platform_health_receiver ... ok
-test every_subscriber_of_a_mid_sized_account_is_notified ... ok
-test every_subscriber_of_a_large_account_is_notified ... ok
-test the_health_check_does_not_carry_over_from_the_previous_change ... ok
-test the_fan_out_ends_before_the_platform_kills_it ... ok
-test the_health_check_is_not_green_while_a_silent_subscriber_blocks_the_others ... ok
-test the_health_check_is_not_green_when_the_lookup_does_not_finish ... ok
-test the_health_check_is_not_green_while_a_large_accounts_subscribers_miss_revocations ... ok
-test subscribers_still_pending_when_the_budget_runs_out_are_recorded_as_failed ... ok
-
-test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.04s
-
-     Running tests/credential.rs (/tmp/cold-N17-check.rmCfwU.target/debug/deps/credential-f8f10d9b64a2c245)
+     Running tests/credential.rs (/tmp/cold-N17-check.agfEH3.target/debug/deps/credential-f8f10d9b64a2c245)
 
 running 7 tests
 test canonical_form_escapes_only_what_json_requires ... ok
-test canonical_form_writes_integral_numbers_without_a_fraction ... ok
-test canonical_form_orders_keys_by_utf16_code_units ... ok
 test canonical_form_sorts_keys_and_drops_whitespace ... ok
+test canonical_form_orders_keys_by_utf16_code_units ... ok
+test canonical_form_writes_integral_numbers_without_a_fraction ... ok
 test disclosure_digest_is_sha256_of_the_canonical_triple ... ok
 test signing_input_excludes_the_proof ... ok
 test signed_documents_verify_and_tampering_is_detected ... ok
 
-test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
 
-     Running tests/did_document.rs (/tmp/cold-N17-check.rmCfwU.target/debug/deps/did_document-18fb639c728feb4d)
+     Running tests/did_document.rs (/tmp/cold-N17-check.agfEH3.target/debug/deps/did_document-18fb639c728feb4d)
 
 running 1 test
 test builds_a_did_document_from_affinidi_did_common ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running tests/issuer.rs (/tmp/cold-N17-check.rmCfwU.target/debug/deps/issuer-a6afd66d89f4819a)
+     Running tests/door.rs (/tmp/cold-N17-check.agfEH3.target/debug/deps/door-b703773d7be24708)
+
+running 5 tests
+test a_credential_signed_with_a_key_the_issuer_retired_is_refused ... ok
+test a_member_of_a_path_did_issuer_that_replaced_its_key_under_the_same_id_is_admitted ... ok
+test a_member_of_an_issuer_that_never_rotated_is_admitted ... ok
+test a_member_of_an_issuer_that_rotated_and_moved_its_endpoint_is_admitted_with_the_current_site ... ok
+test a_member_of_an_issuer_that_rotated_to_a_new_key_id_is_admitted ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.04s
+
+     Running tests/issuer.rs (/tmp/cold-N17-check.agfEH3.target/debug/deps/issuer-a6afd66d89f4819a)
 
 running 9 tests
-test an_expiry_before_issuance_is_refused ... ok
-test claims_are_carried_only_as_salted_digests ... ok
 test holders_must_be_did_key ... ok
-test issued_credentials_carry_the_wire_fields ... ok
-test onboarding_fails_when_the_document_is_unavailable ... ok
+test an_expiry_before_issuance_is_refused ... ok
 test issuance_is_recorded_in_the_store ... ok
+test issued_credentials_carry_the_wire_fields ... ok
+test claims_are_carried_only_as_salted_digests ... ok
+test onboarding_fails_when_the_document_is_unavailable ... ok
 test onboarding_records_the_published_document ... ok
 test every_issue_uses_fresh_salts ... ok
 test the_issuer_proof_verifies_with_the_issuer_key ... ok
 
 test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
-     Running tests/notifier.rs (/tmp/cold-N17-check.rmCfwU.target/debug/deps/notifier-7d0e5776db1ca711)
+     Running tests/notifier.rs (/tmp/cold-N17-check.agfEH3.target/debug/deps/notifier-7d0e5776db1ca711)
 
 running 6 tests
 test a_rejected_delivery_is_reported_as_failed ... ok
 test each_delivery_is_reported_to_the_sink ... ok
-test every_subscriber_of_the_tenant_is_notified_once ... ok
 test other_tenants_subscribers_are_not_notified ... ok
-test the_notification_carries_the_status_change ... ok
+test every_subscriber_of_the_tenant_is_notified_once ... ok
 test the_canary_reports_healthy_once_changes_are_flowing ... ok
+test the_notification_carries_the_status_change ... ok
 
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running tests/published_keys.rs (/tmp/cold-N17-check.rmCfwU.target/debug/deps/published_keys-cc71a8c0212e139f)
+     Running tests/notifier_platform.rs (/tmp/cold-N17-check.agfEH3.target/debug/deps/notifier_platform-cd88232ceab92843)
 
-running 18 tests
-test did_web_url_matches_the_spec_example_for_a_port ... ok
-test did_web_url_for_northfield_is_where_its_document_is_hosted ... ok
-test did_web_url_matches_the_spec_example_for_a_path ... ok
-test did_web_url_matches_the_spec_example_for_a_bare_domain ... ok
-test did_web_url_matches_the_spec_example_for_a_port_and_a_path ... ok
-test northfield_resolves_from_its_hosted_url ... ok
-test the_door_accepts_harbour_after_it_rotates_its_key ... ok
-test the_door_accepts_harbour_signed_with_its_published_key ... ok
-test the_door_accepts_cedar_rowing_signed_with_a_key_its_document_lists ... ok
-test the_door_checks_cedar_rowing_against_the_document_served_today ... ok
-test the_door_accepts_kestrel_signed_with_a_key_its_document_lists ... ok
-test the_door_checks_kestrel_against_the_document_served_today ... ok
-test the_door_checks_harbour_against_the_document_served_today ... ok
-test the_door_checks_northfield_north_against_the_document_served_today ... ok
-test the_door_refuses_when_the_issuer_document_cannot_be_fetched ... ok
-test the_door_refuses_a_key_id_the_issuer_no_longer_lists ... ok
-test the_door_accepts_northfield_north_signed_with_a_key_its_document_lists ... ok
-test the_door_refuses_a_key_the_issuer_replaced_under_the_same_id ... ok
+running 7 tests
+test a_subscriber_that_does_not_answer_in_time_is_recorded_as_not_delivered ... ok
+test the_canary_receives_the_same_change_through_the_same_transport_as_the_subscribers ... ok
+test the_platform_limits_are_the_ones_this_suite_runs_under ... ok
+test every_other_subscriber_is_told_when_one_endpoint_hangs_while_the_health_check_is_green ... ok
+test when_the_budget_runs_out_every_subscriber_not_reached_is_recorded_and_health_is_not_green ... ok
+test every_subscriber_of_a_large_account_is_told_while_the_health_check_is_green ... ok
+test health_is_not_green_when_the_subscribers_cannot_be_read_in_time ... ok
 
-test result: ok. 18 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.25s
 
-     Running tests/resolver.rs (/tmp/cold-N17-check.rmCfwU.target/debug/deps/resolver-12fe0cfa7594279e)
+     Running tests/resolver.rs (/tmp/cold-N17-check.agfEH3.target/debug/deps/resolver-12fe0cfa7594279e)
 
-running 13 tests
+running 15 tests
 test did_key_with_a_non_ed25519_codec_is_rejected ... ok
 test did_key_decodes_to_a_single_ed25519_key ... ok
+test did_peer_2_decodes_keys_by_purpose_and_its_service ... ok
 test did_peer_0_decodes_its_inception_key ... ok
 test did_peer_with_an_unknown_numalgo_is_rejected ... ok
-test did_web_fetches_the_hosted_document ... ok
-test did_peer_2_decodes_keys_by_purpose_and_its_service ... ok
 test did_web_maps_a_bare_domain_to_the_well_known_path ... ok
-test did_web_rejects_an_empty_host ... ok
-test did_web_maps_an_encoded_port ... ok
-test did_web_reports_a_missing_document ... ok
-test unsupported_methods_are_reported ... ok
+test did_web_maps_the_method_spec_examples ... ok
+test did_web_fetches_the_hosted_document ... ok
 test did_web_rejects_a_document_for_another_did ... ok
+test did_web_rejects_an_empty_host ... ok
+test did_web_reports_a_missing_document ... ok
+test did_web_maps_an_encoded_port ... ok
 test mirror_transport_serves_documents_from_its_root ... ok
+test unsupported_methods_are_reported ... ok
+test did_web_resolves_every_approved_issuer_from_the_hosted_documents ... ok
 
-test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running tests/settings.rs (/tmp/cold-N17-check.rmCfwU.target/debug/deps/settings-9d0269617965a225)
+     Running tests/settings.rs (/tmp/cold-N17-check.agfEH3.target/debug/deps/settings-9d0269617965a225)
 
 running 4 tests
+test a_page_read_takes_the_tables_read_latency ... ok
 test putting_a_setting_again_replaces_it ... ok
 test the_kind_index_returns_only_settings_of_that_kind ... ok
-test a_page_read_takes_the_tables_read_latency ... ok
 test a_query_returns_the_tenants_settings_a_page_at_a_time ... ok
 
 test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running tests/status.rs (/tmp/cold-N17-check.rmCfwU.target/debug/deps/status-34c8ba3ed512dfb0)
+     Running tests/status.rs (/tmp/cold-N17-check.agfEH3.target/debug/deps/status-34c8ba3ed512dfb0)
 
 running 7 tests
-test allocation_hands_out_distinct_indexes ... ok
 test a_new_list_has_nothing_revoked ... ok
+test allocation_hands_out_distinct_indexes ... ok
 test revoking_an_unknown_credential_fails ... ok
 test setting_a_bit_only_touches_that_index ... ok
 test the_encoded_list_round_trips ... ok
@@ -266,7 +248,7 @@ test revoking_one_credential_leaves_the_others_valid ... ok
 
 test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running tests/store.rs (/tmp/cold-N17-check.rmCfwU.target/debug/deps/store-803b879a27beddcf)
+     Running tests/store.rs (/tmp/cold-N17-check.agfEH3.target/debug/deps/store-803b879a27beddcf)
 
 running 5 tests
 test a_new_store_is_empty ... ok
@@ -277,37 +259,27 @@ test onboarding_data_loads_every_approved_issuer ... ok
 
 test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running tests/verifier.rs (/tmp/cold-N17-check.rmCfwU.target/debug/deps/verifier-a3c3c0797b0abc1f)
+     Running tests/verifier.rs (/tmp/cold-N17-check.agfEH3.target/debug/deps/verifier-a3c3c0797b0abc1f)
 
 running 16 tests
 test a_credential_without_an_issuer_is_malformed ... ok
 test a_credential_that_is_not_yet_valid_is_rejected ... ok
-test a_credential_verifies_on_its_own ... ok
 test a_presentation_for_another_domain_is_rejected ... ok
+test a_credential_verifies_on_its_own ... ok
 test a_presentation_for_another_nonce_is_rejected ... ok
-test a_proof_by_a_key_the_issuer_does_not_list_is_rejected ... ok
 test a_credential_presented_by_another_holder_is_rejected ... ok
+test a_proof_by_a_key_the_issuer_does_not_list_is_rejected ... ok
 test a_presentation_discloses_only_the_requested_claims ... ok
 test a_presentation_signed_by_someone_else_is_rejected ... ok
+test a_tampered_disclosure_is_rejected ... ok
 test an_expired_credential_is_rejected ... ok
-test a_tampered_credential_is_rejected ... ok
 test the_issuer_document_is_the_one_harbour_publishes ... ok
+test a_tampered_credential_is_rejected ... ok
 test a_revoked_credential_is_rejected ... ok
 test every_claim_can_be_disclosed ... ok
 test the_same_submission_is_accepted_once ... ok
-test a_tampered_disclosure_is_rejected ... ok
 
-test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.08s
-
-     Running tests/wallet_presentation.rs (/tmp/cold-N17-check.rmCfwU.target/debug/deps/wallet_presentation-fa3a58e151650338)
-
-running 4 tests
-test the_vector_was_built_at_the_suites_now ... ok
-test the_wallet_signature_covers_the_nonce ... ok
-test the_wallet_holds_a_credential_the_backend_issued ... ok
-test the_door_accepts_the_presentation_the_wallet_built ... ok
-
-test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.07s
 
    Doc-tests credentials_backend
 
@@ -319,39 +291,38 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
    We strongly recommend running the flutter tool without superuser privileges.
   /
 📎
-00:00 +0: loading /tmp/cold-N17-check.rmCfwU/app/test/credential_store_test.dart
-00:00 +0: /tmp/cold-N17-check.rmCfwU/app/test/credential_store_test.dart: parses an issued credential with its disclosures
-00:00 +1: /tmp/cold-N17-check.rmCfwU/app/test/credential_store_test.dart: saves and finds a credential by id
-00:00 +2: /tmp/cold-N17-check.rmCfwU/app/test/credential_store_test.dart: lists every held credential
-00:00 +3: /tmp/cold-N17-check.rmCfwU/app/test/credential_store_test.dart: saving the same id twice keeps one copy
-00:00 +4: /tmp/cold-N17-check.rmCfwU/app/test/credential_store_test.dart: keeps the holder key
-00:00 +5: /tmp/cold-N17-check.rmCfwU/app/test/credential_list_test.dart: shows an empty wallet
-00:00 +6: /tmp/cold-N17-check.rmCfwU/app/test/credential_list_test.dart: shows an empty wallet
-00:00 +7: /tmp/cold-N17-check.rmCfwU/app/test/credential_list_test.dart: shows an empty wallet
-00:00 +8: /tmp/cold-N17-check.rmCfwU/app/test/credential_list_test.dart: shows an empty wallet
-00:00 +9: /tmp/cold-N17-check.rmCfwU/app/test/credential_list_test.dart: shows an empty wallet
-00:00 +10: /tmp/cold-N17-check.rmCfwU/app/test/credential_list_test.dart: shows an empty wallet
-00:00 +11: /tmp/cold-N17-check.rmCfwU/app/test/credential_list_test.dart: lists held credentials by type and issuer
-00:01 +12: /tmp/cold-N17-check.rmCfwU/app/test/credential_list_test.dart: requesting a membership adds it to the list
-00:01 +13: /tmp/cold-N17-check.rmCfwU/app/test/credential_list_test.dart: a failed request shows an error
-00:01 +14: /tmp/cold-N17-check.rmCfwU/app/test/credential_list_test.dart: a failed request shows an error
-00:01 +15: /tmp/cold-N17-check.rmCfwU/app/test/credential_list_test.dart: a failed request shows an error
-00:02 +16: /tmp/cold-N17-check.rmCfwU/app/test/holder_key_test.dart: a generated holder key is an Ed25519 did:key
-00:02 +17: /tmp/cold-N17-check.rmCfwU/app/test/holder_key_test.dart: two generated keys have different DIDs
-00:02 +18: /tmp/cold-N17-check.rmCfwU/app/test/holder_key_test.dart: a key from a fixed seed has a stable DID
-00:02 +19: /tmp/cold-N17-check.rmCfwU/app/test/holder_key_test.dart: the holder key signs with Ed25519
-00:02 +20: /tmp/cold-N17-check.rmCfwU/app/test/create_presentation_test.dart: matches the presentation the backend verifier checks
-00:02 +21: /tmp/cold-N17-check.rmCfwU/app/test/create_presentation_test.dart: discloses exactly the claims the query names
-00:03 +22: /tmp/cold-N17-check.rmCfwU/app/test/create_presentation_test.dart: discloses nothing when the query names no claims
-00:03 +23: /tmp/cold-N17-check.rmCfwU/app/test/create_presentation_test.dart: sends the credential and each disclosure exactly as issued
-00:03 +24: /tmp/cold-N17-check.rmCfwU/app/test/create_presentation_test.dart: binds the request nonce and client_id under the holder signature
-00:03 +25: /tmp/cold-N17-check.rmCfwU/app/test/create_presentation_test.dart: is signed by the holder key for authentication
-00:03 +26: /tmp/cold-N17-check.rmCfwU/app/test/create_presentation_test.dart: refuses a credential that has expired
-00:03 +27: /tmp/cold-N17-check.rmCfwU/app/test/create_presentation_test.dart: refuses a claim the credential does not hold
-00:03 +28: /tmp/cold-N17-check.rmCfwU/app/test/create_presentation_test.dart: refuses a credential it does not hold
-00:03 +29: /tmp/cold-N17-check.rmCfwU/app/test/create_presentation_test.dart: keeps the credential and presents it again to a fresh request
-00:03 +30: /tmp/cold-N17-check.rmCfwU/app/test/create_presentation_test.dart: refuses a request for more than one credential
-00:03 +31: /tmp/cold-N17-check.rmCfwU/app/test/create_presentation_test.dart: refuses a query that offers claim sets
-00:03 +32: All tests passed!
+00:00 +0: loading /tmp/cold-N17-check.agfEH3/app/test/credential_store_test.dart
+00:00 +0: /tmp/cold-N17-check.agfEH3/app/test/credential_store_test.dart: parses an issued credential with its disclosures
+00:00 +1: /tmp/cold-N17-check.agfEH3/app/test/credential_store_test.dart: saves and finds a credential by id
+00:00 +2: /tmp/cold-N17-check.agfEH3/app/test/credential_store_test.dart: lists every held credential
+00:00 +3: /tmp/cold-N17-check.agfEH3/app/test/credential_store_test.dart: saving the same id twice keeps one copy
+00:00 +4: /tmp/cold-N17-check.agfEH3/app/test/credential_store_test.dart: keeps the holder key
+00:00 +5: /tmp/cold-N17-check.agfEH3/app/test/credential_list_test.dart: shows an empty wallet
+00:02 +6: /tmp/cold-N17-check.agfEH3/app/test/wallet_service_test.dart: creates a holder key once and reuses it
+00:02 +7: /tmp/cold-N17-check.agfEH3/app/test/credential_list_test.dart: lists held credentials by type and issuer
+00:02 +8: /tmp/cold-N17-check.agfEH3/app/test/credential_list_test.dart: lists held credentials by type and issuer
+00:02 +9: /tmp/cold-N17-check.agfEH3/app/test/credential_list_test.dart: lists held credentials by type and issuer
+00:02 +10: /tmp/cold-N17-check.agfEH3/app/test/credential_list_test.dart: lists held credentials by type and issuer
+00:02 +11: /tmp/cold-N17-check.agfEH3/app/test/credential_list_test.dart: lists held credentials by type and issuer
+00:02 +12: /tmp/cold-N17-check.agfEH3/app/test/credential_list_test.dart: requesting a membership adds it to the list
+00:03 +13: /tmp/cold-N17-check.agfEH3/app/test/credential_list_test.dart: a failed request shows an error
+00:03 +14: /tmp/cold-N17-check.agfEH3/app/test/smoke_test.dart: generates an Ed25519 key pair via the ssi package
+00:03 +15: /tmp/cold-N17-check.agfEH3/app/test/smoke_test.dart: builds a DCQL credential query via the dcql package
+00:04 +16: /tmp/cold-N17-check.agfEH3/app/test/holder_key_test.dart: a generated holder key is an Ed25519 did:key
+00:05 +17: /tmp/cold-N17-check.agfEH3/app/test/create_presentation_test.dart: the fixture holder is the backend credential subject
+00:05 +18: /tmp/cold-N17-check.agfEH3/app/test/create_presentation_test.dart: the fixture holder is the backend credential subject
+00:05 +19: /tmp/cold-N17-check.agfEH3/app/test/create_presentation_test.dart: the fixture holder is the backend credential subject
+00:05 +20: /tmp/cold-N17-check.agfEH3/app/test/holder_key_test.dart: the holder key signs with Ed25519
+00:05 +21: /tmp/cold-N17-check.agfEH3/app/test/create_presentation_test.dart: presents the held credential unchanged, bound to the request nonce and domain
+00:05 +22: /tmp/cold-N17-check.agfEH3/app/test/create_presentation_test.dart: discloses only the claims the request asks for, as issued
+00:05 +23: /tmp/cold-N17-check.agfEH3/app/test/create_presentation_test.dart: a request for no claims discloses none
+00:05 +24: /tmp/cold-N17-check.agfEH3/app/test/create_presentation_test.dart: is signed by the holder did:key over the JCS form without the proof
+00:05 +25: /tmp/cold-N17-check.agfEH3/app/test/create_presentation_test.dart: the signature covers the nonce, the domain and the disclosures
+00:05 +26: /tmp/cold-N17-check.agfEH3/app/test/create_presentation_test.dart: the credential stays in the wallet and can be presented again
+00:05 +27: /tmp/cold-N17-check.agfEH3/app/test/create_presentation_test.dart: refuses an expired credential
+00:05 +28: /tmp/cold-N17-check.agfEH3/app/test/create_presentation_test.dart: refuses a credential it does not hold
+00:05 +29: /tmp/cold-N17-check.agfEH3/app/test/create_presentation_test.dart: refuses a credential issued to another holder
+00:05 +30: /tmp/cold-N17-check.agfEH3/app/test/create_presentation_test.dart: refuses a request for a claim the credential does not carry
+00:05 +31: All tests passed!
 ----- end -----
 test exit: 0

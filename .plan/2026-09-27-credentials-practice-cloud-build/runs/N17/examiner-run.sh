@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # examiner-run.sh — the N17 examiner: a separate cold `claude -p --model opus` process, fresh session,
-# in its own directory outside the repo (/tmp/cold-N17-examiner2), never the process that ran the
+# in its own directory outside the repo (/tmp/cold-N17-examiner3), never the process that ran the
 # learner's prompts. Its inputs: golden/ (the session's golden context: _solutions/ + practice.json +
 # context/cedar goals, best-practices, failure-modes), the ordered transcript, the per-turn logs, the
 # final diff, the outcome checker's baseline/final captures, and harness/DESIGN.md. Runs the kit's
@@ -10,9 +10,9 @@ set -euo pipefail
 HERE=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 ROOT=$(git -C "$HERE" rev-parse --show-toplevel)
 KIT="$ROOT/.plan/2026-09-27-credentials-practice-cloud-build/scripts/cold"
-SESSION="$ROOT/.sessions/20260928T134221Z-credentials-train"
+SESSION="$ROOT/.sessions/20260929T094910Z-credentials-train"
 T="$HERE/train"
-E=/tmp/cold-N17-examiner2
+E=/tmp/cold-N17-examiner3
 [ ! -e "$E" ] || { echo "examiner-run: $E exists" >&2; exit 3; }
 mkdir -p "$E/turns" "$E/outcome"
 cp -R "$SESSION/golden" "$E/golden"

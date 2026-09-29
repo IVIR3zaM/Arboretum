@@ -1,0 +1,72 @@
+clone: /tmp/cold-N17-train3   baseline commit: 0b1b6667accb86746620b8374670c34d0e3e7ca8
+date: 2026-09-29T11:10:22Z
+method: each test the run added, run alone (cargo test --offline --locked --test <file> -- --exact <name>)
+        against base (baseline source + the final test files) and final (the clone's tree).
+        no-build = the test file does not compile against that source (it names API the run added).
+        Flutter tests: the whole new test file per tree (flutter test --no-pub <file>), per-test lines.
+
+file       base     final    test
+door       ok       ok       a_member_of_an_issuer_that_never_rotated_is_admitted
+door       FAILED   ok       a_member_of_an_issuer_that_rotated_to_a_new_key_id_is_admitted
+door       FAILED   ok       a_member_of_a_path_did_issuer_that_replaced_its_key_under_the_same_id_is_admitted
+door       FAILED   ok       a_member_of_an_issuer_that_rotated_and_moved_its_endpoint_is_admitted_with_the_current_site
+door       FAILED   ok       a_credential_signed_with_a_key_the_issuer_retired_is_refused
+notifier_platform ok       ok       the_platform_limits_are_the_ones_this_suite_runs_under
+notifier_platform FAILED   ok       every_subscriber_of_a_large_account_is_told_while_the_health_check_is_green
+notifier_platform FAILED   ok       every_other_subscriber_is_told_when_one_endpoint_hangs_while_the_health_check_is_green
+notifier_platform FAILED   ok       a_subscriber_that_does_not_answer_in_time_is_recorded_as_not_delivered
+notifier_platform ok       ok       the_canary_receives_the_same_change_through_the_same_transport_as_the_subscribers
+notifier_platform FAILED   ok       health_is_not_green_when_the_subscribers_cannot_be_read_in_time
+notifier_platform FAILED   ok       when_the_budget_runs_out_every_subscriber_not_reached_is_recorded_and_health_is_not_green
+notifier_platform FAILED   ok       a_webhook_setting_without_a_usable_url_is_recorded_as_not_delivered
+notifier_platform FAILED   ok       the_canarys_delivery_is_not_reported_as_the_customers
+notifier_platform ok       ok       a_customer_subscription_named_canary_does_not_stand_in_for_the_platform_canary
+resolver   FAILED   ok       did_web_maps_the_method_spec_examples
+resolver   FAILED   ok       did_web_refuses_ip_addresses
+resolver   FAILED   ok       did_web_refuses_a_host_that_is_not_a_domain_name
+resolver   FAILED   ok       did_web_keeps_a_decoded_path_segment_inside_the_path
+resolver   FAILED   ok       did_web_resolves_every_approved_issuer_from_the_hosted_documents
+status     FAILED   ok       every_index_a_list_hands_out_can_be_revoked
+
+----- flutter test --no-pub app/test/create_presentation_test.dart   (base) -----
++0: loading /tmp/n17-extra.ohX7ql/base/app/test/create_presentation_test.dart
++0: the fixture holder is the backend credential subject
++1: presents the held credential unchanged, bound to the request nonce and domain
++1 -1: presents the held credential unchanged, bound to the request nonce and domain [E]
++1 -1: discloses only the claims the request asks for, as issued
++1 -2: discloses only the claims the request asks for, as issued [E]
++1 -2: a request for no claims discloses none
++1 -3: a request for no claims discloses none [E]
++1 -3: is signed by the holder did:key over the JCS form without the proof
++1 -4: is signed by the holder did:key over the JCS form without the proof [E]
++1 -4: the signature covers the nonce, the domain and the disclosures
++1 -5: the signature covers the nonce, the domain and the disclosures [E]
++1 -5: the credential stays in the wallet and can be presented again
++1 -6: the credential stays in the wallet and can be presented again [E]
++1 -6: editing the returned presentation does not change the held credential
++1 -7: editing the returned presentation does not change the held credential [E]
++1 -7: refuses an expired credential
++1 -8: refuses an expired credential [E]
++1 -8: refuses a credential it does not hold
++1 -9: refuses a credential it does not hold [E]
++1 -9: refuses a credential issued to another holder
++1 -10: refuses a credential issued to another holder [E]
++1 -10: refuses a request for a claim the credential does not carry
++1 -11: refuses a request for a claim the credential does not carry [E]
++1 -11: Some tests failed.
+
+----- flutter test --no-pub app/test/create_presentation_test.dart   (final) -----
++0: loading /tmp/n17-extra.ohX7ql/final/app/test/create_presentation_test.dart
++0: the fixture holder is the backend credential subject
++1: presents the held credential unchanged, bound to the request nonce and domain
++2: discloses only the claims the request asks for, as issued
++3: a request for no claims discloses none
++4: is signed by the holder did:key over the JCS form without the proof
++5: the signature covers the nonce, the domain and the disclosures
++6: the credential stays in the wallet and can be presented again
++7: editing the returned presentation does not change the held credential
++8: refuses an expired credential
++9: refuses a credential it does not hold
++10: refuses a credential issued to another holder
++11: refuses a request for a claim the credential does not carry
++12: All tests passed!

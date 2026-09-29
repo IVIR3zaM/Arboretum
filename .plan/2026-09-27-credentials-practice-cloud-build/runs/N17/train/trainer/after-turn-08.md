@@ -1,1 +1,1 @@
-Trainer: when a build comes back with its open choices already made, each of them was decided for you. Were any of them yours to make before the code was written, and would you make them the same way now?
+You took the open questions to the people who own the answers instead of letting the assistant answer them, and that is the move this phase is about. Before you move on, look at what the assistant decided on its own where those answers were silent: each such choice is either yours to accept out loud or a question to send back.

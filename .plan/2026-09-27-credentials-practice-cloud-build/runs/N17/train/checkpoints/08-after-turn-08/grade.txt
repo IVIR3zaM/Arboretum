@@ -1,7 +1,7 @@
 practice: credentials
-clone: /tmp/cold-N17-check.rmCfwU
+clone: /tmp/cold-N17-check.agfEH3
 command: bash _solutions/grade.sh   (practice.json -> commands.grade)
-date: 2026-09-28T14:23:05Z
+date: 2026-09-29T10:36:17Z
 ----- output -----
 ==================================================================
  axis a (_solutions/grade.d/a.sh)
@@ -37,7 +37,7 @@ axis a: PASS 26/26
 ==================================================================
  axis a2 (_solutions/grade.d/a2.sh)
 ==================================================================
-notifier: did:web:guild.northfield.example:chapters:north: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000009 did not finish within 8s
+notifier: did:web:guild.northfield.example:chapters:north: subscribers for urn:uuid:5e1f0000-0000-4000-8000-000000000009 not read within 7s
 ok   D1 small tenant, all healthy: every healthy subscriber delivered within 10s
 ok   C1 small tenant, all healthy: canary healthy
 ok   K1 small tenant, all healthy: canary healthy implies every healthy subscriber delivered

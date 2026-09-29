@@ -1,0 +1,7 @@
+On your four calls: I'd rather have been asked before they were built, but I've read each one and I'm keeping them. Refusing is the conservative side for all four, and the PM deferred multiple credentials and credential_sets anyway. Next time a gap like that shows up mid-build, stop and ask.
+
+Now phase 4. I want you to find, not recite, the highest-value correctness and robustness problems still in this code, across both packages. Two sources:
+- the code we inherited: things that are actually wrong in this code, not generic advice;
+- our own diff from the tickets and the feature: what could our changes have broken or left open that none of our tests would notice? Think about edge cases of the inputs we now accept, state we hand out or share, and rules we enforce in one place but not another.
+
+For each finding: where it is (file:line), what goes wrong and for whom, and evidence that it's real. A failing test or a probe you actually ran is evidence; "this could happen" isn't. Rank them by what matters most to members and customers. Then propose which ones belong in scope now (small, clearly correct fixes) and which should be deferred and to whom. Don't fix anything this turn, and don't commit throwaway probes into the repo.

@@ -1,1 +1,1 @@
-Trainer: which of the claims in that summary did you watch being measured, and which did you only read?
+Asking for the tests to be run against both versions of the code, instead of reasoned about, is what exposed a test that could not have gone red. Make that the standard for every test the assistant adds from here on, and treat a summary of results as a claim until you have seen the command that produced it.

@@ -1,6 +1,8 @@
-Before we move on: in your last summary, a couple of things are stated rather than shown. You said the test you narrowed still fails on the original code, and you gave per-file counts for the backend suite without the raw lines. Show me both from real output: run the narrowed test against the original notifier (then put the fix back and confirm it's byte-identical), and paste the raw `test result:` lines of a full `cargo test --offline --locked` run.
+TICKET-2 has landed. Commit the TICKET-2 work on the same branch (notifier, its tests, the README fix and the notes), with a message that says what changed and what's deferred. Commit the two ticket files too so the history says what each change was for.
 
-Then phase 3. Ticket 2 has landed and FEATURE-REQUEST.md is now in the repo. Read it, but don't write any code this turn.
-1. Read how the backend verifier checks a presentation (everything verify_presentation and the functions it calls require) and the app's request parsing, store and holder key. Tell me the wire contract the wallet has to meet, with file:line for each rule.
-2. The brief is two sentences and says it's small. Draft the questions I should take to the people who own the answers (the PM, the Verifier team that owns the backend verifier, Platform), grouped by owner. Anything the code or reference/ already settles, say so and cite it instead of asking. Anything where the docs and the code disagree, put it as a question.
-3. Tell me what you think the smallest correct version is, and what you'd leave out, but mark it as your proposal, not a decision.
+Next up is a feature: FEATURE-REQUEST.md just arrived. It reads like a small job, and I don't trust that yet. Before any code:
+
+1. Read how the backend verifier checks a presentation today, end to end (what it requires, in what shape, what it rejects), and the wallet side that exists: the store, the stub, the request type, the key the holder has. Summarise the wire contract the wallet has to satisfy, citing files and lines.
+2. Then write me the list of questions I need to take to the people who own the answers before this is built: the PM, the verifier team, and Platform. For each question say who owns it and what we'd build differently depending on the answer. Include anything where our own docs and code disagree about how credentials behave.
+
+Don't implement anything and don't answer the questions yourself. I'll bring the answers back.

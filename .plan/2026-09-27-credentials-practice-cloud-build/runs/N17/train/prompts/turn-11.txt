@@ -1,0 +1,9 @@
+Commit the improvement fixes as their own commit on the branch.
+
+Now review the whole branch as if a teammate had opened it as a PR against the baseline commit, and I'm the one who has to approve it. Work from the diff itself (git diff from the baseline), not from what you remember doing. Triage first: tell me which parts carry the risk and deserve line-by-line reading (I'd expect the resolver change, the URL mapping, the notifier's budget/concurrency/health logic and createPresentation's signing and disclosure selection), and which are skim-level (READMEs, notes, test fixtures). Then read the risky parts line by line and report:
+
+1. Anything wrong or questionable in those hunks, with file and line, including anything the earlier turns claimed that the code doesn't actually do.
+2. Whether each new test actually discriminates: run every test this branch added, one at a time, against the baseline commit's source (with the new test files laid over it) and against the branch, and show me a table of which fail on the old code and pass on the new. Flag any that pass on both, or that only pass when run together with others.
+3. Anything in the diff that isn't needed for the two tickets, the feature or the four agreed fixes.
+
+Don't fix anything in this step; I'll decide what changes before merge.

@@ -1,0 +1,19 @@
+N17 try 2 (2026-09-29): path B — the partial run's environment was reclaimed.
+
+Path A needs all three of these; checked on 2026-09-29 in a Linux cloud container:
+  /tmp/cold-N17-train2                                   missing (no /tmp/cold-N17-* at all)
+  3ce2466c-*.jsonl under /tmp/cold-N17-train2/.git/cc-config/projects/   missing (the clone is gone)
+  /tmp/cold-N17-snap2/turn-09/clone.tar                  missing
+.sessions/20260928T134221Z-credentials-train/ is gone too (no .sessions/ in this checkout).
+
+The run can only resume by --resume-ing CLI session 3ce2466c-... in that clone, so it cannot be
+resumed. Per D22/D23 (path B) it is set aside intact:
+  - runs/N17/train/ was moved with `git mv` to runs/N17/superseded-try2/train/; every file tracked
+    at 91703a1 under runs/N17/train/ has an identical blob hash there.
+  - The helper scripts as they stood for that run (turn.sh, snapshot.sh, checkpoint.sh,
+    outcome-extra.sh, build-transcript.py, examiner-run.sh, showturn.py, sumunit.sh) are copied,
+    not moved, into runs/N17/superseded-try2/scripts/.
+Nothing in it is resumed, re-driven or edited. A brand-new calibration train run starts from
+turn 1 in runs/N17/train/: a new .sessions/<stamp>/, a new clone /tmp/cold-N17-train3 (mkclone.sh
+t1), snapshots in /tmp/cold-N17-snap3, and a new CLI session. Its learner prompts are written
+fresh; the prompts and transcripts of both superseded runs were not read.

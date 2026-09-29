@@ -1,0 +1,16 @@
+Thanks. That's a real review. My decisions as the approver:
+
+- A and B block the merge. Fix both, test first: turn each probe into a test in the suite, show it failing on the current branch, then make the smallest fix (recognise the platform canary by where it comes from, not by an id a customer can also use; hand out a copy of the credential, not the wallet's own map) and show it passing.
+- C and D: correct the wording in the code comments, README and notes so they say what the code does. For C, say plainly that a lookup that misses the deadline turns health red but records no per-subscriber events.
+- E: keep the index fix, but it does not deploy until whoever owns production status-list storage confirms whether allocation state is persisted. Put that in the PR description as a deploy precondition.
+- F, G, H and the "not needed" items: leave them. Research notes and the two work items stay on the branch; I'll decide at merge.
+
+Then write PR_DESCRIPTION.md at the repo root for the whole branch, short, and include my review in my words:
+
+- What I verified: every ticket reproduced by a failing test before its fix; each new test run alone against the old and new code; the wallet's presentation accepted by the real backend verifier and rejected when tampered.
+- What the AI got wrong along the way, and was caught: a notifier test that claimed an ordering it didn't check and passed on the old code; the canary recognised by an id a customer could reuse; the presentation sharing the stored credential's map; two comments that overclaimed.
+- The weakness I'm shipping knowingly: health is still one per-process flag written at the end of a change, and our internal budget assumes Platform's cold start stays under the headroom we left. Revisit when Platform gives us cold-start figures or when per-subscriber queuing lands.
+- The trade-off: no retries in this fix. We accept that a relying party whose endpoint is down misses the callback until its next status-list refresh; revisit when Platform provides a failure destination.
+- Blockers outside this branch: the forged-credential escalation (item 1) and the cache decision (item 2).
+
+Commit the fixes and the PR description as a final commit. Run both whole suites and paste the real result lines, and list the tests that went from failing to passing in this step.

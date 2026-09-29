@@ -1,0 +1,8 @@
+Right call to stop. I took the canary question to Platform Infrastructure, since they own the standard. Their answer: "We operate a health receiver for exactly this: https://canary.status.membership-platform.example/webhooks/status. It sits behind the same public egress and NAT path as relying-party traffic, and it answers 200 when it receives a status event. Keep the URL in the notifier as today; we don't want it injected at deploy time." So option (a), with that URL, and the Notifier constructor stays as it is.
+
+Your other three:
+2. Per-call bound: 5 s for the whole call, connect plus response, is fine.
+3. Budget: yes, lower DISPATCH_BUDGET to 8 s as a backstop under the 10 s kill. Anything still pending when it fires is recorded as a failed delivery, as you describe.
+4. Concurrency: uncapped per change. Put "does Platform want a cap" on the follow-up list.
+
+Your "already decided" list is right. Go ahead with the whole change, keeping it as small as that list. When you're done, show me from real output: the reproduction tests passing, the full backend and app suites, and the source diff. For each of the four faults, revert only that part, show me the test that goes red, and put it back. Also update the notes and README lines that describe the notifier's behaviour so they match what it now does.

@@ -1,7 +1,7 @@
-Before we touch anything, I want us both to understand this repo. Please don't change any code or docs in this turn.
+I'm picking up this repo today and there's a support ticket waiting (TICKET-1.md), but before anyone touches code I want us both to understand the system. Please don't edit any source, test or README yet: this pass is reading only, plus one notes file.
 
-1. Map the two packages: in backend/, the path a credential takes from issuance to verification (how the verifier resolves an issuer and checks its key, expiry, status), and the status-change webhook notifier; in app/, the wallet's store and the presentation stub. Point me at the files and functions, briefly.
-2. Read everything under reference/ (every file, including the infra/ folder and the hosted documents) and write what you learn to research-notes.md at the repo root. I don't want a file listing: for each source, write down the rules it states that the code has to obey, and anything where it disagrees with what the code or its READMEs/comments assume.
-3. Reconcile the docs: go through backend/README.md, app/README.md and the code comments, and list every claim that doesn't match what the code actually does or what reference/ says. For each, say which source you'd trust and why.
+1. Map both packages for me: in backend/, the path a credential takes from issuance to the door's verify decision (how an issuer is resolved, which keys count, what gets checked), and the status-change webhook notifier. In app/, the wallet's store and the presentation stub. Cite files and functions.
+2. Read everything under reference/ (every file, including infra/ and the hosted documents). It's the external documentation we have from the other teams and the platform. Write what you learn to research-notes.md at the repo root: for each document, the rules it states that our code has to obey, and wherever the code does something different, say so and cite both sides.
+3. Reconcile the docs: compare what backend/README.md, app/README.md and the code comments claim with what the code actually does. List each claim that's stale or wrong, and say which source wins and why.
 
-TICKET-1.md is in the repo. Read it, but don't start on it yet; just tell me which parts of the code and reference you think are relevant to it.
+Keep the notes factual and short. Where you're guessing, say so. Finish with a short summary of the three or four things most likely to matter for TICKET-1, but don't propose or make a fix yet.

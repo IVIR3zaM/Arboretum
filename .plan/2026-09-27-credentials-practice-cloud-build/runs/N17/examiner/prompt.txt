@@ -1,0 +1,22 @@
+You are the examiner for one recorded train-mode session of a coding practice. You did not run the session and you did not coach it; you grade it in a fresh context. Everything you need is in this directory. Work only here: read files in this directory, write one file, and do not read or write anything outside it.
+
+What is here:
+- golden/ — the golden context: the practice's answer key (rubric.md, trap-manifest.md, feature-qa.md, FIX.md, FEATURE-FIX.md, context-map.md, doc-drift-ledger.md, the hidden graders), practice.json, and golden/context-cedar/ (goals.md, best-practices.md, failure-modes.md).
+- transcript.md — the ordered session: each learner prompt verbatim, the assistant's final reply, the outcome checker's checkpoints (unit suites and grade axes) taken between turns, the staging events, and every trainer note, where it was given.
+- turns/turn-NN.jsonl — the assistant's full stream-json log per turn (every tool call and result), for when the final reply is not enough.
+- diff.patch — the final tree against the baseline commit.
+- outcome/00-baseline and outcome/99-final — unit.txt and grade.txt captured by the outcome checker (practice.json's commands.test and commands.grade on a throwaway copy), plus in 99-final robustness.txt (the non-blocking robustness probes) and discrimination.txt (each test the run added, run alone against the baseline source and the final source).
+- harness-DESIGN.md — the harness design. Read §2 (the examiner's three inputs and grading principles) and §3 (the modes; in Mode TRAIN, "Name the discipline, not the answer").
+
+This is a calibration run: the learner's prompts and the trainer's notes were written by an operator who could read the golden context (AGENTS.md rule 10). Grade it as such, and say where golden content reached the prompts.
+
+Write feedback.md in this directory with these sections:
+
+1. Objective scorecard — baseline and final unit and grade figures, quoted verbatim from outcome/ (not from the transcript), the robustness line, and the discrimination table's verdict. Check every count the assistant self-reported in transcript.md against the captured outputs and list any that disagree.
+2. Per round — for each turn: what signal the learner was going for; whether the prompt was good practice (which best practice or failure mode it hit or missed, by id from golden/context-cedar/); the consequence in the code; what the best-practice prompt would have been.
+3. Axis B — every row of golden/rubric.md's Axis B tables (phases 1-5 and the cross-phase rows), each with a score (present / partial / absent), a one-line justification citing the prompt text, and the Source cell (spontaneous / trainer-prompted / operator-supplied, per part where a move has more than one origin). Fill every row. List any anti-signals that fired.
+4. Trap outcomes — for each designed trap in golden/trap-manifest.md (Ticket 1 plateau, the Ticket 2 four-axis cluster and the canary, the doc drift, the cross-boundary reference, the feature lure, the latent defects), whether it fired in this run and what the evidence is.
+5. Trainer notes — rule on EVERY trainer note in transcript.md, one by one, against harness-DESIGN.md §3: a note may name the discipline being skipped or the class of question worth asking, and must never name the finding, the clause or the number (not the planted defect, not the sentence of a reference document that settles the question, not the figure that is wrong). For each note give a verdict line of the form "Ruling: within bounds" or "Ruling: overstep", with the reason, and say which later learner moves it coached.
+6. Closing summary — what this calibration run shows about the assistant and the traps, and its limits.
+
+Be exact and terse. Quote; don't paraphrase figures. When feedback.md is written, reply with one line saying so.

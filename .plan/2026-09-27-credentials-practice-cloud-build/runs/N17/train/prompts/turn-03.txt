@@ -1,13 +1,8 @@
-Good corrections, and the reproduction is what I wanted: it fails for the right reason on every rotated issuer and on the path mapping. My answers:
+Good, that's the failure I wanted to see. Decisions from my side:
 
-1. Old-key credentials: follow the spec. A key the issuer no longer serves is not its key, so those credentials get refused and the clubs re-issue. I'll own telling Partner Success; put it in your summary as a behaviour change.
-2. Trust Registry: not in this ticket. Leave onboarded-issuers.json alone (don't re-pin or edit it) and note the registry gap as a follow-up.
-3. Production transport: out of scope. Keep resolution behind the existing DocumentTransport; no new dependencies.
-4. Fetch failure: fail closed. No fallback to the onboarding copy and no cache in this change.
-5. The proof-type bypass: real, but separate. Don't fix it in this change; we'll come back to it.
-6. Treat every approved issuer as affected.
-7. Keep the tests as they are.
+- Refusing credentials signed with a retired key is correct and intended: the ticket's promise is about valid credentials, and a key the issuer no longer publishes is not one. I'll tell support to expect re-issues.
+- The trust-registry question is real but it's not this ticket. Keep the saved list as the gate for "approved" for now; I'll raise the registry with the owning team. Same for the proof-type skip you spotted: note it, don't fix it here.
 
-Now fix the root: the verifier should resolve the document the issuer serves now, and did_web_url should follow the spec's mapping. Keep the change as small as that. Fix the stale comments that describe the old behaviour, nothing else.
+Now fix TICKET-1 at the root, minimally: resolve_issuer must use the document the issuer serves now (the approved list still decides who is approved), and did_web_url must map DIDs the way the method spec says. Don't re-pin or edit data/onboarded-issuers.json, don't special-case any issuer, don't hard-code keys from reference/. Correct the stale comments on the code you change so they stop claiming the saved copy is enough. No other refactors.
 
-Then show me, from real command output, not a summary: the reproduction tests passing, the full backend suite and the full app suite (cargo test --offline --locked in backend/, flutter test --no-pub in app/), and the diff of the source files you changed. If any previously green test had to change, tell me which one and why.
+Then run the whole backend suite and the app suite, and paste the real result lines: every test you added in the last step should now pass, and nothing else should have changed. Tell me which of your new tests would still pass if someone reverted only the URL mapping, and which if they reverted only the resolve change, so I know each half is actually covered.

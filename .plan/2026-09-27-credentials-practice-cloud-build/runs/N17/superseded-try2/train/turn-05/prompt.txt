@@ -1,0 +1,10 @@
+That model matches what I see: four faults, and no single one closes the ticket. The ticket's promise is every subscriber, whatever the account size and however one endpoint behaves, and a green check that means callbacks are arriving. So all four get fixed in this change. My decisions:
+
+- Budget: the fan-out has to finish inside the platform's hard limit with room to spare. Don't raise the in-code budget to get there, and don't add retries: the deployment runs with none, and a retry mechanism is a separate design (note it as a follow-up).
+- Lookup: use the tenant-kind index the table already has, not a scan of every setting.
+- Slow endpoints: one subscriber that is slow or never answers must not cost anyone else their callback. Every call needs its own bound, and a timeout or failed delivery has to be observable as something the system records, not just a log line.
+- Health check: it should only go green when the real path ran for that change, so it goes out over the same path as the subscribers, after the lookup, and it can't carry over from a previous change. For its target, reread the platform's domain-name standard in reference/ and apply what it says a probe must point at. Tell me what you chose and which lines of the standard justify it. If the standard doesn't settle it, stop and ask me instead of picking.
+
+Keep the change as small as that. If you hit a decision I haven't covered, ask before acting.
+
+Then show me from real output: your reproduction tests passing, the full backend and app suites, and the source diff. For each of the four faults, point to the test that would go red if only that part of the fix were reverted.

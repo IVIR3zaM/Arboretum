@@ -1,2 +1,2 @@
-audit: clean — 10 tool call(s) checked, clone /tmp/cold-N17-train2
+audit: clean — 4 tool call(s) checked, clone /tmp/cold-N17-train3
 audit exit: 0

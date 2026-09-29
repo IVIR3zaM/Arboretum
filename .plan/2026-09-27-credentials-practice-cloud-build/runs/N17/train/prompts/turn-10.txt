@@ -1,0 +1,10 @@
+Good list, and thank you for separating probes from reasoning. My calls:
+
+- Fix on this branch: 3, 4, 8 and 9, as you recommend. They're in code we own or touched, and each is small.
+- Item 1 I'm escalating to the verifier team today as a release blocker, with your probe as the reproduction. They own that check and said so; I won't patch their verification logic from a wallet-and-notifier branch. Write the escalation up in research-notes.md with the exact probe steps so they can run it.
+- Item 2 goes to the verifier team and Platform as a decision (cache within the spec's limit or not); record it, don't build a cache.
+- 5, 6, 7, 10, 11, 12, 13: deferred, each with its owner, in the notes.
+
+For each of 3, 4, 8, 9: first turn the probe into a test in the real suite and show it failing on the current code, then make the smallest fix, then show it passing. For item 3, keep to what the did:web spec actually says a DID may contain; quote the rule you're enforcing. Don't touch anything outside these four.
+
+At the end, run both whole suites and paste the real result lines, and give me the list of every test that went from failing to passing in this step.

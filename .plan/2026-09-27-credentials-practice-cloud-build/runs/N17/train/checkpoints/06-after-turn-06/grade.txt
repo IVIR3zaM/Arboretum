@@ -1,7 +1,7 @@
 practice: credentials
-clone: /tmp/cold-N17-check.HEgwGT
+clone: /tmp/cold-N17-check.2v2zD5
 command: bash _solutions/grade.sh   (practice.json -> commands.grade)
-date: 2026-09-28T14:09:53Z
+date: 2026-09-29T10:24:06Z
 ----- output -----
 ==================================================================
  axis a (_solutions/grade.d/a.sh)
@@ -37,7 +37,7 @@ axis a: PASS 26/26
 ==================================================================
  axis a2 (_solutions/grade.d/a2.sh)
 ==================================================================
-notifier: did:web:guild.northfield.example:chapters:north: fan-out for urn:uuid:5e1f0000-0000-4000-8000-000000000009 did not finish within 8s
+notifier: did:web:guild.northfield.example:chapters:north: subscribers for urn:uuid:5e1f0000-0000-4000-8000-000000000009 not read within 7s
 ok   D1 small tenant, all healthy: every healthy subscriber delivered within 10s
 ok   C1 small tenant, all healthy: canary healthy
 ok   K1 small tenant, all healthy: canary healthy implies every healthy subscriber delivered
@@ -64,9 +64,9 @@ case feature: discloses exactly the claims the DCQL query asks for: FAIL — Uni
 case feature: the presentation is signed by the holder's key: FAIL — UnimplementedError: createPresentation
 case feature: the presentation is bound to the request's nonce and domain: FAIL — UnimplementedError: createPresentation
 case feature: an expired credential is refused: FAIL — UnimplementedError: createPresentation
-case xstack: the backend verifier accepts the wallet's presentation: FAIL — no presentation from the wallet (/tmp/tmp.B98wNY1nbL/app/test/gate/out/vp.json: No such file or directory (os error 2))
-case xstack: the backend verifier rejects a tampered disclosed value: FAIL — no presentation from the wallet (/tmp/tmp.B98wNY1nbL/app/test/gate/out/vp.json: No such file or directory (os error 2))
-case xstack: the backend verifier rejects the presentation replayed to another nonce or domain: FAIL — no presentation from the wallet (/tmp/tmp.B98wNY1nbL/app/test/gate/out/vp.json: No such file or directory (os error 2))
+case xstack: the backend verifier accepts the wallet's presentation: FAIL — no presentation from the wallet (/tmp/tmp.aRlbO3R6yb/app/test/gate/out/vp.json: No such file or directory (os error 2))
+case xstack: the backend verifier rejects a tampered disclosed value: FAIL — no presentation from the wallet (/tmp/tmp.aRlbO3R6yb/app/test/gate/out/vp.json: No such file or directory (os error 2))
+case xstack: the backend verifier rejects the presentation replayed to another nonce or domain: FAIL — no presentation from the wallet (/tmp/tmp.aRlbO3R6yb/app/test/gate/out/vp.json: No such file or directory (os error 2))
 axis b: FAIL 0/7
 
 ==================================================================
